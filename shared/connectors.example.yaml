@@ -7,7 +7,7 @@
 # The `job-discovery` skill writes this file the first time it runs without
 # one and prompts you for Apify actor IDs.
 #
-# See job-discovery/references/connector-routing.md.
+# See skills/job-discovery/references/connector-routing.md.
 # =============================================================================
 
 connectors:
@@ -76,4 +76,4 @@ connectors:
 #   everywhere     -> apify-linkedin (+ indeed where Indeed has coverage)
 #
 # `remote_board: true` and `regions: [...]` are mutually exclusive on a
-# connector. See job-discovery/references/connector-routing.md.
+# connector. See skills/job-discovery/references/connector-routing.md.

@@ -46,7 +46,7 @@ branches:
 # Notes:
 # - The first two CV experience slots are always your most recent /
 #   longest-tenure roles (chronological). Only the third slot is
-#   branch-driven. See cv-tailor/references/experience-slot-logic.md.
+#   branch-driven. See skills/cv-tailor/references/experience-slot-logic.md.
 # - A role that fits no branch can be diagnosed as `branch: general`,
 #   which falls back to config.yaml > cv.default_third_slot.
 # - Adding a branch later: re-run job-search-setup, or just edit this file.

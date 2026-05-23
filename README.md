@@ -23,7 +23,7 @@ It is opinionated. It will tell you when you're about to skip something the fram
 - **cover-letter** — voice-anchored, sub-300-word, no-em-dash, with the operational test *"could this sentence appear in any cover letter?"*
 - **interview-prep** — role snapshot + STAR+R story map + hard questions + your ask.
 - **story-bank** — STAR+R story library, refreshed from your career file.
-- **job-discovery** — Indeed + Apify-LinkedIn primary, adapter slots for Wuzzuf / StepStone / Seek / etc.
+- **job-discovery** — ~~job board (Indeed) + ~~job board via ~~web scraper (Apify-LinkedIn) primary, adapter slots for more ~~job boards.
 - **job-search-pipeline** — the orchestrator. Chains everything. Owns the shortcut-command DSL (`Run CV only`, `Run Request`, `Run Interview Prep`, `Run Blacklist`, `Run Story Bank Refresh`).
 - **job-search-setup** — first-run wizard. Reads your career file, proposes branches, prompts for voice references, picks output formats. Writes `config.yaml`.
 
@@ -43,36 +43,34 @@ It is opinionated. It will tell you when you're about to skip something the fram
 
 ## Installation
 
-### Method 1 — Project skills (recommended)
+### Method 1 — Plugin install (recommended)
 
 ```bash
-cd /path/to/your/project
-mkdir -p .claude/skills
-git clone https://github.com/sherifscript/saville-row.git .claude/skills/saville-row
+claude plugin marketplace add sherifscript/saville-row
+claude plugin install saville-row@sherifscript
 ```
 
-The eight skills auto-load from their `SKILL.md` descriptions. The repo also
-ships a router at `.claude/CLAUDE.md` — optional, but if you want the
-shortcut-command routing and the warn-once policy applied project-wide, copy
-its contents into your project's own `.claude/CLAUDE.md` (merge if you
-already have one).
+All eight skills install in one command. Say *"set up saville-row"* to run
+the first-time wizard.
 
-### Method 2 — Global skills (available across all projects)
+### Method 2 — Local plugin (development or offline)
 
 ```bash
-mkdir -p ~/.claude/skills
-git clone https://github.com/sherifscript/saville-row.git ~/.claude/skills/saville-row
+git clone https://github.com/sherifscript/saville-row.git
+claude --plugin-dir ./saville-row
 ```
+
+Or add it permanently to your Claude config with `claude plugin install --scope user ./saville-row`.
 
 ### Method 3 — Claude Cowork (desktop)
 
-1. Clone the repo to a local folder: `git clone https://github.com/sherifscript/saville-row.git ~/saville-row`
+1. Clone the repo: `git clone https://github.com/sherifscript/saville-row.git ~/saville-row`
 2. Open Claude desktop → Cowork tab → select the cloned folder as your working directory.
-3. Cowork auto-detects the `SKILL.md` files. Say *"set up saville-row"* to trigger the setup wizard.
+3. Cowork auto-detects the `skills/` directory. Say *"set up saville-row"* to trigger the setup wizard.
 
 ### Method 4 — claude.ai upload
 
-Upload the eight `SKILL.md` files (one per skill folder) to a claude.ai Project's Knowledge. Optionally upload the `references/` files for richer behavior. Claude.ai cannot run the Python rendering scripts, so this method is best for diagnosis, cover-letter, interview-prep, and story-bank — the editorial skills. CV rendering requires local Python.
+Upload the eight `skills/*/SKILL.md` files to a claude.ai Project's Knowledge. Optionally upload the `references/` files for richer behavior. Claude.ai cannot run the Python rendering scripts, so this method is best for diagnosis, cover-letter, interview-prep, and story-bank — the editorial skills. CV rendering requires local Python.
 
 ---
 
@@ -104,7 +102,7 @@ You: Run Blacklist: add Acme Corp
 You: Run Story Bank Refresh
 ```
 
-See [`job-search-pipeline/references/shortcut-commands.md`](./job-search-pipeline/references/shortcut-commands.md) for the full DSL.
+See [`skills/job-search-pipeline/references/shortcut-commands.md`](./skills/job-search-pipeline/references/shortcut-commands.md) for the full DSL.
 
 ---
 
@@ -140,7 +138,7 @@ This is **less strict than the original private workflow** the framework was ext
 - Claude Code, Claude desktop with Cowork, or claude.ai Projects.
 - Python 3.10+ for the CV render scripts.
 - `docxtpl`, `python-docx`, `openpyxl`, `PyYAML` (install via `pip install -r requirements.txt`).
-- Optional: LibreOffice for PDF output; an Apify account for LinkedIn / Wuzzuf job discovery.
+- Optional: LibreOffice for PDF output; a ~~web scraper (e.g. Apify) account for ~~job board discovery (LinkedIn, Wuzzuf, etc.).
 
 ---
 

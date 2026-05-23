@@ -1,0 +1,12 @@
+{
+  "name": "sherifscript",
+  "description": "Plugins by sherifscript. Currently hosts saville-row, a diagnosis-first job search system for Claude.",
+  "owner": { "name": "sherifscript" },
+  "plugins": [
+    {
+      "name": "saville-row",
+      "source": "./",
+      "description": "A diagnosis-first job search system: discover, diagnose, tailor, cover, interview prep, story bank."
+    }
+  ]
+}

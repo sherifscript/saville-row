@@ -33,4 +33,4 @@ The CV was checked by the programmatic post-render audit before being placed her
 
 1. Start with `candidate-profile.md` — what Jordan handed the framework. Notice it is free-form prose, not a filled-in schema. That is the intended input format.
 2. Read `Diagnosis - Northwind Operations - Senior PM.md` — the diagnosis the framework wrote from the JD. It does not summarize the JD; it reads it.
-3. Open `CV - Northwind Operations - Senior PM.docx` next to the diagnosis. Every bullet traces back to a line in the diagnosis. `role-diagnosis/examples/saas-pm-role.md` walks through that mapping exp
+3. Open `CV - Northwind Operations - Senior PM.docx` next to the diagnosis. Every bullet traces back to a line in the diagnosis. `skills/role-diagnosis/examples/saas-pm-role.md` walks through that mapping exp

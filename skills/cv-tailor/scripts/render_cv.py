@@ -150,6 +150,6 @@ if __name__ == "__main__":
     print(
         "render_cv.py is a library scaffold. The model builds the content_map "
         "from the diagnosis and the career file, then calls render(). "
-        "See cv-tailor/references/content-map-schema.md for the content_map "
-        "shape and cv-tailor/SKILL.md for the full flow."
+        "See skills/cv-tailor/references/content-map-schema.md for the content_map "
+        "shape and skills/cv-tailor/SKILL.md for the full flow."
     )

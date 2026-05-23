@@ -61,7 +61,7 @@ def convert(source_cv_path, template_out_path):
     # NOTE: bullet-loop insertion ({%p for ... %}) is layout-specific and is
     # done by locating the bullet paragraph ranges in document_xml and
     # replacing them with: loop-open paragraph + one styled bullet paragraph
-    # + loop-close paragraph. See cv-tailor/references/docxtpl-recipe.md.
+    # + loop-close paragraph. See skills/cv-tailor/references/docxtpl-recipe.md.
 
     _rewrite_zip_member(template_out_path, "word/document.xml", document_xml)
     print(f"Template written: {template_out_path}")

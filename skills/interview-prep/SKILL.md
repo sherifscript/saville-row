@@ -2,8 +2,8 @@
 name: interview-prep
 description: Produce an interview prep document for a specific role — role snapshot, STAR+R story map, likely hard questions, and smart questions to ask back. Pulls from the story bank and the career file.
 metadata:
-  version: 1.0.0
-  last_updated: 2026-05-20
+  version: 1.2.0
+  last_updated: 2026-05-24
 ---
 
 # interview-prep
@@ -74,4 +74,4 @@ Create the folder if it does not exist.
 - [`references/story-mapping.md`](./references/story-mapping.md)
 - [`references/star-plus-r.md`](./references/star-plus-r.md)
 - [`references/hard-questions.md`](./references/hard-questions.md)
-- [`../../shared/scripts/text_to_docx.py`](../../shared/scripts/text_to_docx.py) — markdown → .docx render
+- [`${CLAUDE_PLUGIN_ROOT}/shared/scripts/text_to_docx.py`](${CLAUDE_PLUGIN_ROOT}/shared/scripts/text_to_docx.py) — markdown → .docx render

@@ -2,8 +2,8 @@
 name: role-diagnosis
 description: Produce a one-page Diagnosis.md for a target role before any CV or cover letter is rendered. Five sections — what the team is hiring to fix, 90-day deliverables, the real bar, strongest credential, verbatim JD keywords. Hard gate for cv-tailor and cover-letter.
 metadata:
-  version: 1.0.0
-  last_updated: 2026-05-20
+  version: 1.2.0
+  last_updated: 2026-05-24
 ---
 
 # role-diagnosis
@@ -42,7 +42,7 @@ There is no fixed "for FP&A roles, lead with X" rule. There is no "always includ
 
 ## Branch resolution
 
-If `branches.yaml` exists with more than one branch, the diagnosis must specify which branch applies to this role. The branch determines the third experience slot in the CV (see `cv-tailor/references/experience-slot-logic.md`). If the branch is ambiguous from the JD, prompt the user to pick:
+If `branches.yaml` exists with more than one branch, the diagnosis must specify which branch applies to this role. The branch determines the third experience slot in the CV (see `../cv-tailor/references/experience-slot-logic.md`). If the branch is ambiguous from the JD, prompt the user to pick:
 
 > *"This role could be diagnosed against your `research-and-analytics` branch or your `product-management` branch. The JD emphasizes stakeholder management and shipped outcomes, which leans PM, but it also asks for analytical rigor. Which branch should this CV speak to?"*
 

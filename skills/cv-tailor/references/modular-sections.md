@@ -59,10 +59,10 @@ The cv-tailor skill reads section overrides from the diagnosis after loading the
 
 ## How partials work
 
-Each template (`templates/OPUS/`, `templates/modern-tech/`, etc.) ships every possible section as a partial docx file:
+Each template (`${CLAUDE_PLUGIN_ROOT}/templates/OPUS/`, `${CLAUDE_PLUGIN_ROOT}/templates/modern-tech/`, etc.) ships every possible section as a partial docx file:
 
 ```
-templates/OPUS/
+${CLAUDE_PLUGIN_ROOT}/templates/OPUS/
 ├── README.md
 ├── full_template.docx       # all sections, for reference
 └── partials/
@@ -110,8 +110,8 @@ The setup wizard adopts the chosen template's default. The user can edit afterwa
 
 ## Adding a new section
 
-1. Add the partial: `templates/[your-template]/partials/new_section.docx` with the desired styling and Jinja placeholders.
-2. Add the section to the canonical list in `shared/config.example.yaml` with a default.
+1. Add the partial: `${CLAUDE_PLUGIN_ROOT}/templates/[your-template]/partials/new_section.docx` with the desired styling and Jinja placeholders.
+2. Add the section to the canonical list in `${CLAUDE_PLUGIN_ROOT}/shared/config.example.yaml` with a default.
 3. Update `scripts/section_composer.py` to recognize the new name (only if the name has special composition rules; otherwise the composer handles arbitrary names automatically).
 4. Add content_map keys for the new section.
 5. Update `references/content-map-schema.md`.

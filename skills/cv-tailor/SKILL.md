@@ -2,8 +2,8 @@
 name: cv-tailor
 description: Render diagnosis-driven, ATS-optimized CVs as .docx via docxtpl. Modular section composition, region-aware headers, inline-bold helper, and a mandatory five-question post-render audit that catches named historical failure modes.
 metadata:
-  version: 1.1.0
-  last_updated: 2026-05-23
+  version: 1.2.0
+  last_updated: 2026-05-24
 ---
 
 # cv-tailor
@@ -105,7 +105,7 @@ cv:
 
 A user can disable any toggleable section globally in `config.yaml`. A diagnosis can also override per-application — e.g., a publications-heavy academic role can turn `publications: on` for that CV only.
 
-The template (`templates/[chosen]/`) ships every possible section as a partial docx file. `scripts/section_composer.py` reads the section order and stitches partials in order, then the result is rendered by docxtpl. See [`references/modular-sections.md`](./references/modular-sections.md).
+The template (`${CLAUDE_PLUGIN_ROOT}/templates/[chosen]/`) ships every possible section as a partial docx file. `scripts/section_composer.py` reads the section order and stitches partials in order, then the result is rendered by docxtpl. See [`references/modular-sections.md`](./references/modular-sections.md).
 
 ## Output
 

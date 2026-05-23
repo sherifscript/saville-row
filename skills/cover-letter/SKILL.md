@@ -2,8 +2,8 @@
 name: cover-letter
 description: Write voice-anchored cover letters under 300 words, no em dashes, with an opener load-bearing on the role's specifics. Refuses to draft without a voice reference. Also drafts LinkedIn recruiter nudges.
 metadata:
-  version: 1.1.0
-  last_updated: 2026-05-23
+  version: 1.2.0
+  last_updated: 2026-05-24
 ---
 
 # cover-letter
@@ -96,4 +96,4 @@ See [`references/linkedin-nudge.md`](./references/linkedin-nudge.md) for the for
 - [`references/objections-and-close.md`](./references/objections-and-close.md) — naming the obvious objection, and the warm close
 - [`references/linkedin-nudge.md`](./references/linkedin-nudge.md) — the recruiter DM format
 - [`templates/cover-letter.txt.tmpl`](./templates/cover-letter.txt.tmpl)
-- [`../../shared/scripts/text_to_docx.py`](../../shared/scripts/text_to_docx.py) — markdown → .docx render
+- [`${CLAUDE_PLUGIN_ROOT}/shared/scripts/text_to_docx.py`](${CLAUDE_PLUGIN_ROOT}/shared/scripts/text_to_docx.py) — markdown → .docx render

@@ -29,7 +29,7 @@ jobs:
       - name: Check SKILL.md frontmatter
         run: |
           fail=0
-          for f in */SKILL.md; do
+          for f in skills/*/SKILL.md; do
             head -1 "$f" | grep -q '^---$' || { echo "NO FRONTMATTER: $f"; fail=1; }
             grep -q '^name:' "$f" || { echo "NO name: $f"; fail=1; }
             awk '/^---/{p++} p==1{print}' "$f" | grep -q 'version:' || { echo "NO version in frontmatter: $f"; fail=1; }

@@ -25,13 +25,13 @@ headers. This is the default (`config.yaml > cv.template: OPUS`).
 Plus the paragraph loops: `core_skills`, `experiences` (with nested
 `role.bullets`), `msc_bullets`, `ba_bullets`, `additional`.
 
-See `../../cv-tailor/references/content-map-schema.md` for the full content
+See `../../skills/cv-tailor/references/content-map-schema.md` for the full content
 map.
 
 ## Modular sections
 
 `full_template.docx` contains every section. The `partials/` folder is for
-the modular-composition path (`cv-tailor/references/modular-sections.md`).
+the modular-composition path (`skills/cv-tailor/references/modular-sections.md`).
 Splitting OPUS into partials is a v1.1 task — until then, the renderer uses
 `full_template.docx` whole and section toggling is done by leaving the
 relevant content-map keys empty.
@@ -40,5 +40,5 @@ relevant content-map keys empty.
 
 Structural edits (new placeholder, tab stop, color) are made directly to
 `full_template.docx` via unpack/edit/repack — never as part of the daily CV
-build. See `../../cv-tailor/references/docxtpl-recipe.md` and
-`../../cv-tailor/scripts/build_template.py`.
+build. See `../../skills/cv-tailor/references/docxtpl-recipe.md` and
+`../../skills/cv-tailor/scripts/build_template.py`.
