@@ -1,0 +1,11 @@
+{
+  "name": "sherifscript",
+  "owner": { "name": "sherifscript" },
+  "plugins": [
+    {
+      "name": "saville-row",
+      "source": "./",
+      "description": "A diagnosis-first job search system: discover, diagnose, tailor, cover, interview prep, story bank."
+    }
+  ]
+}
