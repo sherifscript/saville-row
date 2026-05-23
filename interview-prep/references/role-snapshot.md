@@ -1,6 +1,6 @@
 # Role snapshot — diagnosing the role for interview prep
 
-The role snapshot is the interview-prep equivalent of `role-diagnosis` section 1. It is 3–4 sentences that name the real problem behind the hire. Everything else in the prep document hangs off it.
+The role snapshot is the interview-prep equivalent of `role-diagnosis` section 1. It names the real problem behind the hire. Everything else in the prep document hangs off it.
 
 ## What it is
 
@@ -11,7 +11,7 @@ A diagnosis of the underlying pressure driving this hire. Not a restatement of t
 1. Read the JD top to bottom once.
 2. Ask: what changed that made this role open? A person left, a function is missing, a target was missed, the company hit a growth stage it cannot staff, a market shifted.
 3. Look at the team size, the reporting line, and the company's recent public signals (funding, launches, press).
-4. Write 3–4 sentences naming the pressure and what a successful hire relieves.
+4. Write as much as the pressure requires — enough that the candidate reading it understands what the company is actually trying to solve and can frame every interview answer toward it. The Northwind example below is the quality bar: layered, diagnostic, and ending with the single lens that ties the whole prep together.
 
 ## Why it drives the rest of the prep
 

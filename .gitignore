@@ -28,6 +28,9 @@ Requests/
 .env.*
 !.env.example
 
+# Claude Code local settings (machine-specific; never publish)
+.claude/settings.local.json
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db
