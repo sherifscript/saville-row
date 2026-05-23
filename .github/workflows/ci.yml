@@ -8,10 +8,10 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b  # v5.3.0
         with:
           python-version: '3.11'
 
@@ -32,7 +32,7 @@ jobs:
           for f in */SKILL.md; do
             head -1 "$f" | grep -q '^---$' || { echo "NO FRONTMATTER: $f"; fail=1; }
             grep -q '^name:' "$f" || { echo "NO name: $f"; fail=1; }
-            grep -q 'version:' "$f" || { echo "NO version: $f"; fail=1; }
+            awk '/^---/{p++} p==1{print}' "$f" | grep -q 'version:' || { echo "NO version in frontmatter: $f"; fail=1; }
           done
           exit $fail
 

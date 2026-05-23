@@ -6,6 +6,7 @@ python-docx>=1.1.0     # docx manipulation (dependency of docxtpl + composer)
 docxcompose>=1.4.0     # stitching section partials into one template
 openpyxl>=3.1.0        # the append-only job log (.xlsx)
 PyYAML>=6.0            # reading config.yaml / branches.yaml / etc.
+pytest>=7.0            # test runner (CI: python -m pytest tests/)
 
 # Optional — only needed if output.formats includes "pdf":
 #   LibreOffice must be installed and on PATH (not a pip package).

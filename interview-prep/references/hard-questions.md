@@ -30,15 +30,15 @@ For the showcase candidate (a B2C PM moving to B2B SaaS), a sharp interviewer's 
 
 Notice that each question targets a real gap. None of them are answerable with a rehearsed generic story. That is the point — the candidate should walk in having thought hard about exactly these.
 
-## How the candidate should use them
+## What to include for each question
 
-The prep document lists the hard questions but does **not** script the answers. Scripted answers to hard questions sound scripted. Instead, the candidate should:
+Each hard question in the prep document carries two coaching paragraphs:
 
-1. Read each hard question and sit with the discomfort of it.
-2. Decide what the honest, strongest answer is — usually one that concedes the real gap and then shows why it is bridgeable.
-3. Optionally map a story from the story bank to it.
+**Why they're asking this.** A short paragraph naming the gap or tension being probed. What is the interviewer actually worried about? What would a weak answer reveal? This is the framing the candidate needs before they can answer well.
 
-The framework can help draft a thinking-through of each, but the candidate must own the answer. A hard question answered with genuine thought beats one answered with a polished script every time.
+**How to approach it.** A coaching paragraph — not a scripted answer, but a framing: what the honest, strongest answer looks like, what to concede and what to defend, which story from the story bank fits if any. This gives the candidate a way in without putting words in their mouth.
+
+The worked examples in the "How to generate them" section above are the quality bar. The B2C-to-B2B pivot question, for instance, would carry: a "why they're asking" paragraph about the buyer/user split and longer feedback loops (the interviewer is testing whether the candidate has thought about what transfers vs. what they'll need to unlearn) and a "how to approach it" paragraph about naming both what transfers (analytical rigor, user empathy, experiment instinct) and what changes (discovery cadence, success metrics, stakeholder map).
 
 ## How many
 

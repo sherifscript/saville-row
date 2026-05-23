@@ -56,7 +56,7 @@ The full grammar is in [`references/shortcut-commands.md`](./references/shortcut
 
 ## Selection rule
 
-From each results table, select the top 5 roles by Match Score (up to 10 total across both tables, fewer if a connector returned fewer). Aim for at least 10 results per table before applying the top-5 cut; retry once with alternative keywords if the first pass is thin. A low yield after retry is acceptable — proceed with whatever was found.
+From each results table, select the top 5 roles by Match Score (up to 10 total across both tables, fewer if a connector returned fewer). Aim for at least 10 results per table before applying the top-5 cut; retry once with alternative keywords if the first pass is thin — use broader synonyms of the primary job title (e.g., if "Product Manager" yields thin results, retry with "Product Lead" or "Program Manager") and the branch's keyword seeds from `branches.yaml`. A low yield after retry is acceptable — proceed with whatever was found.
 
 Selected roles get `✓` in the job log's Selected column and a green row fill.
 

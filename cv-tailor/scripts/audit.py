@@ -147,8 +147,12 @@ def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
 
 if __name__ == "__main__":
     import sys
+    import os
     if len(sys.argv) < 2:
         print("Usage: python audit.py <rendered_cv.docx>")
+        sys.exit(1)
+    if not os.path.isfile(sys.argv[1]):
+        print(f"Error: file not found: {sys.argv[1]}", file=sys.stderr)
         sys.exit(1)
     xml = _read_document_xml(sys.argv[1])
     bold_count = len(re.findall(r"<w:b\s*/>", xml))
