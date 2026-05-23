@@ -5,7 +5,7 @@
 # an automatic rejection. The `job-search-setup` skill copies the relevant
 # defaults here and asks you to fill in your personal details.
 #
-# See cv-tailor/references/regional-headers.md for the reasoning behind
+# See skills/cv-tailor/references/regional-headers.md for the reasoning behind
 # each region's convention.
 # =============================================================================
 

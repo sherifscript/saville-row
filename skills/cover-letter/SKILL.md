@@ -96,4 +96,4 @@ See [`references/linkedin-nudge.md`](./references/linkedin-nudge.md) for the for
 - [`references/objections-and-close.md`](./references/objections-and-close.md) — naming the obvious objection, and the warm close
 - [`references/linkedin-nudge.md`](./references/linkedin-nudge.md) — the recruiter DM format
 - [`templates/cover-letter.txt.tmpl`](./templates/cover-letter.txt.tmpl)
-- [`../../shared/scripts/text_to_docx.py`](../../shared/scripts/text_to_docx.py) — markdown → .docx render
+- [`${CLAUDE_PLUGIN_ROOT}/shared/scripts/text_to_docx.py`](${CLAUDE_PLUGIN_ROOT}/shared/scripts/text_to_docx.py) — markdown → .docx render

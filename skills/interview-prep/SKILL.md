@@ -74,4 +74,4 @@ Create the folder if it does not exist.
 - [`references/story-mapping.md`](./references/story-mapping.md)
 - [`references/star-plus-r.md`](./references/star-plus-r.md)
 - [`references/hard-questions.md`](./references/hard-questions.md)
-- [`../../shared/scripts/text_to_docx.py`](../../shared/scripts/text_to_docx.py) — markdown → .docx render
+- [`${CLAUDE_PLUGIN_ROOT}/shared/scripts/text_to_docx.py`](${CLAUDE_PLUGIN_ROOT}/shared/scripts/text_to_docx.py) — markdown → .docx render

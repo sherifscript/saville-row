@@ -3,7 +3,7 @@ import os
 import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCRIPTS = os.path.join(REPO_ROOT, "cv-tailor", "scripts")
+SCRIPTS = os.path.join(REPO_ROOT, "skills", "cv-tailor", "scripts")
 TEMPLATE = os.path.join(REPO_ROOT, "templates", "OPUS", "full_template.docx")
 
 # Make the cv-tailor scripts importable as plain modules.

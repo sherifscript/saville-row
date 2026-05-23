@@ -104,7 +104,7 @@ You: Run Blacklist: add Acme Corp
 You: Run Story Bank Refresh
 ```
 
-See [`job-search-pipeline/references/shortcut-commands.md`](./job-search-pipeline/references/shortcut-commands.md) for the full DSL.
+See [`skills/job-search-pipeline/references/shortcut-commands.md`](./skills/job-search-pipeline/references/shortcut-commands.md) for the full DSL.
 
 ---
 

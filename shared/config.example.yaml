@@ -85,7 +85,7 @@ cover_letter:
 # skills read before drafting, so the output sounds like you. This is the
 # single highest-leverage setting in the framework. The cover-letter skill
 # refuses to draft (in strict mode) without one. See
-# job-search-setup/references/voice-references.md.
+# skills/job-search-setup/references/voice-references.md.
 voice_references:
   cv_summary:
     - "data/voice/old-cv-summary.md"

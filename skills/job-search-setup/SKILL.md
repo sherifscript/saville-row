@@ -66,7 +66,7 @@ Citizenship line: [if applicable]
 Trailing fields: [LinkedIn, personal site, etc.]
 ```
 
-Smart defaults for US / UK / EU / Gulf / Egypt are shipped in `shared/regional-headers.example.yaml`. The setup skill copies the relevant ones into `regional-headers.yaml` and asks the user to fill in personal details (their address, phone, etc.).
+Smart defaults for US / UK / EU / Gulf / Egypt are shipped in `${CLAUDE_PLUGIN_ROOT}/shared/regional-headers.example.yaml`. The setup skill copies the relevant ones into `regional-headers.yaml` and asks the user to fill in personal details (their address, phone, etc.).
 
 For regions not in the defaults (Singapore, Australia, Brazil, etc.), prompt the user for the convention and write a new entry.
 
@@ -83,7 +83,7 @@ For each provided file, write the path into `config.yaml > voice_references`. Th
 
 ### Step 5 — Template
 
-Show the template catalog (`templates/README.md`) and ask the user to pick one:
+Show the template catalog (`${CLAUDE_PLUGIN_ROOT}/templates/README.md`) and ask the user to pick one:
 
 - `OPUS` — flagship; research/consulting heavy; selective inline bold in experience and education
 - `modern-tech` — clean, tech/startup
@@ -126,7 +126,7 @@ Show the user the contents of the three files before writing. Confirm. Write. Do
 - [`references/career-file-guide.md`](./references/career-file-guide.md) — what to put in the career file
 - [`references/branches-detection.md`](./references/branches-detection.md)
 - [`references/voice-references.md`](./references/voice-references.md)
-- [`../shared/config.example.yaml`](../shared/config.example.yaml)
-- [`../shared/branches.example.yaml`](../shared/branches.example.yaml)
-- [`../shared/regional-headers.example.yaml`](../shared/regional-headers.example.yaml)
-- [`../templates/README.md`](../templates/README.md)
+- [`${CLAUDE_PLUGIN_ROOT}/shared/config.example.yaml`](${CLAUDE_PLUGIN_ROOT}/shared/config.example.yaml)
+- [`${CLAUDE_PLUGIN_ROOT}/shared/branches.example.yaml`](${CLAUDE_PLUGIN_ROOT}/shared/branches.example.yaml)
+- [`${CLAUDE_PLUGIN_ROOT}/shared/regional-headers.example.yaml`](${CLAUDE_PLUGIN_ROOT}/shared/regional-headers.example.yaml)
+- [`${CLAUDE_PLUGIN_ROOT}/templates/README.md`](${CLAUDE_PLUGIN_ROOT}/templates/README.md)

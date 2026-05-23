@@ -57,11 +57,11 @@ Date folders use `dd.mm`. Timestamps in the job log use `H:MM AM/PM DD.MM.YY`. B
 - **Job log sheets** are always country-named (Egypt, Denmark, ...). Never city-named.
 - **Session folders** use whatever the prompt specified (Cairo, Copenhagen, ...).
 
-A "Run Cairo" session puts its documents in `data/sessions/[dd.mm]/Cairo/` but routes job-log rows to the Egypt sheet. See `job-discovery/references/regional-sheet-mapping.md`.
+A "Run Cairo" session puts its documents in `data/sessions/[dd.mm]/Cairo/` but routes job-log rows to the Egypt sheet. See `skills/job-discovery/references/regional-sheet-mapping.md`.
 
 ## What is committed vs. what is not
 
-**Committed (the framework):** all `SKILL.md` files, all `references/`, all `scripts/`, all `templates/`, `shared/*.example.yaml`, `shared/conventions.md`, the root `README.md`, `LICENSE`, `.claude/CLAUDE.md`, `examples/showcase/`.
+**Committed (the framework):** all `SKILL.md` files under `skills/`, all `references/`, all `scripts/`, all `templates/`, `shared/*.example.yaml`, `shared/conventions.md`, the root `README.md`, `LICENSE`, `.claude-plugin/`, `settings.json`, `CONNECTORS.md`, `examples/showcase/`.
 
 **Never committed (the user's data):** `data/` in full, the live `config.yaml` / `branches.yaml` / `regional-headers.yaml` / `connectors.yaml`. All covered by `.gitignore`.
 
@@ -69,4 +69,4 @@ The dividing line: the framework is public and shareable; the user's career, app
 
 ## Skill cross-references
 
-Skills reference each other and their own `references/` files by relative path. When editing a skill, keep the "Files referenced" section of its `SKILL.md` in sync with the actual files.
+Skills live under `skills/` and reference each other by relative path (`../sibling-skill/references/file.md`). Assets outside `skills/` (shared scripts, CV templates) are referenced via `${CLAUDE_PLUGIN_ROOT}/shared/...` or `${CLAUDE_PLUGIN_ROOT}/templates/...`. When editing a skill, keep the "Files referenced" section of its `SKILL.md` in sync with the actual files.
