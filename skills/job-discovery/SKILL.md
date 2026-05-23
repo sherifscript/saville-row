@@ -18,7 +18,7 @@ metadata:
 ## What it does
 
 1. Reads the candidate's career file and the target geography from the prompt.
-2. Searches configured connectors. Indeed and Apify-LinkedIn are primary; others are adapter-configured. See [`references/connector-routing.md`](./references/connector-routing.md).
+2. Searches configured connectors. ~~job board (Indeed) and ~~job board via ~~web scraper (Apify-LinkedIn) are primary; others are adapter-configured. See [`references/connector-routing.md`](./references/connector-routing.md).
 3. Filters out blacklisted companies. See [`references/deduplication-rules.md`](./references/deduplication-rules.md) (blacklist is loaded at session start).
 4. Scores each role against the candidate (Match Score, 0–10).
 5. Deduplicates against the existing job log.
@@ -26,22 +26,22 @@ metadata:
 
 ## Connectors
 
-Indeed and Apify-LinkedIn are the primary connectors — the two largest job platforms worldwide. Additional platforms are adapter-configured in `connectors.yaml`:
+~~job board (Indeed) and ~~job board via ~~web scraper (Apify-LinkedIn) are the primary connectors — the two largest job platforms worldwide. Additional platforms are adapter-configured in `connectors.yaml`:
 
 | Connector | Platform | Notes |
 | --- | --- | --- |
-| `indeed` | Indeed | Primary. Direct connector. |
-| `apify-linkedin` | LinkedIn (via Apify) | Primary. LinkedIn is login-gated; always scrape via Apify, never a browser. |
-| `apify-wuzzuf` | Wuzzuf | Egypt-focused adapter. |
-| `apify-stepstone` | StepStone | DACH-region adapter. |
-| `apify-seek` | Seek | Australia/NZ adapter. |
-| `apify-hiringcafe` | HiringCafe | Remote board (`remote_board: true`). `Run Remote` only. |
-| `apify-weworkremotely` | We Work Remotely | Remote board. `Run Remote` only. |
-| `apify-remoteok` | Remote OK | Remote board. `Run Remote` only. |
-| `apify-workingnomads` | Working Nomads | Remote board. `Run Remote` only. |
-| `apify-generic` | other | Pick a highly-rated active Apify scraper by judgment. |
+| `indeed` | ~~job board (Indeed) | Primary. Direct connector. |
+| `apify-linkedin` | ~~job board (LinkedIn) via ~~web scraper (Apify) | Primary. LinkedIn is login-gated; always scrape via a ~~web scraper, never a browser. |
+| `apify-wuzzuf` | ~~job board (Wuzzuf) via ~~web scraper (Apify) | Egypt-focused adapter. |
+| `apify-stepstone` | ~~job board (StepStone) via ~~web scraper (Apify) | DACH-region adapter. |
+| `apify-seek` | ~~job board (Seek) via ~~web scraper (Apify) | Australia/NZ adapter. |
+| `apify-hiringcafe` | ~~job board (HiringCafe) via ~~web scraper (Apify) | Remote board (`remote_board: true`). `Run Remote` only. |
+| `apify-weworkremotely` | ~~job board (We Work Remotely) via ~~web scraper (Apify) | Remote board. `Run Remote` only. |
+| `apify-remoteok` | ~~job board (Remote OK) via ~~web scraper (Apify) | Remote board. `Run Remote` only. |
+| `apify-workingnomads` | ~~job board (Working Nomads) via ~~web scraper (Apify) | Remote board. `Run Remote` only. |
+| `apify-generic` | other ~~job board via ~~web scraper (Apify) | Pick a highly-rated active ~~web scraper actor by judgment. |
 
-The first time job-discovery runs and finds no `connectors.yaml`, it prompts the user to enable connectors and provides the default config. Setup, the Apify account flow, and the plug-and-play pattern for adding any new board are in [`references/connector-setup.md`](./references/connector-setup.md).
+The first time job-discovery runs and finds no `connectors.yaml`, it prompts the user to enable connectors and provides the default config. Setup, the ~~web scraper account flow, and the plug-and-play pattern for adding any new board are in [`references/connector-setup.md`](./references/connector-setup.md).
 
 ## Remote searches
 
@@ -51,7 +51,7 @@ A `Run Remote` search (any of: "Run Remote", "search remote", "find remote roles
 
 Present results in a table with these columns: `# | Job Title | Company | Location | Job Type | Match Score | Match Justification | Skill Gap | Salary Range | Apply Link`.
 
-Generate two tables: one for direct-connector (Indeed) results, one for Apify results. See [`references/connector-routing.md`](./references/connector-routing.md) for the partial-results and failure rules.
+Generate two tables: one for direct-connector (~~job board) results, one for ~~web scraper results. See [`references/connector-routing.md`](./references/connector-routing.md) for the partial-results and failure rules.
 
 ## Match Score
 

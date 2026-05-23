@@ -119,7 +119,7 @@ Show the user the contents of the three files before writing. Confirm. Write. Do
 
 - Does not write a starter career file (yet — see Step 1).
 - Does not validate that the user's voice reference files actually exist (the skill is permissive; cv-tailor and cover-letter will complain if a path is broken).
-- Does not configure connectors (Indeed / Apify). That happens lazily — the first time `job-discovery` runs and finds no `connectors.yaml`, it prompts.
+- Does not configure connectors (~~job board / ~~web scraper). That happens lazily — the first time `job-discovery` runs and finds no `connectors.yaml`, it prompts.
 
 ## Files referenced
 

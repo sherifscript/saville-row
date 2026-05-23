@@ -31,7 +31,7 @@ your machine.
   purpose — it is a fictional candidate (Jordan Park) with invented data,
   and the `.gitignore` has explicit negation rules to keep it in. Never put
   your own data in `examples/showcase/`.
-- **Your `connectors.yaml` may hold an Apify token reference.** Keep API
+- **Your `connectors.yaml` may hold a ~~web scraper token reference (e.g. an Apify token).** Keep API
   tokens out of the committed repo. The framework reads tokens from your
   connector/MCP configuration, not from a committed file, but double-check.
 
@@ -48,4 +48,4 @@ real personal data in the issue.
 framework backs it up before every access and never overwrites it. This is a
 data-safety measure, not a security one, but it lives in the same spirit:
 your accumulated history is protected by default. See
-`job-discovery/references/append-only-safety.md`.
+`skills/job-discovery/references/append-only-safety.md`.

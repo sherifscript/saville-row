@@ -23,7 +23,7 @@ It is opinionated. It will tell you when you're about to skip something the fram
 - **cover-letter** — voice-anchored, sub-300-word, no-em-dash, with the operational test *"could this sentence appear in any cover letter?"*
 - **interview-prep** — role snapshot + STAR+R story map + hard questions + your ask.
 - **story-bank** — STAR+R story library, refreshed from your career file.
-- **job-discovery** — Indeed + Apify-LinkedIn primary, adapter slots for Wuzzuf / StepStone / Seek / etc.
+- **job-discovery** — ~~job board (Indeed) + ~~job board via ~~web scraper (Apify-LinkedIn) primary, adapter slots for more ~~job boards.
 - **job-search-pipeline** — the orchestrator. Chains everything. Owns the shortcut-command DSL (`Run CV only`, `Run Request`, `Run Interview Prep`, `Run Blacklist`, `Run Story Bank Refresh`).
 - **job-search-setup** — first-run wizard. Reads your career file, proposes branches, prompts for voice references, picks output formats. Writes `config.yaml`.
 
@@ -140,7 +140,7 @@ This is **less strict than the original private workflow** the framework was ext
 - Claude Code, Claude desktop with Cowork, or claude.ai Projects.
 - Python 3.10+ for the CV render scripts.
 - `docxtpl`, `python-docx`, `openpyxl`, `PyYAML` (install via `pip install -r requirements.txt`).
-- Optional: LibreOffice for PDF output; an Apify account for LinkedIn / Wuzzuf job discovery.
+- Optional: LibreOffice for PDF output; a ~~web scraper (e.g. Apify) account for ~~job board discovery (LinkedIn, Wuzzuf, etc.).
 
 ---
 
