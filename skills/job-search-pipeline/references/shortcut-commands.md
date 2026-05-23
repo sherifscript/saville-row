@@ -61,4 +61,4 @@ Invoke the `story-bank` skill's refresh protocol. Extract new STAR+R stories fro
 
 ## Extending the DSL
 
-New commands follow the same shape: a `Run [Verb]: [args]` line that maps to a defined pipeline slice. Document any new command here, and add its routing to `.claude/CLAUDE.md`.
+New commands follow the same shape: a `Run [Verb]: [args]` line that maps to a defined pipeline slice. Document any new command here, and update the skill router table in `job-search-pipeline/SKILL.md`.

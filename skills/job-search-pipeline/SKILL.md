@@ -10,6 +10,23 @@ metadata:
 
 The orchestrator. It does not do the work — it sequences the other skills and owns the shortcut-command grammar.
 
+## Skill router
+
+Match user intent to the correct skill before doing anything else:
+
+| User says... | Skill |
+| --- | --- |
+| "set up saville-row" / "first run" / "I just cloned this" | `job-search-setup` |
+| "find jobs in [X]" / "Run [Country]" / "search [city]" | `job-discovery` → `job-search-pipeline` |
+| "Run Remote" / "search remote" / "find remote roles" / "run the workflow remote" | `job-search-pipeline` (`Run Remote` — routes to the Remote sheet) |
+| "tailor a CV for [company]" / "render a CV" / "Run CV only" | `role-diagnosis` (gate) → `cv-tailor` |
+| "diagnose this role" / "what is this team actually hiring to fix" | `role-diagnosis` |
+| "write a cover letter for [company]" | `cover-letter` (after diagnosis) |
+| "prep me for the [company] interview" / "Run Interview Prep" | `interview-prep` |
+| "refresh the story bank" / "Run Story Bank Refresh" | `story-bank` |
+| "blacklist [company]" / "Run Blacklist: add/remove" | `job-discovery` (blacklist sub-action) |
+| Any `Run [shortcut]` command | `job-search-pipeline` (it owns the DSL) |
+
 ## When to activate
 
 - Any `Run [...]` shortcut command
@@ -70,9 +87,12 @@ After any session where something unexpected happened — low yield, language ba
 
 ## Opinionation
 
-The pipeline respects `config.yaml > opinionation`. Default `warn-once-then-comply`: gates explain themselves on first bypass per session, then comply. `strict`: gates refuse. See the routing notes in `.claude/CLAUDE.md`.
+The pipeline respects `config.yaml > opinionation`. Default is `warn-once-then-comply`: hard gates (diagnosis-first; voice reference for cover letters; max experience slots; append-only Excel) emit a one-time explanation on the first bypass per session, then comply silently. Track which gates have been warned about in session memory.
+
+`strict` mode (`opinionation: strict` in `config.yaml`) reverts to the original behavior: refuses to proceed when a gate is bypassed.
 
 ## Files referenced
 
 - [`references/shortcut-commands.md`](./references/shortcut-commands.md) — the full DSL
-- [`references/session-notes.m
+- [`references/session-notes.md`](./references/session-notes.md) — the session notes format
+- [`references/failure-recovery.md`](./references/failure-recovery.md) — per-stage failure rules
