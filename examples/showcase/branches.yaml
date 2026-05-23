@@ -1,0 +1,27 @@
+# Showcase branches — auto-detected from candidate-profile.md by the
+# job-search-setup wizard, then confirmed. Jordan Park has two arcs.
+
+branches:
+  - name: product-management
+    display_name: "Product Management"
+    third_slot_company: "Alpha Apps"
+    voice_descriptor: "cross-functional, outcome-oriented, user-focused"
+    keyword_seeds:
+      - "product"
+      - "PM"
+      - "roadmap"
+      - "user research"
+      - "activation"
+      - "growth"
+
+  - name: growth-analytics
+    display_name: "Growth & Analytics"
+    third_slot_company: "Alpha Apps"
+    voice_descriptor: "quantitative, experiment-led, funnel-focused"
+    keyword_seeds:
+      - "growth"
+      - "analytics"
+      - "experimentation"
+      - "funnel"
+      - "retention"
+      - "A/B testing"

@@ -1,0 +1,121 @@
+# =============================================================================
+# config.example.yaml — saville-row configuration
+#
+# Copy this file to `config.yaml` at the repo root and fill it in. The
+# `job-search-setup` skill writes this file for you interactively; this
+# annotated copy is for users who prefer to edit it by hand.
+#
+# Every key has a comment explaining: what it does, when to change it, and
+# what happens if you leave the default.
+# =============================================================================
+
+candidate:
+  # Your full name. Appears on the CV and in the cover letter signature.
+  name: "Jordan Park"
+  # Your email. Used in the regional header contact line.
+  email: "jordan.park@example.com"
+  # Path to your career history file. Free-form text or markdown — there is
+  # NO template to fill. Write your career however you like; the skills
+  # parse it. This is the single source of truth for all factual content.
+  career_file: "data/career.md"
+
+
+cv:
+  # Which CV template to render against. Options: OPUS, modern-tech,
+  # academic, executive, creative. See templates/README.md.
+  # Default OPUS — research/consulting-leaning, selective inline bold.
+  template: "OPUS"
+
+  # Maximum number of roles in the Experience section.
+  # Default 3. Why: a 4th slot usually pushes the CV onto a 2nd page and
+  # dilutes the headline. If your career has 6+ roles, the diagnosis picks
+  # which 3 fit each application — the rest stay in your career file as
+  # supporting material. Set 2 for early-career; set 4 only if you have
+  # several short specialist roles that genuinely don't compress.
+  max_experience_slots: 3
+
+  # If you held multiple roles in sequence at one employer (e.g. promoted
+  # Analyst -> Senior Analyst), set true to render them as one contiguous
+  # block in chronological order. Default true. Set false if the two roles
+  # at the same employer were really different jobs.
+  continuous_employer_block: true
+
+  # Third-slot company used when no branch is selected (Run CV only:
+  # General). Leave null to let the diagnosis pick by broad judgment.
+  default_third_slot: null
+
+  # Which CV sections appear, and in what order. Toggleable sections can be
+  # removed. tagline / contact / experience / education are required and
+  # cannot be removed. A diagnosis can override this per application.
+  sections:
+    - tagline
+    - contact
+    - summary          # remove if you prefer a CV with no summary section
+    - core_skills
+    - experience
+    - education
+    - additional       # remove if you don't want an Additional Info section
+    # - publications   # uncomment for academic / research-heavy profiles
+    # - certifications # uncomment if certifications matter in your field
+    # - volunteering   # uncomment to include volunteer work
+
+
+discovery:
+  # Roles scoring below this Match Score (0-10) are filtered out before the
+  # CV-tailoring stage. Default 5. Lower it to see more marginal roles.
+  min_match_score: 5
+  # How many results to aim for per connector table before applying the
+  # top-N selection. Default 10.
+  results_target_per_table: 10
+
+
+cover_letter:
+  # Markets where cover letters are written for ALL selected roles.
+  western_markets: ["US", "UK", "EU", "Canada", "Australia"]
+  # In these markets, cover letters are written ONLY for multinational
+  # employers (Big Four, McKinsey, Spotify MENA, etc.) — local companies
+  # get a CV only.
+  multinational_only_markets: ["Egypt", "Gulf"]
+  # Draft LinkedIn recruiter nudges when a recruiter is identified in the
+  # scraped job data. Default true.
+  linkedin_nudges: true
+
+
+# Voice reference files — samples of YOUR OWN writing that the generative
+# skills read before drafting, so the output sounds like you. This is the
+# single highest-leverage setting in the framework. The cover-letter skill
+# refuses to draft (in strict mode) without one. See
+# job-search-setup/references/voice-references.md.
+voice_references:
+  cv_summary:
+    - "data/voice/old-cv-summary.md"
+  cover_letter:
+    - "data/voice/cover-letter-sample.txt"
+  interview_prep: []      # empty list = no voice anchoring for this skill
+  linkedin_nudge: []
+
+
+# Default region when neither the prompt nor the job posting specifies one.
+# Must match a key in regional-headers.yaml.
+default_region: "US"
+
+
+# How the framework behaves when you ask it to skip a hard gate (render a
+# CV with no diagnosis, use 4 experience slots, draft a cover letter with
+# no voice reference, etc.).
+#   warn-once-then-comply : (default) explains the gate the first time per
+#                           session, then complies silently afterward.
+#   strict                : refuses to bypass any gate. Recommended if you
+#                           have shipped broken outputs before and trust
+#                           the audit more than your own in-the-moment call.
+opinionation: "warn-once-then-comply"
+
+
+output:
+  # CV output formats.
+  #   [docx]        : (default) Word only. Fast, no extra dependencies.
+  #   [docx, pdf]   : also render PDF via LibreOffice. Requires `libreoffice`
+  #                   on PATH; adds a few seconds per render and a small
+  #                   extra audit pass. Convert to PDF yourself on a
+  #                   need-to basis if you'd rather not enable this.
+  formats: ["docx"]

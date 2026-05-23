@@ -1,0 +1,11 @@
+=====================================
+Recruiter: Dana Liu — Talent Partner, Northwind Operations
+Job: Northwind Operations | Senior Product Manager, Workflow Automation
+LinkedIn: linkedin.com/in/example-dana-liu
+-------------------------------------
+Hi Dana, I saw Northwind is hiring a Senior PM for Workflow Automation. I most
+recently shipped an onboarding redesign that lifted 7-day activation from 32%
+to 38% in a quarter, and built the experimentation platform behind it. I'm
+Brooklyn-based and available immediately. Happy to send my CV if it's useful.
+Thanks for considering.
+=====================================

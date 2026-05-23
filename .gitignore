@@ -1,0 +1,52 @@
+# User data — never commit
+data/
+*.career.txt
+*.career.md
+voice-references/
+config.yaml
+branches.yaml
+regional-headers.yaml
+connectors.yaml
+
+# Rendered outputs
+**/CV - *.docx
+**/Cover Letter - *.docx
+**/Diagnosis - *.md
+**/*Interview Prep*.docx
+**/LinkedIn Messages.txt
+**/Job Listings.xlsx
+**/Job Listings — *.xlsx
+**/Session Notes.txt
+**/Backup/
+
+# Per-session run folders
+[0-9][0-9].[0-9][0-9]/
+Requests/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+.pytest_cache/
+pytest-cache-files-*/
+.python-version
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# The showcase is committed — it is the demo, not user data. These
+# negations re-include it after the broad rules above would exclude it.
+!examples/showcase/
+!examples/showcase/**

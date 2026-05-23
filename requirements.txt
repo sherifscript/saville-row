@@ -1,0 +1,11 @@
+# saville-row — Python dependencies for the CV render scripts.
+# Install: pip install -r requirements.txt
+
+docxtpl>=0.16.7        # CV rendering via Jinja-templated .docx
+python-docx>=1.1.0     # docx manipulation (dependency of docxtpl + composer)
+docxcompose>=1.4.0     # stitching section partials into one template
+openpyxl>=3.1.0        # the append-only job log (.xlsx)
+PyYAML>=6.0            # reading config.yaml / branches.yaml / etc.
+
+# Optional — only needed if output.formats includes "pdf":
+#   LibreOffice must be installed and on PATH (not a pip package).

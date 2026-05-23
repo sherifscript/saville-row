@@ -1,0 +1,13 @@
+# Showcase regional headers — Jordan Park targets the US market.
+
+regions:
+  US:
+    location: "Brooklyn, NY"
+    phone: "+1 718 555 0142"
+    email: "jordan.park@example.com"
+    line_2_links:
+      - "jordanpark.me"
+      - "linkedin.com/in/jordanpark"
+    line_2_suffix: "Available immediately"
+    additional_work_auth: true
+    additional_work_auth_text: "US Citizen, available immediately."

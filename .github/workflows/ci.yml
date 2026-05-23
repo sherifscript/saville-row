@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Compile all Python scripts
+        run: |
+          fail=0
+          for f in $(find . -name '*.py'); do
+            python -m py_compile "$f" || { echo "COMPILE FAIL: $f"; fail=1; }
+          done
+          exit $fail
+
+      - name: Check SKILL.md frontmatter
+        run: |
+          fail=0
+          for f in */SKILL.md; do
+            head -1 "$f" | grep -q '^---$' || { echo "NO FRONTMATTER: $f"; fail=1; }
+            grep -q '^name:' "$f" || { echo "NO name: $f"; fail=1; }
+            grep -q 'version:' "$f" || { echo "NO version: $f"; fail=1; }
+          done
+          exit $fail
+
+      - name: Run tests
+        run: |
+          if [ -d tests ]; then python -m pytest tests/ -v; else echo "no tests dir"; fi

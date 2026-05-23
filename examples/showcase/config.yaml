@@ -1,0 +1,44 @@
+# Showcase config — the filled config.yaml for the fictional candidate
+# Jordan Park. In a real repo this lives at the root and is gitignored;
+# here it is committed so you can see a complete, filled example.
+
+candidate:
+  name: "Jordan Park"
+  email: "jordan.park@example.com"
+  career_file: "candidate-profile.md"
+
+cv:
+  template: "OPUS"
+  max_experience_slots: 3
+  continuous_employer_block: true     # Beta Inc Senior PM + PM = one block
+  default_third_slot: null
+  sections:
+    - tagline
+    - contact
+    - summary
+    - core_skills
+    - experience
+    - education
+    - additional
+
+discovery:
+  min_match_score: 5
+  results_target_per_table: 10
+
+cover_letter:
+  western_markets: ["US", "UK", "EU", "Canada", "Australia"]
+  multinational_only_markets: ["Egypt", "Gulf"]
+  linkedin_nudges: true
+
+voice_references:
+  cv_summary: []
+  cover_letter:
+    - "voice/cover-letter-sample.txt"
+  interview_prep: []
+  linkedin_nudge: []
+
+default_region: "US"
+opinionation: "warn-once-then-comply"
+
+output:
+  formats: ["docx"]

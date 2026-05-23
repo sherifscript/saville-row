@@ -1,0 +1,31 @@
+VOICE REFERENCE — Jordan Park
+
+This is a sample of Jordan's own writing, used by the cover-letter skill to
+anchor tone. It is a cover letter Jordan wrote, unaided, for an earlier role.
+The point is not the structure — it is the register: short sentences, plain
+claims, no performed enthusiasm, willing to concede a limitation.
+
+---
+
+Dear Hiring Manager,
+
+I am applying because the role is squarely about onboarding, and onboarding
+is the part of product work I have spent the last four years on.
+
+At my current company I owned the new-user experience for a consumer app
+with about fifteen million registered users. When I started, most new users
+never came back after the first session. I spent a month just watching
+session recordings before I changed anything, which felt slow at the time
+and turned out to be the most useful thing I did. The fix was not clever. We
+were asking for a permissions grant before the user had any reason to care.
+We moved it. Activation went up and stayed up.
+
+I am not a designer and I am not an engineer. What I am good at is finding
+the one place a funnel is actually leaking and getting the team to agree to
+fix that before anything else. That takes some patience and a tolerance for
+being the person who says no to the other twelve ideas.
+
+I would be glad to talk.
+
+Best regards,
+Jordan Park

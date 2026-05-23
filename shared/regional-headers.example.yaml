@@ -1,0 +1,78 @@
+# =============================================================================
+# regional-headers.example.yaml — CV header variants by region
+#
+# Different job markets screen for different signals. A wrong header can be
+# an automatic rejection. The `job-search-setup` skill copies the relevant
+# defaults here and asks you to fill in your personal details.
+#
+# See cv-tailor/references/regional-headers.md for the reasoning behind
+# each region's convention.
+# =============================================================================
+
+regions:
+
+  US:
+    location: "Brooklyn, NY"
+    phone: "+1 718 555 0142"
+    email: "jordan.park@example.com"
+    line_2_links:
+      - "jordanpark.me"
+      - "linkedin.com/in/jordanpark"
+    # North America: no citizenship / work-auth line by convention.
+    line_2_suffix: ""
+    additional_work_auth: true
+    additional_work_auth_text: "US Citizen, available immediately."
+
+  UK:
+    location: "London, UK"
+    phone: "+44 20 5550 0142"
+    email: "jordan.park@example.com"
+    line_2_links:
+      - "jordanpark.me"
+      - "linkedin.com/in/jordanpark"
+    # Optional: "Right to work in the UK" if applicable.
+    line_2_suffix: ""
+    additional_work_auth: true
+    additional_work_auth_text: "Right to work in the UK; available immediately."
+
+  EU:
+    location: "Berlin, Germany"
+    phone: "+49 30 5550 0142"
+    email: "jordan.park@example.com"
+    line_2_links:
+      - "jordanpark.me"
+      - "linkedin.com/in/jordanpark"
+    # EU/EEA: state EU eligibility — many EU employers screen out
+    # candidates who need sponsorship.
+    line_2_suffix: "EU Citizen"
+    additional_work_auth: true
+    additional_work_auth_text: "EU Citizen, eligible to work across the EU/EEA without sponsorship; available immediately."
+
+  Gulf:
+    location: "Dubai, UAE"
+    phone: "+971 4 555 0142"
+    email: "jordan.park@example.com"
+    line_2_links:
+      - "jordanpark.me"
+      - "linkedin.com/in/jordanpark"
+    # Gulf: nationality is openly displayed and often ATS-required.
+    line_2_suffix: "Nationality: [your nationality]"
+    additional_work_auth: false
+    additional_work_auth_text: ""
+
+  Egypt:
+    location: "Cairo, Egypt"
+    phone: "+20 2 5550 0142"
+    email: "jordan.park@example.com"
+    line_2_links:
+      - "jordanpark.me"
+      - "linkedin.com/in/jordanpark"
+    # Egypt: for male candidates, military service status is expected by
+    # many employers (Exempted / Completed / Postponed / Not Required).
+    # Female candidates omit the Military field.
+    line_2_suffix: "[Nationality] | Military: [status]"
+    additional_work_auth: false
+    additional_work_auth_text: ""
+
+# To add a region not listed: copy a block, rename the key, set the fields.
+# `default_region` in config.yaml must point at one of these keys.

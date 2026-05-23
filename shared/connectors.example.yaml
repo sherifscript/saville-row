@@ -1,0 +1,79 @@
+# =============================================================================
+# connectors.example.yaml — job board connectors
+#
+# Indeed and LinkedIn (via Apify) are the two primary connectors — the
+# largest job platforms worldwide. Everything else is an optional adapter.
+#
+# The `job-discovery` skill writes this file the first time it runs without
+# one and prompts you for Apify actor IDs.
+#
+# See job-discovery/references/connector-routing.md.
+# =============================================================================
+
+connectors:
+
+  indeed:
+    enabled: true
+    # Direct connector — no actor ID needed.
+
+  apify-linkedin:
+    enabled: true
+    # LinkedIn is login-gated. ALWAYS scrape via an Apify actor, never a
+    # browser. Pick a highly-rated, actively-maintained LinkedIn jobs actor
+    # and put its ID here. Example value below — verify it is still active.
+    actor_id: "curious_coder/linkedin-jobs-scraper"
+
+  apify-wuzzuf:
+    enabled: false
+    # Egypt-focused board. Enable for Egypt searches.
+    actor_id: "shahidirfan/wuzzuf-jobs-scraper"
+
+  apify-stepstone:
+    enabled: false
+    # DACH region (Germany, Austria, Switzerland).
+    actor_id: ""
+
+  apify-seek:
+    enabled: false
+    # Australia / New Zealand.
+    actor_id: ""
+
+  # --- Remote-focused boards -------------------------------------------------
+  # A connector with `remote_board: true` is used ONLY for a `Run Remote`
+  # search and is silent for every `Run [Country/City]` search.
+
+  apify-hiringcafe:
+    enabled: true
+    remote_board: true
+    # HiringCafe — large remote-jobs aggregator.
+    actor_id: ""
+
+  apify-weworkremotely:
+    enabled: true
+    remote_board: true
+    # We Work Remotely.
+    actor_id: ""
+
+  apify-remoteok:
+    enabled: true
+    remote_board: true
+    # Remote OK.
+    actor_id: ""
+
+  apify-workingnomads:
+    enabled: false
+    remote_board: true
+    # Working Nomads.
+    actor_id: ""
+
+# Region -> extra adapters applied automatically (only if enabled above):
+#   Egypt          -> apify-wuzzuf
+#   DACH           -> apify-stepstone
+#   Australia/NZ   -> apify-seek
+#   Run Remote     -> apify-hiringcafe, apify-weworkremotely, apify-remoteok,
+#                     apify-workingnomads (every enabled remote_board), plus
+#                     apify-linkedin + indeed with the remote filter
+#   everywhere     -> apify-linkedin (+ indeed where Indeed has coverage)
+#
+# `remote_board: true` and `regions: [...]` are mutually exclusive on a
+# connector. See job-discovery/references/connector-routing.md.
