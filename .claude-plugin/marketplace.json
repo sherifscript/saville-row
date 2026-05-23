@@ -1,5 +1,6 @@
 {
   "name": "sherifscript",
+  "description": "Plugins by sherifscript. Currently hosts saville-row, a diagnosis-first job search system for Claude.",
   "owner": { "name": "sherifscript" },
   "plugins": [
     {
