@@ -2,8 +2,8 @@
 name: job-search-pipeline
 description: Orchestrator for saville-row. Chains discover → diagnose → tailor → cover → audit. Owns the shortcut-command DSL (Run [Country], Run CV only, Run Request, Run Blacklist, Run Interview Prep, Run Story Bank Refresh).
 metadata:
-  version: 1.1.0
-  last_updated: 2026-05-23
+  version: 1.2.0
+  last_updated: 2026-05-24
 ---
 
 # job-search-pipeline

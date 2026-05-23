@@ -3,6 +3,40 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v1.2.0 — 2026-05-24
+
+Plugin conversion.
+
+### Changed
+
+- **Plugin layout.** Skills moved from repo root to `skills/` directory.
+  `.claude-plugin/plugin.json` manifest added; the repo is now installable
+  via `claude plugin install saville-row@sherifscript`.
+- **Router folded into pipeline.** The routing table and opinionation policy
+  from `.claude/CLAUDE.md` are now self-contained inside
+  `job-search-pipeline/SKILL.md`. The `.claude/` directory is removed.
+- **Permissions migrated.** Python/pip permissions moved from
+  `.claude/settings.json` to the plugin-level `settings.json`.
+- **Connector placeholders.** Third-party platform names (Indeed, LinkedIn,
+  Apify, Wuzzuf, StepStone, Seek, etc.) wrapped in `~~job board` and
+  `~~web scraper` placeholders in body text. Frontmatter trigger descriptions
+  are unchanged.
+
+### Added
+
+- `.claude-plugin/marketplace.json` — single-plugin marketplace so
+  `claude plugin marketplace add sherifscript/saville-row` works.
+- `CONNECTORS.md` — documents the `~~` placeholder system and lists all
+  connector categories with their default options.
+- `settings.json` (plugin root) — default Python/pip execution permissions.
+
+### Removed
+
+- `.claude/CLAUDE.md` — content folded into `job-search-pipeline/SKILL.md`.
+- `.claude/settings.json` — replaced by plugin-level `settings.json`.
+
+---
+
 ## v1.1.0 — 2026-05-23
 
 Quality pass on the cover-letter and CV skills, plus first-class support for
