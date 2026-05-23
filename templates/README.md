@@ -33,7 +33,7 @@ templates/<name>/
     └── volunteering.docx
 ```
 
-The `cv-tailor` skill composes `full_template.docx` on the fly from the partials listed in `config.yaml > cv.sections` (see `cv-tailor/references/modular-sections.md`). If no partials are present, it falls back to `full_template.docx` whole.
+The `cv-tailor` skill composes `full_template.docx` on the fly from the partials listed in `config.yaml > cv.sections` (see `skills/cv-tailor/references/modular-sections.md`). If no partials are present, it falls back to `full_template.docx` whole.
 
 ## v1.0 status
 
@@ -42,11 +42,11 @@ The `cv-tailor` skill composes `full_template.docx` on the fly from the partials
 To populate a template:
 
 1. Build (or bring) a finished CV `.docx` with the layout you want.
-2. Run `cv-tailor/scripts/build_template.py <source.docx> <full_template.docx>` to convert the variable regions to docxtpl placeholders.
+2. Run `skills/cv-tailor/scripts/build_template.py <source.docx> <full_template.docx>` to convert the variable regions to docxtpl placeholders.
 3. Split the result into section partials, or keep `full_template.docx` whole if you don't need modular sections.
 4. Run the acceptance test (`build_template.py <template.docx>`) and confirm the render matches the source layout.
 
-See `cv-tailor/references/docxtpl-recipe.md` and `cv-tailor/SKILL.md` Appendix for the full procedure.
+See `skills/cv-tailor/references/docxtpl-recipe.md` and `skills/cv-tailor/SKILL.md` Appendix for the full procedure.
 
 ## Adding your own template
 

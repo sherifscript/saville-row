@@ -16,9 +16,9 @@ them is a hard sell; a change that strengthens one is welcome.
   a built `.docx`. Building modern-tech, academic, executive, or creative
   is self-contained, valuable work. See `templates/README.md`.
 - **A new connector adapter.** Job boards are pure configuration — see
-  `job-discovery/references/connector-setup.md`.
+  `skills/job-discovery/references/connector-setup.md`.
 - **A new region.** Regional headers are data — see
-  `cv-tailor/references/regional-headers.md`.
+  `skills/cv-tailor/references/regional-headers.md`.
 - **Reference-file improvements.** Clearer explanations, better examples.
 
 ## Things to discuss first (open an issue)
