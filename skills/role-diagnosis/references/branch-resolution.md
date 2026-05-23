@@ -54,7 +54,7 @@ Adding a new branch mid-search is also fine — re-run `job-search-setup` and up
 
 ## What branch resolution does not do
 
-- Does not change the first two experience slots. Those are always the candidate's primary employer / longest tenure / most recent role, in chronological order. See `cv-tailor/references/experience-slot-logic.md`.
+- Does not change the first two experience slots. Those are always the candidate's primary employer / longest tenure / most recent role, in chronological order. See `../cv-tailor/references/experience-slot-logic.md`.
 - Does not change which keywords appear. Those come from the JD verbatim, regardless of branch.
 - Does not change the regional header. That's purely region-based.
 

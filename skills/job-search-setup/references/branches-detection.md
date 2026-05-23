@@ -66,7 +66,7 @@ branches:
       - "user research"
 ```
 
-The `third_slot_company` field is the company whose role goes in the third CV experience slot when this branch is selected. The first two slots are typically the candidate's most recent and longest-tenure roles; the third varies by branch (see `cv-tailor/references/experience-slot-logic.md`).
+The `third_slot_company` field is the company whose role goes in the third CV experience slot when this branch is selected. The first two slots are typically the candidate's most recent and longest-tenure roles; the third varies by branch (see `../cv-tailor/references/experience-slot-logic.md`).
 
 ## Edge cases
 

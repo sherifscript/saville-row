@@ -14,7 +14,7 @@ conversion they render as literal asterisks in Word.
 Always call convert_content_map(cm) immediately before
     tpl.render(cm, autoescape=True)
 
-See cv-tailor/references/docxtpl-recipe.md for the rationale and the named
+See skills/cv-tailor/references/docxtpl-recipe.md for the rationale and the named
 failure modes (2026-04-28 ampersand strip, 2026-05-11 empty-bold regression).
 """
 

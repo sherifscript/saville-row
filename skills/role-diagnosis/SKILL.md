@@ -42,7 +42,7 @@ There is no fixed "for FP&A roles, lead with X" rule. There is no "always includ
 
 ## Branch resolution
 
-If `branches.yaml` exists with more than one branch, the diagnosis must specify which branch applies to this role. The branch determines the third experience slot in the CV (see `cv-tailor/references/experience-slot-logic.md`). If the branch is ambiguous from the JD, prompt the user to pick:
+If `branches.yaml` exists with more than one branch, the diagnosis must specify which branch applies to this role. The branch determines the third experience slot in the CV (see `../cv-tailor/references/experience-slot-logic.md`). If the branch is ambiguous from the JD, prompt the user to pick:
 
 > *"This role could be diagnosed against your `research-and-analytics` branch or your `product-management` branch. The JD emphasizes stakeholder management and shipped outcomes, which leans PM, but it also asks for analytical rigor. Which branch should this CV speak to?"*
 

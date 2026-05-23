@@ -2,7 +2,7 @@
 audit.py — post-render audit for tailored CVs.
 
 Implements the two programmatic checks of the five-question post-render audit
-(see cv-tailor/references/post-render-audit.md). The editorial checks (#1, #3)
+(see skills/cv-tailor/references/post-render-audit.md). The editorial checks (#1, #3)
 are run by the model, not here.
 
 Programmatic checks:
