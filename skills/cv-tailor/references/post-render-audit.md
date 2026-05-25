@@ -50,6 +50,24 @@ The failure mode: the RichText XML gets written inside a `<w:t>` text node inste
 
 **Incident:** 2026-05-11, "Run CV only: General" session. Every bullet containing `**markdown**` rendered as an empty bullet. The BMG CV rendered five days earlier (2026-05-06) used the same template, same loop structure, and same helper, and rendered cleanly. The trigger was never identified — until it is, audit check 5 treats the symptom as the hard gate.
 
+### 6. Does the rendered CV contain any em dashes?
+
+**Programmatic check.** Scan visible text for the em dash character (—). Em dashes are banned from all employer-facing output — CV, cover letter, LinkedIn nudge, interview prep. See `shared/conventions.md`.
+
+**On failure:** locate each em dash in the rendered text and replace it with a comma, period, or restructured sentence. Re-render. Do not ship the CV until the check passes.
+
+### 7. Is the experience section in strict reverse-chronological order, with the primary employer's contiguous block in slots 1 + 2?
+
+**Programmatic check.** Two sub-checks, both must pass:
+
+1. **Reverse-chronological order.** The experience list, when ordered by end date (most recent first, ongoing roles = 9999), must match the order in which the roles appear in the CV. Slot 1 is the most recent role. Slot 2 is the next. And so on.
+
+2. **Contiguous employer block in slots 1 + 2.** If the candidate has two adjacent roles at the same primary employer (e.g., Statista Research Expert + Statista Research Assistant), those two roles must occupy Slots 1 and 2 — and no other role may appear between them. This is the hard rule that prevents visible employment gaps. A CV that puts Atheneum (an ongoing role) in Slot 2 below Statista Expert (ended Oct 2025) violates chronology. A CV that skips the Statista Assistant entirely leaves a gap (2020–2023) that a recruiter will notice immediately.
+
+**On failure:** rebuild the `experiences` list in the content map. Slot 1 = most recent full-time role. Slot 2 = the adjacent role at the same employer (if `continuous_employer_block: true`). Slot 3 = branch-driven choice from `branches.yaml`. Re-render. The check runs against the `content_map.experiences` list before docxtpl rendering; no XML inspection required.
+
+**Incident root cause (2026-05-24 Cairo trial):** `experience-slot-logic.md` had the hard rule; `cv-tailor/SKILL.md` had only a soft one-liner ("adjacent role at the same employer *if applicable*"). The render script read the soft rule and treated the Statista Assistant as droppable. This check ensures the structural failure is caught before the CV ships even if the render script makes the same mistake.
+
 ## Running the audit
 
 ```python

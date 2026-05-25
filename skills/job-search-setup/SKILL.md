@@ -24,6 +24,16 @@ After setup completes, all other skills become operable.
 
 ## The conversation, in order
 
+### Step 0 — Preamble (say this before any question)
+
+Before asking anything, tell the user what saville-row is and what it does:
+
+> *"saville-row is a job-search pipeline that runs five stages from a single prompt: it searches job boards for you, scores each role against your career, writes a one-page role diagnosis before any CV is rendered, produces a tailored CV for each selected role, and writes a voice-anchored cover letter. The pipeline runs start to finish from one command — `Run [Country]` — and produces a complete session output folder.*
+>
+> *Setup takes about 5 minutes. I'll ask you a few questions about your career, which regions you're targeting, and a few preferences — then I'll write the config files and you're ready to search."*
+
+This gives new users a frame before they answer questions whose purpose they would otherwise have to guess at.
+
 ### Step 1 — Locate the career file
 
 Ask the user for the path to their career history file. Accept any format: `.txt`, `.md`, `.docx`, `.pdf`. Read it once. It will be the single source of truth for all factual content downstream.
@@ -51,7 +61,13 @@ I see three possible branches in your career:
 Confirm, edit, add, or remove?
 ```
 
-User accepts/edits. Write the final list to `branches.yaml`. See [`references/branches-detection.md`](./references/branches-detection.md) for the detection heuristic.
+User accepts/edits. For each confirmed branch, ask one follow-up question:
+
+> *"For [Branch name] roles, which past employer should appear as the third experience slot on the CV — the role that best proves this branch's credentials alongside your primary employer? This maps directly to `third_slot_company` in branches.yaml."*
+
+Propose the most likely answer from the career file (the role that overlaps most with the branch's keyword seeds) and let the user confirm or override. This field is **required** in branches.yaml. Without it, cv-tailor cannot resolve Slot 3 and will free-hand it, producing inconsistent CVs.
+
+Write the final list to `branches.yaml`. See [`references/branches-detection.md`](./references/branches-detection.md) for the detection heuristic.
 
 ### Step 3 — Regions
 
@@ -97,23 +113,66 @@ Default: `OPUS`. Write `cv.template: [choice]` to `config.yaml`.
 
 Ask: *"Which CV sections do you want by default? You can override per application."* Default-on: tagline, contact, summary, core_skills, experience, education, additional. Default-off: publications, certifications, volunteering. The user can toggle anything.
 
+### Step 6b — Inline bold
+
+Ask: *"Should selected phrases in your experience and education bullets appear in bold? Bold helps a recruiter's eye land on quantified outcomes (40+ clients, 30%) and recognizable credentials (Deloitte, Harvard Law Review) in a 6-second scan. But it's also increasingly read as an AI tell — many recruiters now treat heavy bold as a signal that the CV was AI-drafted.*
+
+*Here's the difference on a single bullet:*
+
+With bold:
+> Delivered market-entry research for **40+ multinational corporations**, cited by **Deloitte** and **Freedom House** across technology and media sectors.
+
+Without bold:
+> Delivered market-entry research for 40+ multinational corporations, cited by Deloitte and Freedom House across technology and media sectors.
+
+*Default is off. Turn it on if you want the emphasis."*
+
+Write `cv.inline_bold: true/false` to `config.yaml`. When `inline_bold: false`, the `convert_content_map()` helper in cv-tailor strips all `**` markers from every bullet before render — including experience, education, and any other field — so nothing renders bold regardless of what the content map contains.
+
 ### Step 7 — Output formats
 
 Ask: *"Output formats?"*
 - `docx` only — default, fast, no extra dependencies
 - `docx + pdf` — also renders PDF via LibreOffice. Warn: requires `libreoffice` on PATH, adds ~5 seconds per render, and runs an extra audit pass on the PDF (modest extra token cost).
 
-### Step 8 — Opinionation
+### Step 8 — Quality gates
 
-Ask: *"How strict do you want the framework to be?"*
-- `warn-once-then-comply` — default. Hard gates explain themselves on first bypass, then get out of the way.
-- `strict` — hard gates refuse outright. Recommended for users who have shipped broken outputs before and trust the framework's audit more than their own judgment.
+The framework has a few hard quality gates that protect output. The main one: it will not render a CV until it has written a one-page role diagnosis for that role first. If you try to skip the diagnosis, should the framework explain the gate once and then do it anyway, or refuse outright every time?
 
-### Step 9 — Write and confirm
+Ask: *"The pipeline has quality gates — the main one being that it diagnoses each role before rendering a CV, so the CV has a clear editorial brief behind every bullet. If you skip a gate, should I explain it the first time and then go ahead, or refuse every time?"*
+- `warn-once-then-comply` — default. Explains each gate the first time you bypass it in a session, then complies without repeating itself.
+- `strict` — refuses to bypass any gate. Worth choosing if you've shipped a broken or generic CV before and want the framework to hold the line even when you're in a hurry.
 
-Show the user the contents of the three files before writing. Confirm. Write. Done. Suggest a next command:
+### Step 9 — Write, confirm, and orient
 
-> *"Setup complete. Try `Run [your_primary_region]` to do a first job search, or `Run CV only: General` to render an untailored CV against your default template."*
+Show the user the contents of the three files before writing. Confirm. Write. Then give a complete orientation:
+
+**The full command catalog** — present this as the closing message so the user knows the whole surface area, not just one entry point:
+
+```
+Full pipeline
+  Run [Country/City]              Full search → diagnose → tailor → cover for that geography
+  Run [Country] | [Branch]        Same, scoped to one career branch
+  Run Remote                      Search remote boards; routes results to the Remote sheet
+  Run Remote | [Branch]           Remote, scoped to a branch
+
+Single document
+  Run CV only: [Branch]           Skip discovery; render one untailored CV for a branch
+  Run CV only: General            Skip discovery; broad-judgment CV with no branch
+  Run Request: [URL], [URL]       Diagnose, tailor, and cover specific job posting URLs
+
+Utilities
+  Run Blacklist: add [Company]    Add a company to the skip list
+  Run Blacklist: remove [Company] Remove a company from the skip list
+  Run Interview Prep: [Co], [Title]   Build an interview prep document for a role
+  Run Story Bank Refresh          Extract new STAR+R stories from your career file
+
+See CHEATSHEET.md at the repo root for a one-page reference.
+```
+
+**A note on connectors** — job discovery searches Indeed and, for LinkedIn and regional job boards, an Apify web scraper. The first time you run a search, the pipeline will walk you through connecting Apify. To save time, you can create a free account at apify.com now and have your API token ready. The detailed connector setup guide is in `skills/job-discovery/references/connector-setup.md`.
+
+**Where your output lives** — CVs, cover letters, and diagnoses are saved to `data/sessions/[dd.mm]/[Country or City]/`. The job log is at `data/job-log/Job Listings.xlsx`. Both paths are shown again at the end of every pipeline run.
 
 ## What this skill does not do
 

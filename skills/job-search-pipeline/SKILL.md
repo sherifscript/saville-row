@@ -43,7 +43,7 @@ At the start of every session in a saville-row repo:
 
 ## The full pipeline
 
-For a `Run [Country/City]` command, the pipeline runs:
+For a `Run [Country/City]` command, the pipeline runs start to finish from one prompt — no mid-run pauses, no confirmation checkpoints between stages:
 
 ```
 1. job-discovery   — search, blacklist filter, score, dedup, append to job log
@@ -55,6 +55,10 @@ For a `Run [Country/City]` command, the pipeline runs:
 ```
 
 Each stage gates the next: no diagnosis means no CV; a failed audit means the CV is not shipped.
+
+**No mid-run confirmation pauses.** Do not stop between stages to ask whether to proceed, whether to generate all CVs, or whether the selection looks right. Present the results table and the selected roles, then proceed immediately into diagnosis, CV rendering, and cover letters. The only interactive stop in a full-pipeline run is the branch-selection menu when a `Run [Country]` prompt names no branch — and only that.
+
+If a configurable safety valve is needed, it lives in config.yaml as `pipeline.confirm_before_render` (default false). Without that key explicitly set to true, the pipeline runs uninterrupted.
 
 ## Shortcut command DSL
 
@@ -84,6 +88,17 @@ When any stage fails, do not silently fall back. Stop, log to `data/Session Note
 ## Session notes
 
 After any session where something unexpected happened — low yield, language barriers, connector failures, market-specific limitations — append an entry to `data/Session Notes.txt` and tell the user one line about what was logged. Format in [`references/session-notes.md`](./references/session-notes.md).
+
+## Closing summary (after every full pipeline run)
+
+After a pipeline run completes, tell the user in plain text:
+
+1. **Session output folder** — the exact path where CVs, cover letters, and diagnoses were saved (e.g., `data/sessions/25.05/Cairo/`).
+2. **Job log location** — `data/job-log/Job Listings.xlsx`, and which sheet was updated.
+3. **What was produced** — a one-line count: "5 diagnoses, 5 CVs, 4 cover letters, 1 LinkedIn nudge file."
+4. **Any exceptions** — low yield, connector failures, or skipped cover letters (Egypt/Gulf local companies), stated in one sentence each.
+
+This summary makes it easy to find the output without hunting through folders, and gives a quick sanity-check on what the pipeline completed.
 
 ## Opinionation
 

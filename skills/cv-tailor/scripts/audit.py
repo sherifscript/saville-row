@@ -1,7 +1,7 @@
 """
 audit.py — post-render audit for tailored CVs.
 
-Implements the two programmatic checks of the five-question post-render audit
+Implements the programmatic checks of the post-render audit
 (see skills/cv-tailor/references/post-render-audit.md). The editorial checks (#1, #3)
 are run by the model, not here.
 
@@ -10,6 +10,10 @@ Programmatic checks:
   Check 4 — every & from the content_map survives into the rendered XML.
   Check 5 — bolded runs (<w:b/>) exist inside the experience section when the
             diagnosis specified bold-worthy phrases.
+  Check 6 — no em dashes in the rendered CV (employer-facing output; see
+            shared/conventions.md).
+  Check 7 — experience section is in strict reverse-chronological order and
+            the primary employer's contiguous block occupies slots 1 + 2.
 
 A CV that fails any check is NOT shipped.
 """
@@ -120,6 +124,70 @@ def check_5_bold_in_experience(document_xml, expect_bold):
     return ok, note
 
 
+def check_6_no_em_dashes(document_xml):
+    """Check 6: no em dashes in the rendered CV.
+
+    Em dashes (U+2014, —) are banned from all employer-facing output.
+    See shared/conventions.md.
+    """
+    text = _visible_text(document_xml)
+    em_dash_count = text.count("—")
+    ok = em_dash_count == 0
+    if ok:
+        note = "No em dashes found."
+    else:
+        note = (str(em_dash_count) + " em dash(es) found in rendered CV. "
+                "Replace with commas, periods, or restructure the sentence. "
+                "See shared/conventions.md.")
+    return ok, note
+
+
+def check_7_experience_structure(experiences):
+    """Check 7: experience list is reverse-chronological and the primary
+    employer's contiguous block holds slots 1 + 2.
+
+    `experiences` is the list of dicts from the content_map (before rendering).
+    Each dict must have: company, title, end_year (int; use 9999 for 'Present').
+
+    Returns (ok, note). Returns (True, skip-note) if experiences has fewer
+    than 2 entries or if end_year keys are absent — those cases need manual
+    review, not a hard fail.
+    """
+    if not experiences or len(experiences) < 2:
+        return True, "Fewer than 2 experience entries; structure check skipped."
+
+    if not all("end_year" in e for e in experiences):
+        return True, ("end_year not present on all entries; "
+                      "chronology check requires manual review.")
+
+    # Check strict reverse-chronological order
+    years = [e["end_year"] for e in experiences]
+    if years != sorted(years, reverse=True):
+        return False, (
+            "Experience entries are not in strict reverse-chronological order. "
+            "Order: " + str([str(e.get("company", "?")) + " " + str(e.get("end_year"))
+                             for e in experiences]) + ". "
+            "Most recent role (highest end_year) must be slot 1. "
+            "Ongoing roles use end_year=9999."
+        )
+
+    # Check that slots 1 and 2 share the same employer (contiguous block rule)
+    slot1_company = experiences[0].get("company", "")
+    slot2_company = experiences[1].get("company", "") if len(experiences) > 1 else ""
+    if slot1_company and slot2_company and slot1_company != slot2_company:
+        return False, (
+            "Slots 1 and 2 are different employers ("
+            + str(slot1_company) + " vs " + str(slot2_company) + "). "
+            "When the candidate has two adjacent roles at the same primary employer "
+            "(e.g., Statista Expert + Statista Assistant), they must occupy slots "
+            "1 + 2 as a contiguous block. See "
+            "skills/cv-tailor/references/experience-slot-logic.md."
+        )
+
+    return True, ("Experience structure valid: reverse-chronological; "
+                  "slots 1 + 2 share employer " + str(slot1_company) + ".")
+
+
 def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
                    expected_keywords, expect_bold=True):
     """Run the programmatic audit checks. Returns an AuditResult.
@@ -141,6 +209,15 @@ def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
     ok5, note5 = check_5_bold_in_experience(document_xml, expect_bold)
     result.passed["check_5_bold"] = ok5
     result.notes["check_5_bold"] = note5
+
+    ok6, note6 = check_6_no_em_dashes(document_xml)
+    result.passed["check_6_em_dashes"] = ok6
+    result.notes["check_6_em_dashes"] = note6
+
+    experiences = content_map.get("experiences", [])
+    ok7, note7 = check_7_experience_structure(experiences)
+    result.passed["check_7_structure"] = ok7
+    result.notes["check_7_structure"] = note7
 
     return result
 

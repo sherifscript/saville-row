@@ -44,6 +44,15 @@ cv:
   # General). Leave null to let the diagnosis pick by broad judgment.
   default_third_slot: null
 
+  # Inline bold in experience and education bullets.
+  # When true, **phrase** markers in bullets render as bold runs — a recruiter's
+  # eye lands on quantified outcomes and credential proper nouns first.
+  # When false, all ** markers are stripped and bullets render plain.
+  # Default false — bold is increasingly read by recruiters as an AI tell.
+  # Change to true only if you have verified the OPUS template produces
+  # selective emphasis (4-8 bold items total) rather than over-bolding.
+  inline_bold: false
+
   # Which CV sections appear, and in what order. Toggleable sections can be
   # removed. tagline / contact / experience / education are required and
   # cannot be removed. A diagnosis can override this per application.

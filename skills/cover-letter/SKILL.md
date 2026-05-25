@@ -57,7 +57,7 @@ If yes, cut or rewrite it. This single test catches the AI-template smell that v
 
 ## Format
 
-Plain text, no styling:
+Plain text, no styling, no bold anywhere — including the signature:
 
 ```
 Dear Hiring Manager,
@@ -68,7 +68,7 @@ Best regards,
 Jordan Park
 ```
 
-Last name in bold only. (The framework default uses the candidate's name from `config.yaml`.)
+The candidate's name comes from `config.yaml`. No bold on any part of the name. No em dashes anywhere in the letter.
 
 ## Save location
 

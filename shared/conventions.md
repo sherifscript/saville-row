@@ -59,6 +59,18 @@ Date folders use `dd.mm`. Timestamps in the job log use `H:MM AM/PM DD.MM.YY`. B
 
 A "Run Cairo" session puts its documents in `data/sessions/[dd.mm]/Cairo/` but routes job-log rows to the Egypt sheet. See `skills/job-discovery/references/regional-sheet-mapping.md`.
 
+## Em dashes in employer-facing output
+
+**Em dashes (—) never appear in any candidate-facing or employer-facing output.** This covers CVs, cover letters, LinkedIn nudges, and interview-prep documents.
+
+Use commas, periods, or parentheses instead, or restructure the sentence. Em dashes are a recognized AI-generation tell and a screening risk. This rule applies regardless of how naturally an em dash might read in the context.
+
+Scope:
+- ✅ Ban: CVs (tagline, summary, bullets, additional), cover letters, LinkedIn nudges, interview prep docs
+- ✅ Allowed: internal artifacts — diagnosis files, session notes, SKILL.md documentation
+
+Every skill that generates employer-facing output must enforce this rule and check it before shipping. The post-render audit (`cv-tailor/scripts/audit.py`) includes a programmatic em-dash check. The cover-letter skill already bans em dashes in its own rules. `interview-prep` and the LinkedIn nudge section of `cover-letter` must apply the same rule.
+
 ## What is committed vs. what is not
 
 **Committed (the framework):** all `SKILL.md` files under `skills/`, all `references/`, all `scripts/`, all `templates/`, `shared/*.example.yaml`, `shared/conventions.md`, the root `README.md`, `LICENSE`, `.claude-plugin/`, `settings.json`, `CONNECTORS.md`, `examples/showcase/`.

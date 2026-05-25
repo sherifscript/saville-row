@@ -66,6 +66,21 @@ the tagline, summary, core skills, and at least two experience bullets.
 - [keyword 1]
 - [keyword 2]
 - ...
+
+## Honest assessment (optional)
+
+One sentence. Is the candidacy a strong match, a stretch, or a reach?
+Name the largest risk plainly. This section is for the candidate's eyes
+only — it never enters the CV or cover letter. It is most useful on
+stretch or borderline roles where the cover letter will need to address
+an obvious objection.
+
+Examples:
+- "Strong match: the Statista tenure directly mirrors the core ask."
+- "Stretch: seniority is right but no public-sector context; cover
+  letter should address the gap head-on."
+- "Reach: three of five required skills are absent from the career
+  file; proceed only if the Match Score rationale is compelling."
 ```
 
 ## How to write each section well

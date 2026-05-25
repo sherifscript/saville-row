@@ -71,6 +71,8 @@ Column order: `Source, Selected, Timestamp, #, Job Title, Company, Location, Job
 
 `data/Blacklist.txt`. Loaded at session start. Any company matching an entry is excluded from results, the table, the job log, and all downstream processing. `Run Blacklist: add/remove [Company]` edits the file and confirms — no other workflow steps run.
 
+**Create if absent.** If `data/Blacklist.txt` does not exist at session start, create it as an empty file before proceeding. Do not treat a missing blacklist as an error — it simply means no companies are currently blacklisted. Log the creation in session notes only if something else unexpected also occurred that session.
+
 ## Files referenced
 
 - [`references/connector-setup.md`](./references/connector-setup.md) — one-time setup + the plug-and-play pattern for adding boards

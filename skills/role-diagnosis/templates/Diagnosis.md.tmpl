@@ -25,3 +25,9 @@
 {% for kw in verbatim_keywords %}
 - {{ kw }}
 {% endfor %}
+
+{% if honest_assessment %}
+## Honest assessment
+
+{{ honest_assessment }}
+{% endif %}

@@ -54,6 +54,10 @@ See [`references/story-mapping.md`](./references/story-mapping.md). The STAR+R f
 
 2–3 smart questions for the candidate to ask the interviewer, grounded in the role snapshot diagnosis. Questions that show the candidate has understood the real problem.
 
+## Em dashes
+
+Em dashes (—) are banned from the interview prep document. It is employer-facing. Use commas, periods, or restructure the sentence instead. See `${CLAUDE_PLUGIN_ROOT}/shared/conventions.md`.
+
 ## Save location
 
 ```

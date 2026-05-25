@@ -100,6 +100,20 @@ proof. A bullet with no quantified outcome and no credential proper noun has
 nothing to bold — leave it plain. **Bolding everything is the same as bolding
 nothing.**
 
+## Contact-line hyperlinks
+
+The personal site and LinkedIn links in contact line 2 must render as **real clickable hyperlinks** in the .docx output — not plain text. The baseline OPUS CV carried these as Word hyperlink relationships; the plugin's render path must preserve or recreate them.
+
+**How to add hyperlinks in docxtpl:** docxtpl does not natively produce hyperlink relationships from plain text. The two reliable approaches:
+
+1. **Embed the hyperlinks in the template.** The OPUS_Template.docx should have the personal site and LinkedIn URLs pre-wired as hyperlink elements in contact line 2, with the display text as placeholders. docxtpl inherits them during render. Preferred — the template does the work once.
+
+2. **Build them in `render_cv.py` via python-docx post-processing.** After `tpl.save()`, reopen the file with `python-docx`, locate the contact-line-2 paragraph, delete the plain-text URL runs, and inject hyperlink relationships. More fragile but works if the template cannot be modified.
+
+**What "plain text URL" means to a recruiter:** a PDF viewer and Word both make clickable links from `https://` strings automatically, but a `.docx` attachment opened in a corporate email environment may not. A real hyperlink relationship ensures the link is clickable in every context.
+
+**Post-render verification:** after rendering, check that `word/_rels/document.xml.rels` contains at least two `Relationship` entries with `Type=".../hyperlink"`. If it contains zero, the links are plain text and must be fixed before shipping.
+
 ## When unpack/edit/repack is allowed
 
 Never as part of the daily build. The daily build is always docxtpl render against a pre-built template.
