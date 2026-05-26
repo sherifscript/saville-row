@@ -5,6 +5,7 @@
   "plugins": [
     {
       "name": "saville-row",
+      "displayName": "SavilleRow",
       "source": "./",
       "description": "A diagnosis-first job search system: discover, diagnose, tailor, cover, interview prep, story bank."
     }
