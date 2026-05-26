@@ -3,6 +3,37 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.3.0] — 2026-05-26
+
+### Breaking changes
+- Workspace layout restructured. Config files (config.yaml, branches.yaml,
+  regional-headers.yaml, connectors.yaml) now live in `config/` instead of
+  the repo root. Career file, voice references, Blacklist.txt, and the story
+  bank now live in `assets/`. The job log is at `job-log/`. Dated session
+  output ([dd.mm]/) lands at the repo root rather than under `data/sessions/`.
+
+### Migration from v1.2.0
+1. `mkdir config assets job-log`
+2. Move config.yaml, branches.yaml, regional-headers.yaml, connectors.yaml → config/
+3. Move data/career.md, data/voice/, data/Blacklist.txt,
+   data/Interview\ Story\ Bank.txt, data/Session\ Notes.txt → assets/
+4. Move data/job-log/ contents → job-log/
+5. Existing data/sessions/[dd.mm]/ folders can stay or be moved to the repo root.
+6. Delete the now-empty data/ folder if desired.
+7. Add a `paths:` block to config/config.yaml only if you want non-default
+   locations — the defaults match the new layout exactly.
+
+### Added
+- `shared/scripts/path_utils.py` — single source of truth for all workspace paths
+- `paths:` block in config.example.yaml — makes layout a config decision
+
+### Changed
+- All skills updated to reference paths block keys instead of hardcoded strings
+- .gitignore: replaced `data/` with specific rules for config/, assets/,
+  job-log/, interview-prep/, and [dd.mm]/ folders
+
+---
+
 ## v1.2.0 — 2026-05-24
 
 Plugin conversion.

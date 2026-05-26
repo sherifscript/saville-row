@@ -2,8 +2,8 @@
 name: cover-letter
 description: Write voice-anchored cover letters under 300 words, no em dashes, with an opener load-bearing on the role's specifics. Refuses to draft without a voice reference. Also drafts LinkedIn recruiter nudges.
 metadata:
-  version: 1.2.0
-  last_updated: 2026-05-24
+  version: 1.3.0
+  last_updated: 2026-05-26
 ---
 
 # cover-letter
@@ -73,7 +73,7 @@ The candidate's name comes from `config.yaml`. No bold on any part of the name. 
 ## Save location
 
 ```
-data/sessions/[dd.mm]/[Country or City]/Cover Letter - [Company] - [Job Title].docx
+paths.session_output_dir/[dd.mm]/[Country or City]/Cover Letter - [Company] - [Job Title].docx
 ```
 
 ## LinkedIn recruiter nudge

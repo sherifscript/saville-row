@@ -2,8 +2,8 @@
 name: job-discovery
 description: Search job boards (Indeed, Apify-LinkedIn, and adapter-configured platforms), score roles against the candidate, deduplicate, and append to an append-only Excel job log with backup-before-touch safety.
 metadata:
-  version: 1.2.0
-  last_updated: 2026-05-24
+  version: 1.3.0
+  last_updated: 2026-05-26
 ---
 
 # job-discovery
@@ -59,7 +59,7 @@ Generate two tables: one for direct-connector (~~job board) results, one for ~~w
 
 ## The job log — append-only
 
-The job log is `data/job-log/Job Listings.xlsx`. It is a **permanent record**. All writes are additive. Before any access (including read-only), back it up to `data/job-log/Backup/Job Listings — [DD.MM.YY HH.MM].xlsx`.
+The job log is `paths.job_log_dir`/Job Listings.xlsx. It is a **permanent record**. All writes are additive. Before any access (including read-only), back it up to `paths.job_log_dir`/Backup/Job Listings — [DD.MM.YY HH.MM].xlsx.
 
 The full safety rules — never overwrite, never use a backup as a working base, hard-stop on a locked file in interactive sessions, separate-file fallback in unattended sessions — are in [`references/append-only-safety.md`](./references/append-only-safety.md). This is the single most important file in the skill. Read it.
 
@@ -69,9 +69,9 @@ Column order: `Source, Selected, Timestamp, #, Job Title, Company, Location, Job
 
 ## Blacklist
 
-`data/Blacklist.txt`. Loaded at session start. Any company matching an entry is excluded from results, the table, the job log, and all downstream processing. `Run Blacklist: add/remove [Company]` edits the file and confirms — no other workflow steps run.
+`paths.assets_dir`/Blacklist.txt. Loaded at session start. Any company matching an entry is excluded from results, the table, the job log, and all downstream processing. `Run Blacklist: add/remove [Company]` edits the file and confirms — no other workflow steps run.
 
-**Create if absent.** If `data/Blacklist.txt` does not exist at session start, create it as an empty file before proceeding. Do not treat a missing blacklist as an error — it simply means no companies are currently blacklisted. Log the creation in session notes only if something else unexpected also occurred that session.
+**Create if absent.** If `paths.assets_dir`/Blacklist.txt does not exist at session start, create it as an empty file before proceeding. Do not treat a missing blacklist as an error — it simply means no companies are currently blacklisted. Log the creation in session notes only if something else unexpected also occurred that session.
 
 ## Files referenced
 

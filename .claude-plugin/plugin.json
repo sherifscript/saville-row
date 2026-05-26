@@ -1,6 +1,6 @@
 {
   "name": "saville-row",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "A diagnosis-first job search system. Eight skills covering the full pipeline: discover, diagnose, tailor, cover, interview prep, and story bank.",
   "author": { "name": "sherifscript" },
   "homepage": "https://github.com/sherifscript/saville-row",

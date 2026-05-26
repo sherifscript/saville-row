@@ -2,8 +2,8 @@
 name: job-search-pipeline
 description: Orchestrator for saville-row. Chains discover → diagnose → tailor → cover → audit. Owns the shortcut-command DSL (Run [Country], Run CV only, Run Request, Run Blacklist, Run Interview Prep, Run Story Bank Refresh).
 metadata:
-  version: 1.2.0
-  last_updated: 2026-05-24
+  version: 1.3.0
+  last_updated: 2026-05-26
 ---
 
 # job-search-pipeline
@@ -36,10 +36,11 @@ Match user intent to the correct skill before doing anything else:
 
 At the start of every session in a saville-row repo:
 
-1. Confirm `config.yaml` exists. If not, route to `job-search-setup`.
-2. Load `config.yaml`, `branches.yaml`, `regional-headers.yaml`, `connectors.yaml`.
-3. Load `data/Blacklist.txt` into memory.
-4. Read `data/Session Notes.txt` if it exists — use prior findings (market-specific yield issues, connector flakiness) as context.
+1. Confirm `config.yaml` exists (check `config/config.yaml` first, then repo root for v1.2.0 backwards compatibility). If not, route to `job-search-setup`.
+2. Load `config.yaml`, `branches.yaml`, `regional-headers.yaml`, `connectors.yaml` from `config.yaml > paths.config_dir`.
+3. Load `config.yaml > paths` block — all downstream skills read workspace paths from this block instead of hardcoding them.
+4. Load `paths.assets_dir`/Blacklist.txt into memory.
+5. Read `paths.assets_dir`/Session Notes.txt if it exists — use prior findings (market-specific yield issues, connector flakiness) as context.
 
 ## The full pipeline
 
@@ -83,18 +84,18 @@ Selected roles get `✓` in the job log's Selected column and a green row fill.
 
 ## Failure recovery
 
-When any stage fails, do not silently fall back. Stop, log to `data/Session Notes.txt`, notify the user. The failure-recovery rules per stage are in [`references/failure-recovery.md`](./references/failure-recovery.md).
+When any stage fails, do not silently fall back. Stop, log to `paths.assets_dir`/Session Notes.txt, notify the user. The failure-recovery rules per stage are in [`references/failure-recovery.md`](./references/failure-recovery.md).
 
 ## Session notes
 
-After any session where something unexpected happened — low yield, language barriers, connector failures, market-specific limitations — append an entry to `data/Session Notes.txt` and tell the user one line about what was logged. Format in [`references/session-notes.md`](./references/session-notes.md).
+After any session where something unexpected happened — low yield, language barriers, connector failures, market-specific limitations — append an entry to `paths.assets_dir`/Session Notes.txt and tell the user one line about what was logged. Format in [`references/session-notes.md`](./references/session-notes.md).
 
 ## Closing summary (after every full pipeline run)
 
 After a pipeline run completes, tell the user in plain text:
 
-1. **Session output folder** — the exact path where CVs, cover letters, and diagnoses were saved (e.g., `data/sessions/25.05/Cairo/`).
-2. **Job log location** — `data/job-log/Job Listings.xlsx`, and which sheet was updated.
+1. **Session output folder** — the exact path where CVs, cover letters, and diagnoses were saved (e.g., `paths.session_output_dir`/25.05/Cairo/).
+2. **Job log location** — `paths.job_log_dir`/Job Listings.xlsx, and which sheet was updated.
 3. **What was produced** — a one-line count: "5 diagnoses, 5 CVs, 4 cover letters, 1 LinkedIn nudge file."
 4. **Any exceptions** — low yield, connector failures, or skipped cover letters (Egypt/Gulf local companies), stated in one sentence each.
 

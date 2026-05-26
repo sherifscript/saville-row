@@ -2,8 +2,8 @@
 name: job-search-setup
 description: First-run wizard for saville-row. Reads the candidate's career file, proposes branches, prompts for voice references and regions, writes config.yaml. Run once per repo before any other skill.
 metadata:
-  version: 1.2.0
-  last_updated: 2026-05-24
+  version: 1.3.0
+  last_updated: 2026-05-26
 ---
 
 # job-search-setup
@@ -11,12 +11,12 @@ metadata:
 ## When to activate
 
 - User says "set up saville-row", "first run", "I just cloned this", "configure saville-row"
-- User invokes any other skill and `config.yaml` does not exist at the repo root → suggest setup first
+- User invokes any other skill and `config.yaml` does not exist (checked at `config/config.yaml`, then repo root for v1.2.0 compatibility) → suggest setup first
 
 ## What it does
 
-Walks the candidate through a single conversation that produces three files at the repo root:
-- `config.yaml` — global settings (opinionation, output formats, voice reference paths, template choice)
+Walks the candidate through a single conversation that produces three files in `paths.config_dir`/ (default: `config/`):
+- `config.yaml` — global settings (opinionation, output formats, voice reference paths, template choice, paths block)
 - `branches.yaml` — career branches auto-detected from the career file, confirmed by the user
 - `regional-headers.yaml` — header variants for each target region
 
@@ -82,7 +82,7 @@ Citizenship line: [if applicable]
 Trailing fields: [LinkedIn, personal site, etc.]
 ```
 
-Smart defaults for US / UK / EU / Gulf / Egypt are shipped in `${CLAUDE_PLUGIN_ROOT}/shared/regional-headers.example.yaml`. The setup skill copies the relevant ones into `regional-headers.yaml` and asks the user to fill in personal details (their address, phone, etc.).
+Smart defaults for US / UK / EU / Gulf / Egypt are shipped in `${CLAUDE_PLUGIN_ROOT}/shared/regional-headers.example.yaml`. The setup skill copies the relevant ones into `paths.config_dir`/regional-headers.yaml and asks the user to fill in personal details (their address, phone, etc.).
 
 For regions not in the defaults (Singapore, Australia, Brazil, etc.), prompt the user for the convention and write a new entry.
 
@@ -145,7 +145,7 @@ Ask: *"The pipeline has quality gates — the main one being that it diagnoses e
 
 ### Step 9 — Write, confirm, and orient
 
-Show the user the contents of the three files before writing. Confirm. Write. Then give a complete orientation:
+Show the user the contents of the three files before writing. Confirm. Create `paths.config_dir`/ (default: `config/`) if it does not exist, and write all three config files there. Create `paths.assets_dir`/ (default: `assets/`) and place the career file in it. Then give a complete orientation:
 
 **The full command catalog** — present this as the closing message so the user knows the whole surface area, not just one entry point:
 
@@ -172,7 +172,7 @@ See CHEATSHEET.md at the repo root for a one-page reference.
 
 **A note on connectors** — job discovery searches Indeed and, for LinkedIn and regional job boards, an Apify web scraper. The first time you run a search, the pipeline will walk you through connecting Apify. To save time, you can create a free account at apify.com now and have your API token ready. The detailed connector setup guide is in `skills/job-discovery/references/connector-setup.md`.
 
-**Where your output lives** — CVs, cover letters, and diagnoses are saved to `data/sessions/[dd.mm]/[Country or City]/`. The job log is at `data/job-log/Job Listings.xlsx`. Both paths are shown again at the end of every pipeline run.
+**Where your output lives** — CVs, cover letters, and diagnoses are saved to `paths.session_output_dir`/[dd.mm]/[Country or City]/ (by default, dated folders at the repo root). The job log is at `paths.job_log_dir`/Job Listings.xlsx. Config files are in `paths.config_dir`/. Career file and voice references are in `paths.assets_dir`/. All paths are shown again at the end of every pipeline run and can be customized in `config.yaml > paths`.
 
 ## What this skill does not do
 

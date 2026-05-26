@@ -2,8 +2,8 @@
 name: story-bank
 description: Maintain a library of STAR+R behavioral interview stories drawn from the candidate's career file. Refresh extracts new stories without duplicating or inventing. Read by interview-prep.
 metadata:
-  version: 1.2.0
-  last_updated: 2026-05-24
+  version: 1.3.0
+  last_updated: 2026-05-26
 ---
 
 # story-bank
@@ -16,7 +16,7 @@ metadata:
 
 ## What it does
 
-Maintains `data/Interview Story Bank.txt` — the single source of structured behavioral interview stories. Stories are seeded from the candidate's career file and maintained either via `Run Story Bank Refresh` or manual additions.
+Maintains `paths.assets_dir`/Interview Story Bank.txt — the single source of structured behavioral interview stories. Stories are seeded from the candidate's career file and maintained either via `Run Story Bank Refresh` or manual additions.
 
 The story bank is **not** read at session start. It is only loaded when `interview-prep` runs or `story-bank` is explicitly invoked.
 
@@ -24,7 +24,7 @@ The story bank is **not** read at session start. It is only loaded when `intervi
 
 1. Read the candidate's career file in full.
 2. Extract every moment strong enough for a behavioral interview — moments of decision, impact, failure, leadership, or insight.
-3. For each story **not already present** in `data/Interview Story Bank.txt`, add it in STAR+R format.
+3. For each story **not already present** in `paths.assets_dir`/Interview Story Bank.txt, add it in STAR+R format.
 4. Do not duplicate existing entries.
 5. Do not invent or embellish any detail not present in the career file.
 
@@ -61,7 +61,7 @@ The user can add a story directly: *"Add a story about the time I turned around 
 ## Save location
 
 ```
-data/Interview Story Bank.txt
+paths.assets_dir/Interview Story Bank.txt
 ```
 
 ## Files referenced

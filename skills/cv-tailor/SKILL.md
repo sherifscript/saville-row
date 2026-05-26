@@ -2,8 +2,8 @@
 name: cv-tailor
 description: Render diagnosis-driven, ATS-optimized CVs as .docx via docxtpl. Modular section composition, region-aware headers, inline-bold helper, and a mandatory five-question post-render audit that catches named historical failure modes.
 metadata:
-  version: 1.2.0
-  last_updated: 2026-05-24
+  version: 1.3.0
+  last_updated: 2026-05-26
 ---
 
 # cv-tailor
@@ -135,13 +135,13 @@ The template (`${CLAUDE_PLUGIN_ROOT}/templates/[chosen]/`) ships every possible 
 ## Output
 
 ```
-data/sessions/[dd.mm]/[Country or City]/CV - [Company] - [Job Title].docx
+paths.session_output_dir/[dd.mm]/[Country or City]/CV - [Company] - [Job Title].docx
 ```
 
 For `Run CV only`:
 
 ```
-data/sessions/[dd.mm]/[Branch] CV.docx
+paths.session_output_dir/[dd.mm]/[Branch] CV.docx
 ```
 
 (no Company/Job Title in filename — no specific JD)

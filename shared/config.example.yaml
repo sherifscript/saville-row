@@ -1,7 +1,7 @@
 # =============================================================================
 # config.example.yaml — saville-row configuration
 #
-# Copy this file to `config.yaml` at the repo root and fill it in. The
+# Copy this file to `config/config.yaml` and fill it in. The
 # `job-search-setup` skill writes this file for you interactively; this
 # annotated copy is for users who prefer to edit it by hand.
 #
@@ -17,7 +17,18 @@ candidate:
   # Path to your career history file. Free-form text or markdown — there is
   # NO template to fill. Write your career however you like; the skills
   # parse it. This is the single source of truth for all factual content.
-  career_file: "data/career.md"
+  career_file: "assets/career.md"
+
+
+# Where the plugin reads and writes files. All paths are relative to the
+# repo root. Change these if you want a different layout — every skill reads
+# this block at session start rather than hardcoding paths.
+paths:
+  config_dir: "config"              # config.yaml, branches.yaml, regional-headers.yaml, connectors.yaml
+  assets_dir: "assets"             # career file, voice references, Blacklist.txt, story bank, session notes
+  job_log_dir: "job-log"           # Job Listings.xlsx and Backup/
+  session_output_dir: "."          # dated [dd.mm] folders land at repo root by default
+  interview_prep_dir: "interview-prep"
 
 
 cv:
@@ -97,9 +108,9 @@ cover_letter:
 # skills/job-search-setup/references/voice-references.md.
 voice_references:
   cv_summary:
-    - "data/voice/old-cv-summary.md"
+    - "assets/voice/old-cv-summary.md"
   cover_letter:
-    - "data/voice/cover-letter-sample.txt"
+    - "assets/voice/cover-letter-sample.txt"
   interview_prep: []      # empty list = no voice anchoring for this skill
   linkedin_nudge: []
 

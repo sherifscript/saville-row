@@ -20,7 +20,7 @@ Full pipeline for location-independent roles. `Run Remote`, `Run Remote | Produc
 
 - **Search scope is remote-first.** It searches the dedicated remote boards configured in `connectors.yaml` (HiringCafe, We Work Remotely, Remote OK, Working Nomads by default) **and** applies the remote filter on the primary connectors (Indeed, LinkedIn). See `job-discovery/references/connector-routing.md`.
 - **Sheet routing:** a globally-remote role with no country restriction routes to the **Remote** sheet — the one deliberate exception to country-named sheets. A remote role that *is* country-restricted ("Remote, US only", "Remote within Germany") routes to that country's sheet instead. See `job-discovery/references/regional-sheet-mapping.md`.
-- **Session folder:** `data/sessions/[dd.mm]/Remote/`.
+- **Session folder:** `paths.session_output_dir`/[dd.mm]/Remote/.
 - Branch menu and the rest of the pipeline (diagnosis → cv-tailor → cover-letter → nudges → session notes) are identical to `Run [Country]`.
 
 Natural-language variants map to this command: "run the workflow remote", "run remote jobs", "search remote", "find me remote roles" all resolve to `Run Remote`. If a branch is named in the same breath ("run remote product management"), treat it as `Run Remote | Product Management`.
@@ -31,7 +31,7 @@ Skip discovery and diagnosis. Produce one untailored CV using the branch context
 
 - Present the region menu, wait for a pick, then use that region's header.
 - No JD, so the diagnosis step (role-diagnosis) is skipped — generate the content map from broad branch judgment.
-- Save to `data/sessions/[dd.mm]/[Branch] CV.docx` (or `General CV.docx`). No country subfolder.
+- Save to `paths.session_output_dir`/[dd.mm]/[Branch] CV.docx (or `General CV.docx`). No country subfolder.
 
 ## `Run Request: [URL], [URL], [URL]`
 
@@ -44,20 +44,20 @@ Process specific job postings. Skip the discovery search and the branch menu. Fo
 - Dedup-check against the country sheet; append non-duplicates. Create the sheet if needed.
 - Set `Source` to `Request` (append the inferred branch in parentheses if one is clear: `Request (Product Management)`).
 - Run full diagnosis → cv-tailor → cover-letter.
-- Save to `data/sessions/[dd.mm]/Requests/`.
+- Save to `paths.session_output_dir`/[dd.mm]/Requests/.
 
 ## `Run Blacklist: add [Company], [Company]`
 ## `Run Blacklist: remove [Company], [Company]`
 
-Edit `data/Blacklist.txt`. Confirm the change. No other pipeline steps run.
+Edit `paths.assets_dir`/Blacklist.txt. Confirm the change. No other pipeline steps run.
 
 ## `Run Interview Prep: [Company], [Job Title]`
 
-Invoke the `interview-prep` skill. Pull the JD from the job log's Apply Link if the role is logged, else search. Produce the prep document in `data/interview-prep/`.
+Invoke the `interview-prep` skill. Pull the JD from the job log's Apply Link if the role is logged, else search. Produce the prep document in `paths.interview_prep_dir`/.
 
 ## `Run Story Bank Refresh`
 
-Invoke the `story-bank` skill's refresh protocol. Extract new STAR+R stories from the career file into `data/Interview Story Bank.txt`. No duplicates, no invention.
+Invoke the `story-bank` skill's refresh protocol. Extract new STAR+R stories from the career file into `paths.assets_dir`/Interview Story Bank.txt. No duplicates, no invention.
 
 ## Extending the DSL
 

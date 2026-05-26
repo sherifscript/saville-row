@@ -2,8 +2,8 @@
 name: role-diagnosis
 description: Produce a one-page Diagnosis.md for a target role before any CV or cover letter is rendered. Five sections — what the team is hiring to fix, 90-day deliverables, the real bar, strongest credential, verbatim JD keywords. Hard gate for cv-tailor and cover-letter.
 metadata:
-  version: 1.2.0
-  last_updated: 2026-05-24
+  version: 1.3.0
+  last_updated: 2026-05-26
 ---
 
 # role-diagnosis
@@ -55,10 +55,10 @@ See [`references/branch-resolution.md`](./references/branch-resolution.md).
 Always saved to the same folder the CV will be saved to:
 
 ```
-data/sessions/[dd.mm]/[Country or City]/Diagnosis - [Company] - [Job Title].md
+paths.session_output_dir/[dd.mm]/[Country or City]/Diagnosis - [Company] - [Job Title].md
 ```
 
-For the `Run Request` shortcut: `data/sessions/[dd.mm]/Requests/Diagnosis - [Company] - [Job Title].md`.
+For the `Run Request` shortcut: `paths.session_output_dir`/[dd.mm]/Requests/Diagnosis - [Company] - [Job Title].md.
 
 For `Run CV only` (no specific JD): the diagnosis step is skipped entirely; cv-tailor uses broad branch judgment instead.
 

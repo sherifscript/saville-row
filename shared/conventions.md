@@ -2,41 +2,34 @@
 
 Shared conventions every skill follows. If a skill's behavior seems to conflict with this file, this file is authoritative for naming and paths.
 
-## Repo root files
+## Config files
 
-| File | Purpose | Committed? |
+| File | Location | Committed? |
 | --- | --- | --- |
-| `config.yaml` | global settings | No (gitignored) |
-| `branches.yaml` | career branches | No (gitignored) |
-| `regional-headers.yaml` | header variants | No (gitignored) |
-| `connectors.yaml` | job board connectors | No (gitignored) |
-| `config.example.yaml` etc. (in `shared/`) | annotated templates | Yes |
+| `config.yaml` | `config/` | No (gitignored) |
+| `branches.yaml` | `config/` | No (gitignored) |
+| `regional-headers.yaml` | `config/` | No (gitignored) |
+| `connectors.yaml` | `config/` | No (gitignored) |
+| `config.example.yaml` etc. (in `shared/`) | `shared/` | Yes |
 
-The `.yaml` files contain personal data and are gitignored. The `.example.yaml` files in `shared/` are the committed templates.
+The live `.yaml` files contain personal data and live in `config/`, which is gitignored. The `.example.yaml` files in `shared/` are the committed templates.
 
-## The data/ folder
+## Workspace layout
 
-Everything the user generates lives under `data/`, which is gitignored in full:
+Everything the user generates lives in four gitignored directories at the repo root. Paths are configurable via `config.yaml > paths`; defaults are shown below:
 
 ```
-data/
-├── career.md                       # the candidate's career file
-├── Blacklist.txt                    # blacklisted companies
-├── Session Notes.txt                # the running anomaly log
-├── Interview Story Bank.txt          # STAR+R story library
-├── voice/                            # voice reference files
-├── job-log/
-│   ├── Job Listings.xlsx             # the append-only job log
-│   └── Backup/                       # timestamped backups
-├── interview-prep/                   # interview prep documents
-└── sessions/
-    └── [dd.mm]/                      # one folder per working day
-        ├── [Country or City]/        # per-geography subfolder
-        │   ├── Diagnosis - [Company] - [Job Title].md
-        │   ├── CV - [Company] - [Job Title].docx
-        │   ├── Cover Letter - [Company] - [Job Title].docx
-        │   └── LinkedIn Messages.txt
-        └── Requests/                 # output of the Run Request command
+config/                              # config.yaml, branches.yaml, regional-headers.yaml, connectors.yaml
+assets/                              # career.md, voice/, Blacklist.txt, Interview Story Bank.txt, Session Notes.txt
+job-log/                             # Job Listings.xlsx and Backup/
+[dd.mm]/                             # dated session output at repo root
+    [Country or City]/               # per-geography subfolder
+        Diagnosis - [Company] - [Job Title].md
+        CV - [Company] - [Job Title].docx
+        Cover Letter - [Company] - [Job Title].docx
+        LinkedIn Messages.txt
+    Requests/                        # output of the Run Request command
+interview-prep/                      # interview prep documents
 ```
 
 ## File naming
@@ -57,7 +50,7 @@ Date folders use `dd.mm`. Timestamps in the job log use `H:MM AM/PM DD.MM.YY`. B
 - **Job log sheets** are always country-named (Egypt, Denmark, ...). Never city-named.
 - **Session folders** use whatever the prompt specified (Cairo, Copenhagen, ...).
 
-A "Run Cairo" session puts its documents in `data/sessions/[dd.mm]/Cairo/` but routes job-log rows to the Egypt sheet. See `skills/job-discovery/references/regional-sheet-mapping.md`.
+A "Run Cairo" session puts its documents in `[dd.mm]/Cairo/` at the repo root (or wherever `paths.session_output_dir` points) but routes job-log rows to the Egypt sheet. See `skills/job-discovery/references/regional-sheet-mapping.md`.
 
 ## Em dashes in employer-facing output
 
@@ -75,7 +68,7 @@ Every skill that generates employer-facing output must enforce this rule and che
 
 **Committed (the framework):** all `SKILL.md` files under `skills/`, all `references/`, all `scripts/`, all `templates/`, `shared/*.example.yaml`, `shared/conventions.md`, the root `README.md`, `LICENSE`, `.claude-plugin/`, `settings.json`, `CONNECTORS.md`, `examples/showcase/`.
 
-**Never committed (the user's data):** `data/` in full, the live `config.yaml` / `branches.yaml` / `regional-headers.yaml` / `connectors.yaml`. All covered by `.gitignore`.
+**Never committed (the user's data):** `config/`, `assets/`, `job-log/`, `interview-prep/`, and dated `[dd.mm]/` session folders. All covered by `.gitignore`.
 
 The dividing line: the framework is public and shareable; the user's career, applications, and config are private and stay on their machine.
 

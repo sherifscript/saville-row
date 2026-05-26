@@ -1,5 +1,9 @@
 # User data — never commit
-data/
+# (data/ was the v1.2.0 layout; replaced by the directories below in v1.3.0)
+config/
+assets/
+job-log/
+/interview-prep/
 *.career.txt
 *.career.md
 voice-references/

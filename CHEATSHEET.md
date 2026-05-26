@@ -42,13 +42,14 @@ A one-page reference for all shortcut commands. Full docs in `skills/job-search-
 
 | What | Where |
 |---|---|
-| Session output (CVs, cover letters, diagnoses) | `data/sessions/[dd.mm]/[Country or City]/` |
-| Job log | `data/job-log/Job Listings.xlsx` |
-| Blacklist | `data/Blacklist.txt` |
-| Story bank | `data/Interview Story Bank.txt` |
-| Config | `config.yaml` (repo root, gitignored) |
-| Branches | `branches.yaml` (repo root, gitignored) |
-| Regional headers | `regional-headers.yaml` (repo root, gitignored) |
+| Session output (CVs, cover letters, diagnoses) | `[dd.mm]/[Country or City]/` (repo root, configurable via `paths.session_output_dir`) |
+| Job log | `job-log/Job Listings.xlsx` |
+| Blacklist | `assets/Blacklist.txt` |
+| Story bank | `assets/Interview Story Bank.txt` |
+| Career file | `assets/career.md` |
+| Config | `config/config.yaml` (gitignored) |
+| Branches | `config/branches.yaml` (gitignored) |
+| Regional headers | `config/regional-headers.yaml` (gitignored) |
 
 ---
 
