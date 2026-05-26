@@ -3,34 +3,67 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [1.3.0] — 2026-05-26
+## v1.3.0 — 2026-05-26
 
-### Breaking changes
-- Workspace layout restructured. Config files (config.yaml, branches.yaml,
-  regional-headers.yaml, connectors.yaml) now live in `config/` instead of
-  the repo root. Career file, voice references, Blacklist.txt, and the story
-  bank now live in `assets/`. The job log is at `job-log/`. Dated session
-  output ([dd.mm]/) lands at the repo root rather than under `data/sessions/`.
-
-### Migration from v1.2.0
-1. `mkdir config assets job-log`
-2. Move config.yaml, branches.yaml, regional-headers.yaml, connectors.yaml → config/
-3. Move data/career.md, data/voice/, data/Blacklist.txt,
-   data/Interview\ Story\ Bank.txt, data/Session\ Notes.txt → assets/
-4. Move data/job-log/ contents → job-log/
-5. Existing data/sessions/[dd.mm]/ folders can stay or be moved to the repo root.
-6. Delete the now-empty data/ folder if desired.
-7. Add a `paths:` block to config/config.yaml only if you want non-default
-   locations — the defaults match the new layout exactly.
-
-### Added
-- `shared/scripts/path_utils.py` — single source of truth for all workspace paths
-- `paths:` block in config.example.yaml — makes layout a config decision
+Workspace layout restructure and QA pass from the first end-to-end trial run.
 
 ### Changed
-- All skills updated to reference paths block keys instead of hardcoded strings
-- .gitignore: replaced `data/` with specific rules for config/, assets/,
-  job-log/, interview-prep/, and [dd.mm]/ folders
+
+- **Workspace layout.** Config files (`config.yaml`, `branches.yaml`,
+  `regional-headers.yaml`, `connectors.yaml`) now live under `config/`.
+  Career file, voice references, `Blacklist.txt`, story bank, and session notes
+  live under `assets/`. Job log lives under `job-log/`. Dated session output
+  lands at the repo root (`[dd.mm]/`) instead of `data/sessions/[dd.mm]/`.
+  The old `data/` folder is no longer used.
+- **cv-tailor — seven-check post-render audit.** Two new checks added:
+  check 6 scans all runs for em-dashes (banned from all employer-facing output);
+  check 7 validates chronological order and contiguous-block structure. The
+  contiguous-block rule is now hard (in SKILL.md directly) rather than soft
+  ("if applicable").
+- **cv-tailor — inline-bold toggle.** Bold runs are opt-in via `cv.inline_bold`
+  (default false). Setup step 6b presents before/after examples so the user
+  makes an informed choice before enabling.
+- **job-search-setup — third-slot prompting.** Step 2 now prompts for
+  `third_slot_company` per branch, closing the schema mismatch that allowed
+  an unintended company into experience slot 3.
+- **cover-letter — signature.** Last-name bolding removed from the signature.
+- **Em-dash ban.** Documented in `shared/conventions.md` as the cross-skill
+  rule for all employer-facing output (CV, cover letter, LinkedIn, interview
+  prep). Referenced in interview-prep SKILL.md.
+
+### Added
+
+- **`config/` directory** — default location for all root-level YAML config
+  files.
+- **`assets/` directory** — default location for career file, voice references,
+  `Blacklist.txt`, story bank, and session notes.
+- **`job-log/` directory** — default location for the Excel job log.
+- **`paths:` config block** in `config.yaml` — makes workspace layout a single
+  config decision; every skill reads from it instead of hardcoding paths.
+- **`shared/scripts/path_utils.py`** — single source of truth for resolving
+  workspace paths; includes v1.2.0 backwards-compatible config file lookup.
+- **`CHEATSHEET.md`** — one-page command reference at repo root.
+- **job-discovery** — creates an empty `Blacklist.txt` on first run if absent.
+- **role-diagnosis** — "Honest assessment" added as an optional section to
+  the diagnosis template and `Diagnosis.md.tmpl`.
+- **job-search-pipeline** — explicit no-mid-run-pause rule; closing summary
+  always states session folder, job-log path, and output count.
+- **Setup UX** — Step 0 preamble for new users; Step 8 (opinionation) rewritten
+  with a concrete gate example; Step 9 presents the full 11-command catalog
+  and Apify forward note.
+
+### Migration from v1.2.0
+
+1. `mkdir config assets job-log`
+2. Move `config.yaml`, `branches.yaml`, `regional-headers.yaml`,
+   `connectors.yaml` → `config/`
+3. Move `data/career.md`, `data/voice/`, `data/Blacklist.txt`,
+   `data/Interview Story Bank.txt`, `data/Session Notes.txt` → `assets/`
+4. Move `data/job-log/` contents → `job-log/`
+5. Existing `data/sessions/[dd.mm]/` folders can stay or be moved to the repo root.
+6. Delete the now-empty `data/` folder if desired.
+7. Add a `paths:` block to `config/config.yaml` only if you want non-default
+   locations — the defaults match the new layout exactly.
 
 ---
 
