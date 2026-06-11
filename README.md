@@ -112,14 +112,9 @@ See [CHEATSHEET.md](./CHEATSHEET.md) for the full 11-command reference.
 
 **The plugin shows up as "SavilleRow" (raw, title-cased name) or its skills appear empty.**
 
-This means the marketplace cache predates v1.3.0, before `displayName: "SavilleRow"` and the full `skills/` set landed in the manifest. Update the marketplace and reinstall:
+If skills appear empty or the name looks stale, the marketplace cache predates the current release — run `claude plugin marketplace update sherifscript`, then reinstall. Some app surfaces (e.g. the Claude Desktop plugin directory) title-case the raw `name` field instead of honoring `displayName: "SavilleRow"`, which is why the plugin is named `saville-row`.
 
-```bash
-claude plugin marketplace update sherifscript
-claude plugin install saville-row@sherifscript
-```
-
-**Claude Desktop users:** update or re-add the marketplace (as above) rather than sideloading a zip — a sideloaded zip won't pick up manifest or marketplace updates on its own.
+**Claude Desktop users:** update or re-add the marketplace rather than sideloading a zip — a sideloaded zip won't pick up manifest or marketplace updates on its own.
 
 ---
 

@@ -7,7 +7,15 @@
       "name": "saville-row",
       "displayName": "SavilleRow",
       "source": "./",
-      "description": "A diagnosis-first job search system: discover, diagnose, tailor, cover, interview prep, story bank."
+      "description": "A diagnosis-first job search system: discover, diagnose, tailor, cover, interview prep, story bank.",
+      "version": "1.4.0",
+      "author": { "name": "sherifscript" },
+      "homepage": "https://github.com/sherifscript/saville-row",
+      "repository": "https://github.com/sherifscript/saville-row",
+      "license": "CC-BY-NC-4.0",
+      "keywords": ["job-search", "resume", "cv", "cover-letter", "interview-prep", "career"],
+      "category": "productivity",
+      "tags": ["career", "job-search", "automation"]
     }
   ]
 }

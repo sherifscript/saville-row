@@ -3,6 +3,21 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v1.4.1 — 2026-06-11
+
+### Changed
+
+- **Plugin renamed `saville-row` → `saville-row`.** Some app surfaces
+  (e.g. the Claude Desktop plugin directory) title-case the raw `name` field
+  instead of honoring `displayName`, so the old `name` was rendering as
+  "SavilleRow" in those UIs. The new `name` falls back to "SavilleRow".
+  The GitHub repo slug is unchanged (`sherifscript/saville-row`); only the
+  plugin/install name changed.
+- **Marketplace entry enriched.** The `.claude-plugin/marketplace.json`
+  plugin entry now carries the same metadata as `plugin.json` —
+  `version`, `author`, `homepage`, `repository`, `license`, `keywords` —
+  plus `category` and `tags` for richer Directory listings.
+
 ## v1.4.0 — 2026-06-11
 
 Workflow parity fixes from the first end-to-end trial with friends, plus the
