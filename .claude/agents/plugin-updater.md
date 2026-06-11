@@ -26,11 +26,15 @@ When the user asks for a new release, follow these steps in order:
 
 1. **Confirm the version bump.** Ask the user (or infer from context) whether the release is MAJOR / MINOR / PATCH per semver. Breaking changes → MAJOR, new features → MINOR, bug fixes → PATCH.
 
-2. **Bump `version` in `.claude-plugin/plugin.json`.** Do not edit any other field unless the user asked for it.
+2. **Bump the version in all three places — they ship in sync, always:**
+   - `version` in `.claude-plugin/plugin.json`
+   - `version` in the plugin entry inside `.claude-plugin/marketplace.json` (the entry has carried its own version field since v1.4.1)
+   - `metadata.version` in all 8 `skills/*/SKILL.md` frontmatters (set `metadata.last_updated` to today's date as well)
+   Do not edit any other field unless the user asked for it.
 
 3. **Update `CHANGELOG.md`.** Add a new section at the top following the existing format (`## vX.Y.Z — YYYY-MM-DD`, then `### Added` / `### Changed` / `### Fixed` subsections as needed). Use today's date. Pull change content from recent git log + diff against the previous tag if present, otherwise against the previous changelog entry's date. Do not invent changes — summarize what actually shipped.
 
-4. **Update the README version badge / version reference** if one exists. Grep for the previous version string and update mentions that refer to the current release (not historical mentions in the changelog itself).
+4. **Update the README version badge / version reference and the CLAUDE.md intro line** (`A Claude Code plugin (vX.Y.Z)...`). Grep for the previous version string and update mentions that refer to the current release (not historical mentions in the changelog itself).
 
 5. **Run validation:**
    ```
@@ -43,12 +47,13 @@ When the user asks for a new release, follow these steps in order:
 
 7. **Open a PR to `main`** with the changelog excerpt as the PR body. Title: `Release vX.Y.Z`. Use the user's preferred PR style (no Claude attribution lines).
 
-8. **Tag — only after PR merges to main.** Once the PR lands, instruct the user to run:
+8. **Tag — only after the release commit is on main.** From an up-to-date main:
    ```
    git checkout main && git pull
-   claude plugin tag --push
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
    ```
-   This creates the canonical `vX.Y.Z` tag on the merge commit and pushes it. Do not tag from a feature branch.
+   This creates the canonical `vX.Y.Z` tag on the release commit and pushes it. Do not tag from a feature branch.
 
 9. **Tell installed users how to pick up the update.** They need to refresh their marketplace cache:
    ```
