@@ -2,8 +2,8 @@
 name: role-diagnosis
 description: Produce a one-page Diagnosis.md for a target role before any CV or cover letter is rendered. Five sections — what the team is hiring to fix, 90-day deliverables, the real bar, strongest credential, verbatim JD keywords. Hard gate for cv-tailor and cover-letter.
 metadata:
-  version: 1.3.0
-  last_updated: 2026-05-26
+  version: 1.4.0
+  last_updated: 2026-06-11
 ---
 
 # role-diagnosis

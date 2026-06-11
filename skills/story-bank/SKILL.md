@@ -2,8 +2,8 @@
 name: story-bank
 description: Maintain a library of STAR+R behavioral interview stories drawn from the candidate's career file. Refresh extracts new stories without duplicating or inventing. Read by interview-prep.
 metadata:
-  version: 1.3.0
-  last_updated: 2026-05-26
+  version: 1.4.0
+  last_updated: 2026-06-11
 ---
 
 # story-bank

@@ -2,8 +2,8 @@
 name: cv-tailor
 description: Render diagnosis-driven, ATS-optimized CVs as .docx via docxtpl. Modular section composition, region-aware headers, inline-bold helper, and a mandatory five-question post-render audit that catches named historical failure modes.
 metadata:
-  version: 1.3.0
-  last_updated: 2026-05-26
+  version: 1.4.0
+  last_updated: 2026-06-11
 ---
 
 # cv-tailor

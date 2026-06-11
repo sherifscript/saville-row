@@ -2,8 +2,8 @@
 name: job-search-setup
 description: First-run wizard for saville-row. Reads the candidate's career file, proposes branches, prompts for voice references and regions, writes config.yaml. Run once per repo before any other skill.
 metadata:
-  version: 1.3.0
-  last_updated: 2026-05-26
+  version: 1.4.0
+  last_updated: 2026-06-11
 ---
 
 # job-search-setup
