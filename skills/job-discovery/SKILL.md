@@ -2,7 +2,7 @@
 name: job-discovery
 description: Search job boards (Indeed, Apify-LinkedIn, and adapter-configured platforms), score roles against the candidate, deduplicate, and append to an append-only Excel job log with backup-before-touch safety.
 metadata:
-  version: 1.4.0
+  version: 1.4.1
   last_updated: 2026-06-11
 ---
 

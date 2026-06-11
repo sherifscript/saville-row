@@ -160,7 +160,7 @@ This is **less strict than the original private workflow** the framework was ext
 
 ## Changelog
 
-See [CHANGELOG.md](./CHANGELOG.md) for the full version history. Current release: **v1.4.0**.
+See [CHANGELOG.md](./CHANGELOG.md) for the full version history. Current release: **v1.4.1**.
 
 ---
 
