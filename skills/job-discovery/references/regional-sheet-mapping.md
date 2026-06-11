@@ -44,7 +44,7 @@ The Remote sheet uses the same column order as every country sheet, and is creat
 The two naming conventions are independent:
 
 - **Sheet** is always country-named (Egypt, Denmark, ...).
-- **Session folder** uses whatever the prompt specified. A "Run Cairo" session keeps its CVs and cover letters in `data/sessions/[dd.mm]/Cairo/` even though the rows land on the Egypt sheet.
+- **Session folder** uses whatever the prompt specified. A "Run Cairo" session keeps its CVs and cover letters in `paths.session_output_dir/[session-date]/Cairo/` even though the rows land on the Egypt sheet.
 
 This is deliberate: the folder reflects the work session; the sheet reflects the permanent country-level record.
 

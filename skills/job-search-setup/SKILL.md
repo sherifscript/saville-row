@@ -129,6 +129,12 @@ Without bold:
 
 Write `cv.inline_bold: true/false` to `config.yaml`. When `inline_bold: false`, the `convert_content_map()` helper in cv-tailor strips all `**` markers from every bullet before render — including experience, education, and any other field — so nothing renders bold regardless of what the content map contains.
 
+### Step 6c — Session date format
+
+Ask: *"Session output is saved into dated folders, e.g. `applications/11.06.26/Denmark/`. Should the date be written day-month-year (`dd.mm.yy`, e.g. `11.06.26`) or month-day-year (`mm.dd.yy`, e.g. `06.11.26`, the American convention)?"*
+
+Default: `dd.mm.yy`. Write `paths.session_date_format: [choice]` to `config.yaml`.
+
 ### Step 7 — Output formats
 
 Ask: *"Output formats?"*
@@ -172,7 +178,7 @@ See CHEATSHEET.md at the repo root for a one-page reference.
 
 **A note on connectors** — job discovery searches Indeed and, for LinkedIn and regional job boards, an Apify web scraper. The first time you run a search, the pipeline will walk you through connecting Apify. To save time, you can create a free account at apify.com now and have your API token ready. The detailed connector setup guide is in `skills/job-discovery/references/connector-setup.md`.
 
-**Where your output lives** — CVs, cover letters, and diagnoses are saved to `paths.session_output_dir`/[dd.mm]/[Country or City]/ (by default, dated folders at the repo root). The job log is at `paths.job_log_dir`/Job Listings.xlsx. Config files are in `paths.config_dir`/. Career file and voice references are in `paths.assets_dir`/. All paths are shown again at the end of every pipeline run and can be customized in `config.yaml > paths`.
+**Where your output lives** — CVs, cover letters, and diagnoses are saved to `applications/[dd.mm.yy]/[Country]/` (`paths.session_output_dir`/[session-date]/[Country or City]/, by default dated folders under `applications/` at the repo root, date format per `paths.session_date_format`). The job log is at `paths.job_log_dir`/Job Listings.xlsx. Config files are in `paths.config_dir`/. Career file and voice references are in `paths.assets_dir`/. All paths are shown again at the end of every pipeline run and can be customized in `config.yaml > paths`.
 
 ## What this skill does not do
 

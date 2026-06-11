@@ -37,12 +37,12 @@ If the file cannot be opened in a scheduled or unattended session, proceed with 
 
 1. Skip the deduplication check (it needs to read the sheet).
 2. Skip the normal append.
-3. Save the session's results to a **new** file: `data/job-log/Job Listings — [dd.mm].xlsx`, using the standard sheet and column format.
+3. Save the session's results to a **new** file: `data/job-log/Job Listings — [session-date].xlsx`, using the standard sheet and column format.
 4. Write one log entry to `data/Session Notes.txt`:
 
    ```
-   [dd.mm] — WARNING: Job Listings.xlsx could not be opened. Results saved
-   separately to Job Listings — [dd.mm].xlsx. Deduplication skipped. All
+   [session-date] — WARNING: Job Listings.xlsx could not be opened. Results saved
+   separately to Job Listings — [session-date].xlsx. Deduplication skipped. All
    other outputs completed normally.
    ```
 

@@ -70,11 +70,23 @@ Jordan Park
 
 The candidate's name comes from `config.yaml`. No bold on any part of the name. No em dashes anywhere in the letter.
 
+## Render to .docx (mandatory)
+
+Drafting the letter as plain text is not the deliverable. Once the text passes every check above:
+
+1. Write the draft as plain text (a `.scratch/` working file, not the session folder — see `${CLAUDE_PLUGIN_ROOT}/shared/conventions.md`).
+2. Render it via `python ${CLAUDE_PLUGIN_ROOT}/shared/scripts/text_to_docx.py <draft> <output.docx>`, saving to the path in "Save location" below.
+3. The `.docx` is the **only** deliverable. Never leave a `.md` or `.txt` cover letter in the session folder.
+
+If the render fails, that is a failed stage — apply the failure-recovery rules in `job-search-pipeline/references/failure-recovery.md`. A failed render is not a license to ship the markdown draft instead.
+
 ## Save location
 
 ```
-paths.session_output_dir/[dd.mm]/[Country or City]/Cover Letter - [Company] - [Job Title].docx
+paths.session_output_dir/[session-date]/[Country or City]/Cover Letter - [Company] - [Job Title].docx
 ```
+
+`[session-date]` is today's date formatted per `paths.session_date_format` (default `dd.mm.yy`, e.g. `11.06.26`).
 
 ## LinkedIn recruiter nudge
 

@@ -41,6 +41,7 @@ At the start of every session in a saville-row repo:
 3. Load `config.yaml > paths` block — all downstream skills read workspace paths from this block instead of hardcoding them.
 4. Load `paths.assets_dir`/Blacklist.txt into memory.
 5. Read `paths.assets_dir`/Session Notes.txt if it exists — use prior findings (market-specific yield issues, connector flakiness) as context.
+6. Maintain `paths.assets_dir`/index.txt: scan `assets_dir` recursively, create the index if it does not exist, and reconcile it against the current contents — add entries for new files, remove entries for deleted ones. For each new file, write a one-line description (read just enough of the file to describe it when the filename isn't self-evident). Don't re-read files that are already indexed. Use the index as the session's reference to `assets_dir`, and only open a file from it when something in the session needs it.
 
 ## The full pipeline
 
@@ -92,12 +93,15 @@ After any session where something unexpected happened — low yield, language ba
 
 ## Closing summary (after every full pipeline run)
 
+Before reporting done, run the **deliverables-only sweep**: check each session output folder for anything that isn't `Diagnosis - *.md`, `CV - *.docx`, `Cover Letter - *.docx`, or `LinkedIn Messages.txt` (stray `.py` scripts, content-map dumps, `.md` cover letters from a failed render, etc.) and move it to `.scratch/`. See "Deliverables-only output folders" in `${CLAUDE_PLUGIN_ROOT}/shared/conventions.md`.
+
 After a pipeline run completes, tell the user in plain text:
 
-1. **Session output folder** — the exact path where CVs, cover letters, and diagnoses were saved (e.g., `paths.session_output_dir`/25.05/Cairo/).
+1. **Session output folder** — the exact path where CVs, cover letters, and diagnoses were saved (e.g., `paths.session_output_dir`/11.06.26/Cairo/).
 2. **Job log location** — `paths.job_log_dir`/Job Listings.xlsx, and which sheet was updated.
 3. **What was produced** — a one-line count: "5 diagnoses, 5 CVs, 4 cover letters, 1 LinkedIn nudge file."
 4. **Any exceptions** — low yield, connector failures, or skipped cover letters (Egypt/Gulf local companies), stated in one sentence each.
+5. **Sweep result** — one line: either "Output folders are clean" or what was moved to `.scratch/` and why.
 
 This summary makes it easy to find the output without hunting through folders, and gives a quick sanity-check on what the pipeline completed.
 

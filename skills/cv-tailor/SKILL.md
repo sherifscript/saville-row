@@ -135,16 +135,22 @@ The template (`${CLAUDE_PLUGIN_ROOT}/templates/[chosen]/`) ships every possible 
 ## Output
 
 ```
-paths.session_output_dir/[dd.mm]/[Country or City]/CV - [Company] - [Job Title].docx
+paths.session_output_dir/[session-date]/[Country or City]/CV - [Company] - [Job Title].docx
 ```
 
 For `Run CV only`:
 
 ```
-paths.session_output_dir/[dd.mm]/[Branch] CV.docx
+paths.session_output_dir/[session-date]/[Branch] CV.docx
 ```
 
 (no Company/Job Title in filename — no specific JD)
+
+`[session-date]` is today's date formatted per `paths.session_date_format` (default `dd.mm.yy`, e.g. `11.06.26`).
+
+### Scratch files stay out of the output folder
+
+The render driver script and any content-map JSON/YAML dumps used to build a CV go in `.scratch/` at the workspace root, never in the session output folder. The session folder holds the rendered `.docx` and nothing else. See "Deliverables-only output folders" in `${CLAUDE_PLUGIN_ROOT}/shared/conventions.md`.
 
 ## Files referenced
 

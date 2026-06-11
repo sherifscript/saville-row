@@ -40,10 +40,10 @@ Recruiter: Dana Liu, Talent Partner at Northwind Operations. Role: Senior Produc
 Append each nudge to a single plain-text file in the session folder:
 
 ```
-data/sessions/[dd.mm]/[Country or City]/LinkedIn Messages.txt
+paths.session_output_dir/[session-date]/[Country or City]/LinkedIn Messages.txt
 ```
 
-(or `data/sessions/[dd.mm]/Requests/LinkedIn Messages.txt` for the `Run Request` shortcut)
+(or `paths.session_output_dir/[session-date]/Requests/LinkedIn Messages.txt` for the `Run Request` shortcut)
 
 Create the file if it does not exist. Format each entry:
 

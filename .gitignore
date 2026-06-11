@@ -1,9 +1,12 @@
 # User data — never commit
 # (data/ was the v1.2.0 layout; replaced by the directories below in v1.3.0)
+data/
 config/
 assets/
 job-log/
 /interview-prep/
+applications/
+.scratch/
 *.career.txt
 *.career.md
 voice-references/
@@ -25,6 +28,7 @@ connectors.yaml
 
 # Per-session run folders
 [0-9][0-9].[0-9][0-9]/
+[0-9][0-9].[0-9][0-9].[0-9][0-9]/
 Requests/
 
 # Environment variables
@@ -34,6 +38,7 @@ Requests/
 
 # Claude Code local settings (machine-specific; never publish)
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 
 # OS / editor cruft
 .DS_Store

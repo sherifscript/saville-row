@@ -16,13 +16,14 @@ The live `.yaml` files contain personal data and live in `config/`, which is git
 
 ## Workspace layout
 
-Everything the user generates lives in four gitignored directories at the repo root. Paths are configurable via `config.yaml > paths`; defaults are shown below:
+Everything the user generates lives in gitignored directories at the repo root. Paths are configurable via `config.yaml > paths`; defaults are shown below:
 
 ```
 config/                              # config.yaml, branches.yaml, regional-headers.yaml, connectors.yaml
 assets/                              # career.md, voice/, Blacklist.txt, Interview Story Bank.txt, Session Notes.txt
 job-log/                             # Job Listings.xlsx and Backup/
-[dd.mm]/                             # dated session output at repo root
+applications/                        # paths.session_output_dir — dated session output
+  [session-date]/                    # e.g. 11.06.26, formatted per paths.session_date_format
     [Country or City]/               # per-geography subfolder
         Diagnosis - [Company] - [Job Title].md
         CV - [Company] - [Job Title].docx
@@ -30,6 +31,7 @@ job-log/                             # Job Listings.xlsx and Backup/
         LinkedIn Messages.txt
     Requests/                        # output of the Run Request command
 interview-prep/                      # interview prep documents
+.scratch/                            # ad-hoc helper scripts, content-map dumps, temp files
 ```
 
 ## File naming
@@ -43,14 +45,20 @@ interview-prep/                      # interview prep documents
 | Interview prep | `[Company] - [Job Title] - Interview Prep.docx` |
 | Job log backup | `Job Listings — [DD.MM.YY HH.MM].xlsx` |
 
-Date folders use `dd.mm`. Timestamps in the job log use `H:MM AM/PM DD.MM.YY`. Backup timestamps use `DD.MM.YY HH.MM`.
+Date folders use `paths.session_date_format` (default `dd.mm.yy`, e.g. `11.06.26`; `mm.dd.yy` for US-style dates). Timestamps in the job log use `H:MM AM/PM DD.MM.YY`. Backup timestamps use `DD.MM.YY HH.MM` — these stay as-is regardless of `session_date_format`.
+
+## Deliverables-only output folders
+
+Session output folders (`paths.session_output_dir/[session-date]/[Country or City]/`) contain **only the four deliverables**: `Diagnosis - *.md`, `CV - *.docx`, `Cover Letter - *.docx`, and `LinkedIn Messages.txt`. Nothing else belongs there.
+
+All ad-hoc helper scripts, render driver scripts, content-map JSON/YAML dumps, and other temp files go to `.scratch/` at the workspace root instead. `.scratch/` is gitignored. Once a job's post-render audit passes, its scratch files for that job can be cleaned up — they are working files, not records.
 
 ## Sheets vs. folders
 
 - **Job log sheets** are always country-named (Egypt, Denmark, ...). Never city-named.
 - **Session folders** use whatever the prompt specified (Cairo, Copenhagen, ...).
 
-A "Run Cairo" session puts its documents in `[dd.mm]/Cairo/` at the repo root (or wherever `paths.session_output_dir` points) but routes job-log rows to the Egypt sheet. See `skills/job-discovery/references/regional-sheet-mapping.md`.
+A "Run Cairo" session puts its documents in `[session-date]/Cairo/` under `paths.session_output_dir` (default `applications/`) but routes job-log rows to the Egypt sheet. See `skills/job-discovery/references/regional-sheet-mapping.md`.
 
 ## Em dashes in employer-facing output
 
@@ -68,7 +76,7 @@ Every skill that generates employer-facing output must enforce this rule and che
 
 **Committed (the framework):** all `SKILL.md` files under `skills/`, all `references/`, all `scripts/`, all `templates/`, `shared/*.example.yaml`, `shared/conventions.md`, the root `README.md`, `LICENSE`, `.claude-plugin/`, `settings.json`, `CONNECTORS.md`, `examples/showcase/`.
 
-**Never committed (the user's data):** `config/`, `assets/`, `job-log/`, `interview-prep/`, and dated `[dd.mm]/` session folders. All covered by `.gitignore`.
+**Never committed (the user's data):** `config/`, `assets/`, `job-log/`, `interview-prep/`, `applications/` (dated `[session-date]/` session folders), and `.scratch/`. All covered by `.gitignore`.
 
 The dividing line: the framework is public and shareable; the user's career, applications, and config are private and stay on their machine.
 

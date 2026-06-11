@@ -3,6 +3,50 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v1.4.0 — 2026-06-11
+
+Workflow parity fixes from the first end-to-end trial with friends, plus the
+remaining Life Assets-style workspace conveniences.
+
+### Changed
+
+- **Session output moved to `applications/`.** `paths.session_output_dir`
+  defaults to `applications` (was `.`), so dated session folders no longer
+  land at the repo root next to `config/` and `assets/`.
+- **Session date folders now include the year and are configurable.** New
+  `paths.session_date_format` (default `dd.mm.yy`, e.g. `11.06.26`; or
+  `mm.dd.yy` for US-style dates, e.g. `06.11.26`). `shared/scripts/path_utils.py`
+  gains `format_session_date()`. Every `[dd.mm]` reference across the skills
+  is now `[session-date]`.
+- **Cover letters: `.docx` render is now mandatory.** `cover-letter/SKILL.md`
+  adds a "Render to .docx (mandatory)" step — draft as plain text, render via
+  `text_to_docx.py`, ship the `.docx` only. A failed render is a failed stage,
+  not a license to leave a `.md`/`.txt` letter in the session folder.
+  `interview-prep/SKILL.md` gets the same explicit render step.
+
+### Added
+
+- **Scratch-script hygiene.** New "Deliverables-only output folders"
+  convention in `shared/conventions.md`: session folders hold only
+  `Diagnosis - *.md`, `CV - *.docx`, `Cover Letter - *.docx`, and
+  `LinkedIn Messages.txt`. Render driver scripts and content-map dumps go to
+  `.scratch/` (gitignored) and are cleaned up after the audit passes.
+- **Deliverables-only sweep.** `job-search-pipeline`'s closing summary now
+  checks session folders for stray non-deliverables and moves them to
+  `.scratch/` before reporting done.
+- **Assets index at session start.** `job-search-pipeline` now maintains
+  `paths.assets_dir`/index.txt — scans `assets_dir`, reconciles additions and
+  removals, and gives each file a one-line description, mirroring the
+  original workflow's Life Assets index.
+- **README Troubleshooting section** — covers the stale-marketplace-cache
+  symptom (plugin shows as raw "SavilleRow" or with empty skills) and the
+  fix (`claude plugin marketplace update sherifscript` then reinstall).
+- **`.gitignore` hardening** — `data/` (legacy v1.2.0 layout containing the
+  PII workflow reference), `applications/`, `.scratch/`, and year-bearing
+  `dd.mm.yy/` session folders are now ignored.
+- **`tests/test_path_utils.py`** — covers default paths, user-config
+  overrides, and `format_session_date()` for both formats.
+
 ## v1.3.0 — 2026-05-26
 
 Workspace layout restructure and QA pass from the first end-to-end trial run.

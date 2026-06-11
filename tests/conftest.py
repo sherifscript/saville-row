@@ -4,10 +4,12 @@ import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPTS = os.path.join(REPO_ROOT, "skills", "cv-tailor", "scripts")
+SHARED_SCRIPTS = os.path.join(REPO_ROOT, "shared", "scripts")
 TEMPLATE = os.path.join(REPO_ROOT, "templates", "OPUS", "full_template.docx")
 
-# Make the cv-tailor scripts importable as plain modules.
+# Make the cv-tailor and shared scripts importable as plain modules.
 sys.path.insert(0, SCRIPTS)
+sys.path.insert(0, SHARED_SCRIPTS)
 
 
 def minimal_content_map(**overrides):

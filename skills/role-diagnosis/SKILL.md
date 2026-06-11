@@ -55,10 +55,12 @@ See [`references/branch-resolution.md`](./references/branch-resolution.md).
 Always saved to the same folder the CV will be saved to:
 
 ```
-paths.session_output_dir/[dd.mm]/[Country or City]/Diagnosis - [Company] - [Job Title].md
+paths.session_output_dir/[session-date]/[Country or City]/Diagnosis - [Company] - [Job Title].md
 ```
 
-For the `Run Request` shortcut: `paths.session_output_dir`/[dd.mm]/Requests/Diagnosis - [Company] - [Job Title].md.
+For the `Run Request` shortcut: `paths.session_output_dir`/[session-date]/Requests/Diagnosis - [Company] - [Job Title].md.
+
+`[session-date]` is today's date formatted per `paths.session_date_format` (default `dd.mm.yy`, e.g. `11.06.26`).
 
 For `Run CV only` (no specific JD): the diagnosis step is skipped entirely; cv-tailor uses broad branch judgment instead.
 

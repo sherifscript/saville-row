@@ -42,7 +42,7 @@ A one-page reference for all shortcut commands. Full docs in `skills/job-search-
 
 | What | Where |
 |---|---|
-| Session output (CVs, cover letters, diagnoses) | `[dd.mm]/[Country or City]/` (repo root, configurable via `paths.session_output_dir`) |
+| Session output (CVs, cover letters, diagnoses) | `applications/[session-date]/[Country or City]/` (configurable via `paths.session_output_dir`; date format via `paths.session_date_format`, default `dd.mm.yy`) |
 | Job log | `job-log/Job Listings.xlsx` |
 | Blacklist | `assets/Blacklist.txt` |
 | Story bank | `assets/Interview Story Bank.txt` |

@@ -17,7 +17,7 @@ A clean, uneventful session does not need an entry.
 ## The format
 
 ```
-[dd.mm] — [Country or City] ([Branch if applicable])
+[session-date] — [Country or City] ([Branch if applicable])
 What happened: [brief description]
 Impact: [effect on the session outcome]
 Action taken: [how you proceeded]
@@ -28,7 +28,7 @@ Recommendation: [guidance for future runs in this market or situation]
 ## Example entry
 
 ```
-20.05 — Copenhagen (Product Management)
+20.05.26 — Copenhagen (Product Management)
 What happened: LinkedIn via Apify returned only 4 results for senior PM
 roles; Indeed returned 9. Retry with broader keywords added 2 more.
 Impact: Table 2 had 6 results instead of the target 10. Top-5 selection

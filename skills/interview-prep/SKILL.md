@@ -58,6 +58,16 @@ See [`references/story-mapping.md`](./references/story-mapping.md). The STAR+R f
 
 Em dashes (—) are banned from the interview prep document. It is employer-facing. Use commas, periods, or restructure the sentence instead. See `${CLAUDE_PLUGIN_ROOT}/shared/conventions.md`.
 
+## Render to .docx (mandatory)
+
+The four sections are drafted as markdown, then rendered, never shipped as markdown:
+
+1. Write the draft as markdown (a `.scratch/` working file, not `paths.interview_prep_dir`/ — see `${CLAUDE_PLUGIN_ROOT}/shared/conventions.md`).
+2. Render it via `python ${CLAUDE_PLUGIN_ROOT}/shared/scripts/text_to_docx.py <draft> <output.docx>`, saving to the path in "Save location" below.
+3. The `.docx` is the **only** deliverable. Never leave a `.md` prep document in `paths.interview_prep_dir`/.
+
+If the render fails, that is a failed stage — apply the failure-recovery rules in `job-search-pipeline/references/failure-recovery.md`. A failed render is not a license to ship the markdown draft instead.
+
 ## Save location
 
 ```

@@ -108,6 +108,21 @@ See [CHEATSHEET.md](./CHEATSHEET.md) for the full 11-command reference.
 
 ---
 
+## Troubleshooting
+
+**The plugin shows up as "SavilleRow" (raw, title-cased name) or its skills appear empty.**
+
+This means the marketplace cache predates v1.3.0, before `displayName: "SavilleRow"` and the full `skills/` set landed in the manifest. Update the marketplace and reinstall:
+
+```bash
+claude plugin marketplace update sherifscript
+claude plugin install saville-row@sherifscript
+```
+
+**Claude Desktop users:** update or re-add the marketplace (as above) rather than sideloading a zip — a sideloaded zip won't pick up manifest or marketplace updates on its own.
+
+---
+
 ## Showcase
 
 The `examples/showcase/` folder contains a complete end-to-end run for a fictional candidate — a senior product manager moving from B2C consumer apps to B2B SaaS. It includes the candidate profile, config files, diagnosis, rendered CV, cover letter, interview prep doc, and LinkedIn messages for a single target role (Northwind Operations, Senior PM).

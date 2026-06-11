@@ -27,7 +27,10 @@ paths:
   config_dir: "config"              # config.yaml, branches.yaml, regional-headers.yaml, connectors.yaml
   assets_dir: "assets"             # career file, voice references, Blacklist.txt, story bank, session notes
   job_log_dir: "job-log"           # Job Listings.xlsx and Backup/
-  session_output_dir: "."          # dated [dd.mm] folders land at repo root by default
+  session_output_dir: "applications" # dated [session-date] folders land here by default
+  # Format for the dated session folder name. "dd.mm.yy" (default, e.g.
+  # "11.06.26") or "mm.dd.yy" for US-style dates (e.g. "06.11.26").
+  session_date_format: "dd.mm.yy"
   interview_prep_dir: "interview-prep"
 
 
