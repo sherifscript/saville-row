@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SavilleRow wordmark.
+  Self-contained dark panel so it reads on both GitHub light and dark themes
+  (a transparent wordmark would need a fragile prefers-color-scheme dance).
+  Text is plain SVG <text> with a system sans stack: no embedded fonts.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="220" viewBox="0 0 720 220" role="img" aria-label="SavilleRow — no diagnosis, no CV.">
+  <rect x="1" y="1" width="718" height="218" rx="24" fill="#0d1117" stroke="#21262d" stroke-width="2"/>
+
+  <!-- diagnosis-pass mark: check inside a circle -->
+  <circle cx="92" cy="110" r="36" fill="none" stroke="#2ea043" stroke-width="7"/>
+  <path d="M74 111 l13 14 l24 -29" fill="none" stroke="#2ea043" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="156" y="104" font-size="54" font-weight="700" letter-spacing="-1.5" fill="#e6edf3">Saville<tspan fill="#2ea043">Row</tspan></text>
+    <text x="158" y="150" font-size="23" font-weight="500" letter-spacing="0.5" fill="#8b949e">no diagnosis, no CV.</text>
+  </g>
+</svg>

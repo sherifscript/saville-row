@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Social card, 1280x640. Used in the README and as the repo's social-preview.
+  GitHub's "Social preview" setting (Settings > General) needs a raster (PNG/JPG);
+  export this to PNG when you set it there. In-README it embeds fine as SVG.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="SavilleRow: a diagnosis-first job search system for Claude.">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d1117"/>
+      <stop offset="1" stop-color="#161b22"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1280" height="8" fill="#2ea043"/>
+
+  <g font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" text-anchor="middle">
+    <!-- diagnosis-pass mark -->
+    <circle cx="640" cy="150" r="44" fill="none" stroke="#2ea043" stroke-width="9"/>
+    <path d="M618 151 l16 17 l30 -36" fill="none" stroke="#2ea043" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <text x="640" y="300" font-size="96" font-weight="700" letter-spacing="-3" fill="#e6edf3">Saville<tspan fill="#2ea043">Row</tspan></text>
+    <text x="640" y="362" font-size="38" font-weight="600" letter-spacing="-0.5" fill="#c9d1d9">No diagnosis, no CV.</text>
+
+    <text x="640" y="452" font-size="27" font-weight="500" fill="#8b949e">discover  &#8594;  diagnose  &#8594;  tailor  &#8594;  cover  &#8594;  interview prep  &#8594;  story bank</text>
+
+    <text x="640" y="566" font-size="24" font-weight="600" letter-spacing="1" fill="#6e7681">A DIAGNOSIS-FIRST JOB SEARCH SYSTEM &#183; CLAUDE CODE PLUGIN</text>
+  </g>
+</svg>
