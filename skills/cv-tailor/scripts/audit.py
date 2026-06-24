@@ -14,6 +14,11 @@ Programmatic checks:
             shared/conventions.md).
   Check 7 — experience section is in strict reverse-chronological order and
             the primary employer's contiguous block occupies slots 1 + 2.
+  Check 8 — tailoring coverage: every experience slot reflects the diagnosis
+            (each slot's bullets carry at least one diagnosed keyword), so no
+            slot ships as un-angled career-file boilerplate.
+  Check 9 — grounding: every number/percentage/count in the rendered CV traces
+            to the career file, catching invented or inflated metrics.
 
 A CV that fails any check is NOT shipped.
 """
@@ -188,8 +193,81 @@ def check_7_experience_structure(experiences):
                   "slots 1 + 2 share employer " + str(slot1_company) + ".")
 
 
+def check_8_slot_coverage(experiences, expected_keywords):
+    """Check 8: every experience slot is angled to this role.
+
+    The diagnosis now mandates that at least one diagnosed keyword/angle reaches
+    every experience slot, not just the lead (see diagnosis-template.md
+    "Section angles"). The programmatic floor: each slot's bullets must contain
+    at least one diagnosed keyword verbatim. A slot with zero is the symptom of
+    un-angled career-file boilerplate pasted across CVs.
+
+    Skipped (manual review) when keywords or bullets are absent.
+    """
+    if not expected_keywords or not experiences:
+        return True, "No keywords or no experiences; coverage check skipped."
+    if not all(e.get("bullets") for e in experiences):
+        return True, ("Not all slots carry bullets in the content_map; "
+                      "coverage check requires manual review.")
+
+    kws = [k.lower() for k in expected_keywords]
+    uncovered = []
+    for i, e in enumerate(experiences):
+        text = " ".join(e.get("bullets", [])).lower()
+        if not any(k in text for k in kws):
+            uncovered.append("slot " + str(i + 1) + " ("
+                             + str(e.get("company", "?")) + ")")
+    ok = not uncovered
+    if ok:
+        note = "Every experience slot carries >= 1 diagnosed keyword."
+    else:
+        note = ("Un-angled slot(s) with zero diagnosed keywords: "
+                + ", ".join(uncovered) + ". The diagnosis must give each slot a "
+                "Section-angle; do not paste career-file phrasing verbatim. See "
+                "references/content-map-schema.md 'Facts vs angle'.")
+    return ok, note
+
+
+def check_9_numeric_grounding(document_xml, career_file_text):
+    """Check 9: every metric in the rendered CV traces to the career file.
+
+    Catches invented/inflated numbers (e.g. a "30%" or "40+" the career file
+    never states). Conservative: only flags percentages (\\d+%) and count
+    claims (\\d+\\+), and only when the digit sequence appears nowhere in the
+    career file — so a real number written slightly differently still passes.
+    Semantic inflation ("supported" -> "led") is the editorial honesty
+    companion, not this check.
+
+    Skipped when no career file text is provided.
+    """
+    if not career_file_text:
+        return True, "No career file provided; numeric grounding skipped."
+
+    text = _visible_text(document_xml)
+    metrics = re.findall(r"\d+%|\d+\+", text)
+    career_digits = career_file_text
+    ungrounded = []
+    for m in metrics:
+        digits = re.sub(r"\D", "", m)
+        if digits and digits not in career_digits:
+            ungrounded.append(m)
+    # de-dup while keeping order
+    seen = set()
+    ungrounded = [m for m in ungrounded if not (m in seen or seen.add(m))]
+    ok = not ungrounded
+    if ok:
+        note = (str(len(metrics)) + " metric(s) checked; all trace to the "
+                "career file.")
+    else:
+        note = ("Metric(s) with no source in the career file: "
+                + ", ".join(ungrounded) + ". A bullet may re-frame a real fact "
+                "but may not invent a number. Remove or correct, or add the fact "
+                "to the career file if it is real.")
+    return ok, note
+
+
 def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
-                   expected_keywords, expect_bold=True):
+                   expected_keywords, expect_bold=True, career_file_path=None):
     """Run the programmatic audit checks. Returns an AuditResult.
 
     The editorial checks (#1, #3) are recorded by the model into the same
@@ -218,6 +296,18 @@ def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
     ok7, note7 = check_7_experience_structure(experiences)
     result.passed["check_7_structure"] = ok7
     result.notes["check_7_structure"] = note7
+
+    ok8, note8 = check_8_slot_coverage(experiences, expected_keywords)
+    result.passed["check_8_coverage"] = ok8
+    result.notes["check_8_coverage"] = note8
+
+    career_text = None
+    if career_file_path:
+        with open(career_file_path, encoding="utf-8", errors="replace") as f:
+            career_text = f.read()
+    ok9, note9 = check_9_numeric_grounding(document_xml, career_text)
+    result.passed["check_9_grounding"] = ok9
+    result.notes["check_9_grounding"] = note9
 
     return result
 

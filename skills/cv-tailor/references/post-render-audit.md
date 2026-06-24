@@ -1,6 +1,6 @@
 # Post-render audit — the five questions every shipped CV must pass
 
-Before any CV is shipped (saved to the session folder for the user to send), it passes a five-question audit. Three of the checks are editorial; two are programmatic. The programmatic checks are implemented in [`../scripts/audit.py`](../scripts/audit.py) and run automatically. The editorial checks are prompted to the user (or run as model inference).
+Before any CV is shipped (saved to the session folder for the user to send), it passes the audit below. The numbered checks are a mix of editorial and programmatic. The programmatic checks (2, 4, 5, 6, 7, 8, 9) are implemented in [`../scripts/audit.py`](../scripts/audit.py) and run automatically; the editorial checks (1, 3, and the honesty companion to 9) are prompted to the user or run as model inference. The "five questions" framing is historical; the list has grown as new failure modes were caught.
 
 If any check fails, the CV is **not shipped**. The framework either re-renders (for programmatic failures) or prompts the user to regenerate the failing section (for editorial failures).
 
@@ -68,6 +68,45 @@ The failure mode: the RichText XML gets written inside a `<w:t>` text node inste
 
 **Incident root cause (2026-05-24 Cairo trial):** `experience-slot-logic.md` had the hard rule; `cv-tailor/SKILL.md` had only a soft one-liner ("adjacent role at the same employer *if applicable*"). The render script read the soft rule and treated the Statista Assistant as droppable. This check ensures the structural failure is caught before the CV ships even if the render script makes the same mistake.
 
+### 8. Is every experience slot tailored to this role, or did a slot ship as boilerplate?
+
+**Programmatic check.** For each slot in `content_map.experiences`, count diagnosed
+keywords in that slot's bullets. A slot with zero is the symptom of un-angled
+career-file phrasing pasted across CVs. The diagnosis's "Section angles" block now
+mandates that at least one keyword/angle reaches every slot, including the lower and
+branch slots, so a zero-keyword slot means the mandate was skipped.
+
+**Incident:** 2026-06-14, Denmark batch. The lead Statista slot was tailored per role,
+but the Research Assistant slot was identical boilerplate in 6 of 10 CVs and the
+Atheneum slot was byte-for-byte identical in all 10. Tailoring effort decayed down the
+page because nothing audited below the lead.
+
+**On failure:** give the un-angled slot a Section-angle in the diagnosis and rebuild its
+bullets from that angle (a real career-file fact, framed for this role). Do not paste
+career-file phrasing verbatim. Re-render. Skipped to manual review when keywords or
+bullets are absent.
+
+### 9. Does every number in the CV trace to the career file?
+
+**Programmatic check.** Extract percentages (`\d+%`) and count claims (`\d+\+`) from the
+rendered text. Each must have its digit sequence present somewhere in the career file.
+Conservative by design: only metrics are checked, and only a total absence of the digits
+fails, so a real figure written slightly differently still passes.
+
+This is the truth gate the framework historically lacked ("What the audit does not catch:
+Truthfulness"). Widening tailoring raises the temptation to invent a metric that makes a
+bullet land; this check refuses it. A bullet may re-frame a real fact; it may not add a
+number the career file does not contain.
+
+**Editorial honesty companion (model-run).** The number check cannot see semantic
+inflation. Confirm by reading: a contributor role was not upgraded to owner ("supported"
+did not become "led"), a team outcome was not claimed as a solo one, a tool used once was
+not described as expertise. Same facts-vs-angle line: re-frame what is true, invent
+nothing.
+
+**On failure:** remove or correct the unsupported metric/claim, or add the fact to the
+career file if it is genuinely real and was simply missing. Re-render.
+
 ## Running the audit
 
 ```python
@@ -78,6 +117,7 @@ audit_result = run_full_audit(
     diagnosis_md_path="Diagnosis - Northwind - Senior PM.md",
     content_map=content_map,
     expected_keywords=["workflow automation", "B2B SaaS", "..."],
+    career_file_path="career.txt",   # enables Check 9 numeric grounding
 )
 
 if not audit_result.all_passed:

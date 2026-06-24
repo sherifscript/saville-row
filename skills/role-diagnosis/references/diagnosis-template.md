@@ -67,6 +67,36 @@ the tagline, summary, core skills, and at least two experience bullets.
 - [keyword 2]
 - ...
 
+## Section angles — one line for every rendered part
+
+The lead angle (section 4) sets the headline. This section sets everything
+else, so no part of the CV ships as untailored career-file boilerplate. List
+every part the CV will actually render, given the user's `cv.sections` and
+`cv.max_experience_slots`, and give each a one-line angle: which real fact
+from the career file this part surfaces, and how it connects to the diagnosed
+problem. This is the brief cv-tailor executes field by field.
+
+Cover, at minimum:
+- Each experience slot (1 .. max_experience_slots), including the lower slots
+  and the branch slot — not just the lead. If a slot has nothing to say to
+  this role, angle it to the nearest transferable fact rather than reusing the
+  generic version.
+- Each degree (higher / lower) — what about it speaks to this role.
+- core_skills rows and additional items — which the role rewards.
+- Any enabled optional section (certifications, publications, volunteering).
+
+```
+- Slot 1 (most recent): [fact] angled as [connection to the problem]
+- Slot 2 (same-employer): [fact] angled as [connection]
+- Slot 3 (branch): [fact] angled as [connection]
+- Higher degree: [fact] angled as [connection]
+- ...one line per remaining rendered part...
+```
+
+The angle re-frames a real fact. It never adds a fact, a number, or a title
+the career file does not contain. See the grounding gate in
+`../../cv-tailor/references/post-render-audit.md`.
+
 ## Honest assessment (optional)
 
 One sentence. Is the candidacy a strong match, a stretch, or a reach?
@@ -131,11 +161,19 @@ If the diagnosis can't pick one, the resulting CV will be generic — every sect
 
 These are not your interpretation of the JD's themes. They are *the exact strings the JD uses*. If the JD says "experimentation platform," do not write "A/B testing infrastructure" in the diagnosis. Write "experimentation platform." The CV's keyword density is measured against these exact strings.
 
-Distribute the keywords:
+Distribute the keywords across the whole document, not just the top:
 - 1–2 in the tagline
 - 2–3 in the summary
 - 1–2 per core skill row
 - ≥2 in experience bullets (mandatory — checked by the post-render audit)
+- at least one diagnosed keyword or angle reaches *every* rendered experience
+  slot, including the lower and branch slots (checked by the coverage audit)
+
+The old failure mode was a top-weighted distribution: the lead slot got
+tailored and the lower slots, education, and additional sections shipped as
+identical career-file boilerplate across every CV. The "Section angles"
+section above exists to prevent exactly that. A reader comparing two of your
+CVs side by side should not find a paragraph that is word-for-word the same.
 
 ## What a good diagnosis is not
 

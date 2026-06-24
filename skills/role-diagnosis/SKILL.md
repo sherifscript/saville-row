@@ -2,8 +2,8 @@
 name: role-diagnosis
 description: Produce a one-page Diagnosis.md for a target role before any CV or cover letter is rendered. Five sections — what the team is hiring to fix, 90-day deliverables, the real bar, strongest credential, verbatim JD keywords. Hard gate for cv-tailor and cover-letter.
 metadata:
-  version: 1.4.1
-  last_updated: 2026-06-11
+  version: 1.5.0
+  last_updated: 2026-06-25
 ---
 
 # role-diagnosis
@@ -24,7 +24,7 @@ Reads a job description (from a URL, pasted text, or scraped data) and produces 
 Diagnosis - [Company Name] - [Job Title].md
 ```
 
-The file contains exactly five sections. It is the editorial brief that drives every downstream choice — bullet order, lead angles, which experience to emphasize, what to drop. If a bullet does not serve the diagnosis, it does not belong on that CV.
+The file contains the five core sections plus a Section-angles block (and an optional honest-assessment). It is the editorial brief that drives every downstream choice — bullet order, lead angles, which experience to emphasize, what to drop, and how every part below the headline is framed. If a bullet does not serve the diagnosis, it does not belong on that CV.
 
 ## The five sections
 
@@ -35,6 +35,8 @@ See [`references/diagnosis-template.md`](./references/diagnosis-template.md) for
 3. **What is the actual bar?** — 1 sentence. Pick one: technical depth / stakeholder gravity / speed under chaos / commercial instinct / methodological rigor / cross-cultural fluency / something else.
 4. **Which of my credentials speaks loudest to that bar?** — 1–2 sentences. The single strongest proof point from the career file. This becomes the lead angle of the lead experience section.
 5. **Keywords from the JD that must appear verbatim in the CV.** — Bulleted list of 6–10 exact strings from the JD. ATS terms.
+
+Plus a **Section angles** block: one line per rendered part (every experience slot, each degree, core_skills, additional, and any enabled optional section), each naming a real career-file fact and how it connects to the diagnosed problem. Section 4 sets the headline; this block tailors everything below it so no part ships as career-file boilerplate. The angle re-frames a real fact, never invents one. See [`references/diagnosis-template.md`](./references/diagnosis-template.md).
 
 ## The anti-rigidity clause
 

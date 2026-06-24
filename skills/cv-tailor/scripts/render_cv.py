@@ -86,8 +86,13 @@ def validate_content_map(cm, config):
 
 
 def render(diagnosis_path, content_map, config, repo_root, output_path,
-           expected_keywords):
-    """Render one CV. Returns the AuditResult."""
+           expected_keywords, career_file_path=None):
+    """Render one CV. Returns the AuditResult.
+
+    Pass `career_file_path` (the workspace's `career_file`, e.g.
+    `assets/career.txt`) to enable the Check 9 numeric-grounding gate. Without
+    it, grounding is skipped.
+    """
     template_name = config.get("cv", {}).get("template", "OPUS")
     sections = config.get("cv", {}).get("sections")
 
@@ -131,6 +136,7 @@ def render(diagnosis_path, content_map, config, repo_root, output_path,
         content_map=content_map,
         expected_keywords=expected_keywords,
         expect_bold=expect_bold,
+        career_file_path=career_file_path,
     )
     return result
 

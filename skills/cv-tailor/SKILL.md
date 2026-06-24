@@ -1,9 +1,9 @@
 ---
 name: cv-tailor
-description: Render diagnosis-driven, ATS-optimized CVs as .docx via docxtpl. Modular section composition, region-aware headers, inline-bold helper, and a mandatory five-question post-render audit that catches named historical failure modes.
+description: Render diagnosis-driven, ATS-optimized CVs as .docx via docxtpl. Modular section composition, region-aware headers, inline-bold helper, and a mandatory post-render audit (tailoring coverage, numeric grounding, and named structural failure modes).
 metadata:
-  version: 1.4.1
-  last_updated: 2026-06-11
+  version: 1.5.0
+  last_updated: 2026-06-25
 ---
 
 # cv-tailor
@@ -33,12 +33,29 @@ Exception: `Run CV only` shortcut explicitly skips the diagnosis gate. The CV is
 7. Renders via `docxtpl` with `autoescape=True` mandatory. See [`references/docxtpl-recipe.md`](./references/docxtpl-recipe.md).
 8. Converts `**markdown bold**` markers in experience and education bullets to docxtpl `RichText` runs. See [`references/docxtpl-recipe.md`](./references/docxtpl-recipe.md).
 9. Saves `.docx` to the target folder.
-10. Runs the five-question post-render audit. See [`references/post-render-audit.md`](./references/post-render-audit.md). Refuses to ship the CV if any check fails.
+10. Runs the post-render audit. See [`references/post-render-audit.md`](./references/post-render-audit.md). Refuses to ship the CV if any check fails.
 11. (Optional) Converts to PDF via LibreOffice if `output_formats` includes `pdf`.
 
 ## Critical correctness rules
 
 These exist because each one has shipped a broken CV in the past. Do not skip.
+
+### Tailor every field to the diagnosis (facts vs angle)
+
+Every content field is angled by the diagnosis, not just the lead slot. Build the
+`content_map` from the diagnosis's "Section angles" block: each experience slot
+(including the lower and branch slots), each degree's bullets, `core_skills`,
+`additional`, and any enabled optional section gets phrasing written for *this*
+role. The career file is the source of facts (dates, employers, what happened,
+every number); the diagnosis decides which fact to surface and how to frame it.
+
+Do not copy career-file phrasing verbatim into bullets. The shipped failure mode:
+the lead slot was tailored and slots 2..N, education, and `additional` were pasted
+from the career file unchanged, so they came out byte-for-byte identical across
+every CV in a batch (the 2026-06-14 Denmark batch shipped the same Atheneum slot in
+all ten CVs). Check 8 of the post-render audit now fails a slot that ships un-angled.
+The angle re-frames a real fact; it never adds one. Check 9 enforces that. See
+[`references/content-map-schema.md`](./references/content-map-schema.md) "Facts vs angle".
 
 ### `autoescape=True` is mandatory
 
@@ -107,7 +124,7 @@ Before `tpl.render()`:
 
 ### Post-render audit (mandatory)
 
-The five-question audit at [`references/post-render-audit.md`](./references/post-render-audit.md). Refuses to ship the CV if any check fails.
+The post-render audit at [`references/post-render-audit.md`](./references/post-render-audit.md). Refuses to ship the CV if any check fails.
 
 ## Modular sections
 
@@ -162,6 +179,6 @@ The render driver script and any content-map JSON/YAML dumps used to build a CV 
 - [`references/content-map-schema.md`](./references/content-map-schema.md) — every key in the content_map
 - [`scripts/render_cv.py`](./scripts/render_cv.py) — the main entry point
 - [`scripts/md_to_richtext.py`](./scripts/md_to_richtext.py) — the bold-marker helper
-- [`scripts/audit.py`](./scripts/audit.py) — the five-question audit as code
+- [`scripts/audit.py`](./scripts/audit.py) — the audit checks as code
 - [`scripts/section_composer.py`](./scripts/section_composer.py) — section partial stitching
 - [`scripts/build_template.py`](./scripts/build_template.py) — one-time template-from-CV converter
