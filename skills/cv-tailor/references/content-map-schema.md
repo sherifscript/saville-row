@@ -2,6 +2,28 @@
 
 The `content_map` is a dict built by `render_cv.py` from the diagnosis, the candidate's career file, the regional header config, and the branch config. It is the input to `tpl.render(content_map, autoescape=True)`.
 
+## Facts vs angle — the source rule
+
+Two sources, two jobs. Do not confuse them:
+
+- **The career file is the source of FACTS.** Dates, employers, titles held,
+  what actually happened, every number and named credential. Nothing in the
+  rendered CV may state a fact the career file does not contain.
+- **The diagnosis is the source of ANGLE.** For every content field below —
+  not just the lead slot — the diagnosis's "Section angles" block decides
+  *which* real fact to surface and *how* to frame it for this role.
+
+The failure this rule fixes: when the diagnosis only angled the lead slot, the
+builder filled slots 2..N, education bullets, `additional`, and the optional
+sections with the career file's existing phrasing verbatim — so those parts
+were byte-for-byte identical across every CV (the Atheneum slot was identical
+in all ten CVs of the 2026-06-14 Denmark batch). A field marked
+"source: diagnosis" below means *angled by the diagnosis*, not copied from the
+career file. A field marked "source: career file" is a verbatim fact (a date,
+an institution name) and is correctly not re-angled. The post-render audit's
+coverage check (Check 8) flags any experience slot that ships un-angled; the
+grounding check (Check 9) flags any number or claim with no career-file source.
+
 ## Schema
 
 | Key | Type | Source | Notes |
