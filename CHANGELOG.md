@@ -3,6 +3,36 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v1.5.0 — 2026-06-25
+
+Whole-CV tailoring. The 2026-06-14 Denmark trial showed tailoring effort decaying
+down the page: the lead experience slot was rewritten per role, but the lower and
+branch slots, education, and additional sections shipped as identical career-file
+boilerplate across every CV (the Atheneum slot was byte-for-byte identical in all
+ten CVs). Root cause: the diagnosis only ever angled the headline, and the audit
+only checked the lead.
+
+### Added
+
+- **Diagnosis "Section angles" block.** `role-diagnosis` now emits one line per
+  rendered part (every experience slot, each degree, core_skills, additional, and
+  any enabled optional section), naming a real career-file fact and how it connects
+  to the diagnosed problem. Keyword coverage is now whole-document, not top-weighted.
+- **Audit Check 8 (tailoring coverage).** Fails any experience slot whose bullets
+  carry zero diagnosed keywords, catching un-angled boilerplate before it ships.
+- **Audit Check 9 (numeric grounding).** Fails any percentage or count in the
+  rendered CV whose digits are absent from the career file, catching invented or
+  inflated metrics. Paired with an editorial honesty companion for semantic
+  inflation ("supported" must not become "led"). `render_cv.render()` gains a
+  `career_file_path` argument to enable it.
+- **Regression tests** for Checks 8 and 9 (`tests/test_tailoring_audit.py`).
+
+### Changed
+
+- **`cv-tailor` facts-vs-angle rule.** The career file is the source of facts; the
+  diagnosis is the source of the angle of *every* field, not just the lead slot.
+  Copying career-file phrasing verbatim into bullets is now explicitly forbidden.
+
 ## v1.4.1 — 2026-06-11
 
 ### Changed
