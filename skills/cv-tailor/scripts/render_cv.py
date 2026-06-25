@@ -114,15 +114,30 @@ def render(diagnosis_path, content_map, config, repo_root, output_path,
             f"fall back to a copy or older version."
         )
 
-    # 3. Detect whether the diagnosis specified bold phrases (for audit #5).
-    expect_bold = any(
+    # 3. Resolve whether bold renders at all. Two triggers, either turns
+    #    markdown-bold conversion on: cv.inline_bold (selective emphasis) or
+    #    cv.bullet_style == "labeled" (a bold capability label leading each
+    #    bullet, the Gemini style). Plain mode (default) strips all markers.
+    cv_cfg = config.get("cv", {})
+    render_bold = bool(cv_cfg.get("inline_bold", False)) \
+        or cv_cfg.get("bullet_style", "plain") == "labeled"
+
+    # Audit #5 expects bold runs only when bold will actually render AND the
+    # content map carries markers. Gating on render_bold keeps it consistent:
+    # without it, plain mode (which strips markers) would still be asked for
+    # bold runs and fail every CV.
+    markers_present = any(
         isinstance(b, str) and "**" in b
         for role in content_map.get("experiences", [])
         for b in role.get("bullets", [])
     )
+    expect_bold = render_bold and markers_present
 
-    # 4. Convert markdown bold -> RichText. MANDATORY before render.
-    content_map = convert_content_map(content_map)
+    # 4. Convert markdown bold -> RichText (or strip). MANDATORY before render.
+    #    Pass the resolved flag. Previously this called convert_content_map()
+    #    with no argument, so it always used the default (off) and inline_bold /
+    #    labeled never actually rendered bold.
+    content_map = convert_content_map(content_map, inline_bold=render_bold)
 
     # 5. Render. autoescape=True is MANDATORY — see docxtpl-recipe.md.
     tpl = DocxTemplate(template_path)

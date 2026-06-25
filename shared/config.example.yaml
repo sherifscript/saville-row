@@ -67,6 +67,16 @@ cv:
   # selective emphasis (4-8 bold items total) rather than over-bolding.
   inline_bold: false
 
+  # How experience bullets read.
+  #   plain   : (default) bullets are prose; bold follows inline_bold above.
+  #   labeled : each bullet opens with a 2-5 word bold capability label in the
+  #             role's vocabulary, then the outcome ("Pipeline automation: built
+  #             a Python pipeline that cut publication time 30%"). The Gemini
+  #             style. Turns bold rendering on for the labels regardless of
+  #             inline_bold. Substance is identical in both modes — this is only
+  #             the surface form. Default plain to keep the AI-tell guard on.
+  bullet_style: plain
+
   # Which CV sections appear, and in what order. Toggleable sections can be
   # removed. tagline / contact / experience / education are required and
   # cannot be removed. A diagnosis can override this per application.

@@ -2,7 +2,7 @@
 name: role-diagnosis
 description: Produce a one-page Diagnosis.md for a target role before any CV or cover letter is rendered. Five sections — what the team is hiring to fix, 90-day deliverables, the real bar, strongest credential, verbatim JD keywords. Hard gate for cv-tailor and cover-letter.
 metadata:
-  version: 1.5.0
+  version: 1.6.0
   last_updated: 2026-06-25
 ---
 
@@ -36,7 +36,7 @@ See [`references/diagnosis-template.md`](./references/diagnosis-template.md) for
 4. **Which of my credentials speaks loudest to that bar?** — 1–2 sentences. The single strongest proof point from the career file. This becomes the lead angle of the lead experience section.
 5. **Keywords from the JD that must appear verbatim in the CV.** — Bulleted list of 6–10 exact strings from the JD. ATS terms.
 
-Plus a **Section angles** block: one line per rendered part (every experience slot, each degree, core_skills, additional, and any enabled optional section), each naming a real career-file fact and how it connects to the diagnosed problem. Section 4 sets the headline; this block tailors everything below it so no part ships as career-file boilerplate. The angle re-frames a real fact, never invents one. See [`references/diagnosis-template.md`](./references/diagnosis-template.md).
+Plus a **Section angles** block: one line per rendered part (every experience slot, each degree, core_skills, additional, and any enabled optional section), each naming a real career-file fact and how it connects to the diagnosed problem. For every experience slot the line also names the **proof point** — the specific named credential, institution, client, platform, or number the slot's bullets must surface — so cv-tailor writes "cited by Deloitte and the Harvard Law Review" rather than a generic "enterprise decision-makers". Section 4 sets the headline; this block tailors everything below it so no part ships as career-file boilerplate. The angle re-frames a real fact, never invents one. See [`references/diagnosis-template.md`](./references/diagnosis-template.md).
 
 ## The anti-rigidity clause
 

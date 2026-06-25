@@ -2,7 +2,7 @@
 name: cv-tailor
 description: Render diagnosis-driven, ATS-optimized CVs as .docx via docxtpl. Modular section composition, region-aware headers, inline-bold helper, and a mandatory post-render audit (tailoring coverage, numeric grounding, and named structural failure modes).
 metadata:
-  version: 1.5.0
+  version: 1.6.0
   last_updated: 2026-06-25
 ---
 
@@ -57,6 +57,45 @@ all ten CVs). Check 8 of the post-render audit now fails a slot that ships un-an
 The angle re-frames a real fact; it never adds one. Check 9 enforces that. See
 [`references/content-map-schema.md`](./references/content-map-schema.md) "Facts vs angle".
 
+### Write strong bullets (the substance bar)
+
+Tailoring decides *which* fact each bullet surfaces; this decides *how* it is
+written. A bullet that is angled to the role but written as a generic
+responsibility is still weak. The shipped failure mode (2026-06-25 Cairo batch):
+bullets said "tracked positioning for **enterprise decision-makers**" while the
+named proof points (cited by Deloitte, Harvard Law Review, W3C) sat unused in the
+career file. Every bullet must clear this bar:
+
+1. **Surface the named proof point, not a generic noun.** If the career file
+   names the institutions that cited the work (Deloitte, Harvard Law Review,
+   Freedom House, W3C), the clients, the platforms, or a number (40+
+   multinationals, 30% faster, $30K, 11M views), the bullet names it. Never
+   write "enterprise decision-makers", "global process owners", "analytical
+   workstreams", "client-ready outputs", "evidence-based reports", or
+   "actionable insights" when a concrete proof point exists. The diagnosis's
+   per-slot **proof points** (see `role-diagnosis/references/diagnosis-template.md`,
+   "Section angles") tell you which one to use for each slot. Check 10 fails the
+   generic fillers; the editorial checks (1, 3) fail a slot that hides behind a
+   generic noun.
+2. **Lead with the outcome or an ownership verb, not a responsibility verb.**
+   Open with what was achieved or owned ("Built a pipeline that cut publication
+   time 30%", "Owned coverage of 40+ multinationals"), not the duty performed
+   ("Managed documentation workflows", "Coordinated with teams", "Conducted
+   interviews"). Banned bare leads: managed, coordinated, conducted, supported,
+   handled, assisted, maintained.
+3. **Put the metric where it lands.** A number is proof; place it in the lead or
+   as the bullet's terminal, emphasized fact, not buried mid-clause behind
+   filler ("...30%, improving accuracy and consistency" → drop the filler).
+4. **Reframe into the role's vocabulary.** Use the diagnosis's verbatim JD
+   keywords in the bullet wording so the same real fact reads as the thing this
+   team is hiring for.
+5. **Shape:** scope + action + outcome with concrete detail. Ground everything;
+   the proof point must already exist in the career file (Check 9).
+
+The golden reference for this bar is the rebuilt Henkel CV from the 2026-06-25
+session (`build_one.py`); the first-pass `build_cairo.py` bullets are the
+negative the new checks now reject.
+
 ### `autoescape=True` is mandatory
 
 Without it, `&` characters in content_map values are silently stripped from the rendered XML. `Artist & Label` becomes `Artist  Label`. Always pass `autoescape=True` to `tpl.render()`.
@@ -85,6 +124,26 @@ Inline bold is controlled by `config.yaml > cv.inline_bold` (default: `false`).
 | `summary` | No (prose) |
 | `core_skills[i].description` | No (label is bold; description plain) |
 | `additional[i].description` | No (same pattern) |
+
+### Bullet style: plain or labeled
+
+`config.yaml > cv.bullet_style` (default `plain`) chooses how experience bullets
+read. It is independent of the substance bar above — content is written the same
+way in both modes; this is only the surface form.
+
+- **`plain` (default):** bullets are prose. Bold follows `inline_bold` (default
+  off). This is the conservative default; selective inline bold is increasingly
+  read as an AI tell.
+- **`labeled`:** each bullet opens with a 2–5 word **bold capability label** in
+  the role's vocabulary, then a colon, then the outcome — the Gemini style
+  (`**Pipeline automation:** built a Python pipeline that cut publication time
+  30%`). The model writes the label as `**Label:**` at the start of each bullet.
+  `labeled` turns bold rendering on for bullets regardless of `inline_bold`, so
+  the labels render as real bold runs.
+
+The label re-frames a real fact in the JD's language; it never adds a fact. In
+`labeled` mode the "what to bold" discipline (4–8 bold items, never bold a
+generic label) applies to plain mode only — see `references/docxtpl-recipe.md`.
 
 ### Experience section structure — HARD RULES
 
@@ -172,7 +231,7 @@ The render driver script and any content-map JSON/YAML dumps used to build a CV 
 ## Files referenced
 
 - [`references/docxtpl-recipe.md`](./references/docxtpl-recipe.md) — the autoescape mandate, the RichText helper, named failure modes
-- [`references/post-render-audit.md`](./references/post-render-audit.md) — the five checks
+- [`references/post-render-audit.md`](./references/post-render-audit.md) — the audit checks (programmatic 2,4,5,6,7,8,9,10 + editorial 1,3)
 - [`references/modular-sections.md`](./references/modular-sections.md) — section composition
 - [`references/regional-headers.md`](./references/regional-headers.md) — the regional header pattern
 - [`references/experience-slot-logic.md`](./references/experience-slot-logic.md) — slot 1/2/3 rules

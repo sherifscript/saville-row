@@ -1,18 +1,20 @@
 # Post-render audit — the five questions every shipped CV must pass
 
-Before any CV is shipped (saved to the session folder for the user to send), it passes the audit below. The numbered checks are a mix of editorial and programmatic. The programmatic checks (2, 4, 5, 6, 7, 8, 9) are implemented in [`../scripts/audit.py`](../scripts/audit.py) and run automatically; the editorial checks (1, 3, and the honesty companion to 9) are prompted to the user or run as model inference. The "five questions" framing is historical; the list has grown as new failure modes were caught.
+Before any CV is shipped (saved to the session folder for the user to send), it passes the audit below. The numbered checks are a mix of editorial and programmatic. The programmatic checks (2, 4, 5, 6, 7, 8, 9, 10) are implemented in [`../scripts/audit.py`](../scripts/audit.py) and run automatically; the editorial checks (1, 3, and the honesty companion to 9) are prompted to the user or run as model inference. The "five questions" framing is historical; the list has grown as new failure modes were caught.
 
 If any check fails, the CV is **not shipped**. The framework either re-renders (for programmatic failures) or prompts the user to regenerate the failing section (for editorial failures).
 
 ## The five questions
 
-### 1. Does the lead bullet of the lead experience section serve "what is this team actually hiring to fix?"
+### 1. Does each lead slot serve "what is this team actually hiring to fix?" with a named proof point, not a generic noun?
 
-**Editorial check.** Read the diagnosis's section 1 (the problem statement) and the lead bullet of the lead experience role. Do they obviously connect?
+**Editorial check.** Read the diagnosis's section 1 (the problem statement) and the bullets of the lead experience slots. Two things must hold:
 
-The check fails when the lead bullet is a generic strength claim ("led cross-functional teams to drive impact") instead of a specific outcome that addresses the diagnosed problem ("shipped the onboarding redesign that lifted 7-day activation from 32% to 38%, the exact funnel cliff Northwind's JD describes").
+1. The lead bullet is a specific outcome that addresses the diagnosed problem, not a generic strength claim. Fail: "led cross-functional teams to drive impact". Pass: "shipped the onboarding redesign that lifted 7-day activation from 32% to 38%, the exact funnel cliff Northwind's JD describes".
 
-**On failure:** regenerate the lead experience section. The diagnosis is usually fine; the bullet writer drifted into generic phrasing.
+2. Each lead slot **names the concrete proof point** the diagnosis assigned it (the institution, client, platform, or number), rather than hiding behind a generic noun. Fail: "tracked positioning for enterprise decision-makers". Pass: "synthesized findings into reports cited by Deloitte and the Harvard Law Review". This is the gap that shipped the 2026-06-25 Cairo batch: the named credentials sat unused in the career file while the bullets used generic audiences. Check 10 catches the named filler phrases programmatically; this editorial check is the broader judgment that a real proof point is actually surfaced.
+
+**On failure:** regenerate the failing slot from its diagnosis proof point. The diagnosis is usually fine; the bullet writer drifted into generic phrasing or left the proof point on the table.
 
 ### 2. Do at least two experience bullets contain JD keywords verbatim?
 
@@ -26,7 +28,7 @@ The check fails when the lead bullet is a generic strength claim ("led cross-fun
 
 The check fails when the CV could plausibly have been submitted for a different role at a different company. Often the diagnosis was weak — too generic, no real point of view on the role — and the CV inherited the genericness.
 
-**Bolding discipline is part of this check.** Scan every bolded phrase in the rendered CV at once. There should be roughly 4–8 bold items total, and every one should be a quantified outcome or a credential proper noun — never a JD keyword. If a phrase is bolded twice, or if most bullets carry a bold phrase, or if a plain skill word like "user research" is bolded, the CV reads as unedited. Fix the `**` markers in the content map (see docxtpl-recipe.md "what to bold") and re-render.
+**Bolding discipline is part of this check (plain mode).** Scan every bolded phrase in the rendered CV at once. There should be roughly 4–8 bold items total, and every one should be a quantified outcome or a credential proper noun — never a JD keyword. If a phrase is bolded twice, or if most bullets carry a bold phrase, or if a plain skill word like "user research" is bolded, the CV reads as unedited. Fix the `**` markers in the content map (see docxtpl-recipe.md "what to bold") and re-render. In `bullet_style: labeled` this part is suspended: every bullet is supposed to open with a bold capability label, so the 4–8 ceiling does not apply; instead confirm each label is a 2–5 word capability phrase in the role's vocabulary, not a dumped JD keyword.
 
 **On failure:** strengthen the diagnosis first (specifically section 4, "which credential speaks loudest to that bar?"), then re-render. Do not patch the CV directly.
 
@@ -106,6 +108,26 @@ nothing.
 
 **On failure:** remove or correct the unsupported metric/claim, or add the fact to the
 career file if it is genuinely real and was simply missing. Re-render.
+
+### 10. Does any bullet hide behind a generic abstraction instead of a named proof point?
+
+**Programmatic check.** Scan every experience bullet for a short blocklist of generic
+filler phrases ("enterprise decision-makers", "global process owners", "analytical
+workstreams", "client-ready", "evidence-based reports", "actionable insights /
+recommendations"). Any hit fails the CV. The list is deliberately high-precision —
+multi-word abstractions that are almost never legitimate proof; bare "stakeholders" is
+not listed because it is a common, valid JD term.
+
+This is the programmatic floor under the editorial bar in check 1 and in `SKILL.md`
+"Write strong bullets". It does not, on its own, prove the proof point was surfaced
+(that judgment is check 1 plus the diagnosis's per-slot proof points); it catches the
+specific way the 2026-06-25 Cairo batch failed — bullets defaulting to a generic
+audience while named credentials (Deloitte, Harvard Law Review, W3C) sat unused.
+
+**On failure:** rewrite the flagged bullet to name the concrete credential or metric the
+diagnosis assigned that slot, then re-render. Implemented as `check_10_bullet_strength`
+in [`../scripts/audit.py`](../scripts/audit.py); reads RichText or plain-string bullets,
+so it works in both `plain` and `labeled` bullet styles.
 
 ## Running the audit
 

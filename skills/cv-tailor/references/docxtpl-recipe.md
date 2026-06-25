@@ -100,6 +100,14 @@ proof. A bullet with no quantified outcome and no credential proper noun has
 nothing to bold — leave it plain. **Bolding everything is the same as bolding
 nothing.**
 
+**This whole section governs `bullet_style: plain` (the default).** It does
+*not* apply to `bullet_style: labeled`. In labeled mode every bullet opens with
+a bold capability label by design (`**Pipeline automation:** ...`), so the
+"4 to 8 items" ceiling and the "never bold a label" rule are deliberately
+suspended for that lead label. The rules still hold for any *other* bold inside
+a labeled bullet: bold the label and, if anything, a single quantified outcome,
+nothing more. See `SKILL.md` "Bullet style: plain or labeled".
+
 ## Contact-line hyperlinks
 
 The personal site and LinkedIn links in contact line 2 must render as **real clickable hyperlinks** in the .docx output — not plain text. The baseline OPUS CV carried these as Word hyperlink relationships; the plugin's render path must preserve or recreate them.

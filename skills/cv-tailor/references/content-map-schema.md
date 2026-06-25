@@ -41,7 +41,7 @@ grounding check (Check 9) flags any number or claim with no career-file source.
 | `experiences[i].dates` | string | career file | Date range as written in the career file |
 | `experiences[i].company` | string | career file | Company name |
 | `experiences[i].location` | string | career file | City, Country |
-| `experiences[i].bullets` | list[string] | diagnosis | Markdown `**bold**` markers ONLY on quantified outcomes and credential proper nouns — never on JD keywords. See docxtpl-recipe.md "what to bold". |
+| `experiences[i].bullets` | list[string] | diagnosis | Must clear the substance bar in `SKILL.md` "Write strong bullets": surface the named proof point (not a generic noun), lead with the outcome/ownership verb, place the metric where it lands, reframe into JD vocabulary. The diagnosis's per-slot proof points say which credential each slot names. Bold: `plain` mode marks `**bold**` only on quantified outcomes and credential proper nouns, never JD keywords (see docxtpl-recipe.md "what to bold"); `labeled` mode opens each bullet with a `**Label:**` lead-in. Check 10 rejects generic fillers. |
 | `msc_degree` | string | career file | Higher/most-recent degree name. |
 | `msc_date` | string | career file | Higher degree completion date. |
 | `msc_institution` | string | career file | Higher degree institution. |

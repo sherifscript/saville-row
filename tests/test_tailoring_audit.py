@@ -6,8 +6,13 @@ shipped as byte-for-byte identical career-file boilerplate across every CV
 
 Check 8 fails any experience slot that carries zero diagnosed keywords.
 Check 9 fails any number in the CV that has no source in the career file.
+
+Guards the 2026-06-25 failure mode: bullets passed every check and were still
+weak, defaulting to generic nouns ("enterprise decision-makers") where named
+proof points sat unused. Check 10 fails the generic-filler blocklist.
 """
-from audit import check_8_slot_coverage, check_9_numeric_grounding
+from audit import (check_8_slot_coverage, check_9_numeric_grounding,
+                   check_10_bullet_strength)
 
 
 KEYWORDS = ["category strategies", "shopper insights", "data-driven", "pricing"]
@@ -58,3 +63,30 @@ def test_check9_passes_when_all_grounded():
 def test_check9_skips_without_career_file():
     xml = "<w:t>lifted retention 55%</w:t>"
     assert check_9_numeric_grounding(xml, None)[0] is True
+
+
+def test_check10_flags_generic_filler():
+    exp = [{"company": "Statista", "bullets": [
+        "Tracked positioning for enterprise decision-makers."]}]
+    ok, note = check_10_bullet_strength(exp)
+    assert ok is False
+    assert "enterprise decision-makers" in note and "Statista" in note
+
+
+def test_check10_passes_named_proof_point():
+    exp = [{"company": "Statista", "bullets": [
+        "Synthesized findings into reports cited by Deloitte and the "
+        "Harvard Law Review."]}]
+    assert check_10_bullet_strength(exp)[0] is True
+
+
+def test_check10_reads_richtext_bullets():
+    """Labeled / inline_bold mode: bullets are RichText, not strings."""
+    from md_to_richtext import md_to_richtext
+    exp = [{"company": "X", "bullets": [
+        md_to_richtext("**Coverage:** served global process owners.")]}]
+    assert check_10_bullet_strength(exp)[0] is False
+
+
+def test_check10_skips_without_experiences():
+    assert check_10_bullet_strength([])[0] is True

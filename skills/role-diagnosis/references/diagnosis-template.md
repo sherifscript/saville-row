@@ -85,17 +85,26 @@ Cover, at minimum:
 - core_skills rows and additional items — which the role rewards.
 - Any enabled optional section (certifications, publications, volunteering).
 
+For every experience slot, the angle line must also name the **proof point**:
+the specific named credential, institution, client, platform, or number from the
+career file that the slot's bullets must surface. This is what stops a bullet
+from defaulting to a generic noun ("enterprise decision-makers") when a concrete
+proof point ("cited by Deloitte and the Harvard Law Review") is available. If the
+slot genuinely has no named proof point or metric, say so explicitly so cv-tailor
+does not invent one.
+
 ```
-- Slot 1 (most recent): [fact] angled as [connection to the problem]
-- Slot 2 (same-employer): [fact] angled as [connection]
-- Slot 3 (branch): [fact] angled as [connection]
+- Slot 1 (most recent): [fact] | proof point: [named credential / metric to surface] angled as [connection to the problem]
+- Slot 2 (same-employer): [fact] | proof point: [named credential / metric] angled as [connection]
+- Slot 3 (branch): [fact] | proof point: [named credential / metric] angled as [connection]
 - Higher degree: [fact] angled as [connection]
 - ...one line per remaining rendered part...
 ```
 
-The angle re-frames a real fact. It never adds a fact, a number, or a title
-the career file does not contain. See the grounding gate in
-`../../cv-tailor/references/post-render-audit.md`.
+The angle re-frames a real fact, and the proof point must already exist in the
+career file. Neither ever adds a fact, a number, or a title the career file does
+not contain. See the grounding gate (Check 9) and the bullet-strength gate
+(Check 10) in `../../cv-tailor/references/post-render-audit.md`.
 
 ## Honest assessment (optional)
 

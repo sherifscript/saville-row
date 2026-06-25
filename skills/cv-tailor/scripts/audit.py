@@ -19,6 +19,10 @@ Programmatic checks:
             slot ships as un-angled career-file boilerplate.
   Check 9 — grounding: every number/percentage/count in the rendered CV traces
             to the career file, catching invented or inflated metrics.
+  Check 10 — bullet strength: no experience bullet hides behind a generic
+            abstraction ("enterprise decision-makers", "global process owners")
+            where a named proof point belongs. The programmatic floor for the
+            editorial "surface a concrete proof point, not a generic noun" bar.
 
 A CV that fails any check is NOT shipped.
 """
@@ -55,6 +59,21 @@ def _read_document_xml(docx_path):
 def _visible_text(document_xml):
     """Concatenate all <w:t> text content from the document XML."""
     return " ".join(re.findall(r"<w:t[^>]*>(.*?)</w:t>", document_xml, re.DOTALL))
+
+
+def _bullet_text(bullet):
+    """Return the plain text of a content_map bullet.
+
+    A bullet is a plain string in plain mode, or a docxtpl RichText object
+    once convert_content_map() has run with bold on (inline_bold or the
+    labeled bullet_style). The content checks (8, 10) run on the post-convert
+    content_map, so they must read text out of either form. RichText stores
+    its runs as XML; pull the <w:t> text the same way _visible_text does.
+    """
+    if isinstance(bullet, str):
+        return bullet
+    xml = getattr(bullet, "xml", "") or str(bullet)
+    return " ".join(re.findall(r"<w:t[^>]*>(.*?)</w:t>", xml, re.DOTALL))
 
 
 def _iter_strings(obj):
@@ -213,7 +232,7 @@ def check_8_slot_coverage(experiences, expected_keywords):
     kws = [k.lower() for k in expected_keywords]
     uncovered = []
     for i, e in enumerate(experiences):
-        text = " ".join(e.get("bullets", [])).lower()
+        text = " ".join(_bullet_text(b) for b in e.get("bullets", [])).lower()
         if not any(k in text for k in kws):
             uncovered.append("slot " + str(i + 1) + " ("
                              + str(e.get("company", "?")) + ")")
@@ -266,6 +285,60 @@ def check_9_numeric_grounding(document_xml, career_file_text):
     return ok, note
 
 
+# Generic filler phrases that signal a weak, un-tailored bullet. Each one
+# was an actual offender in the 2026-06-25 Cairo batch, where bullets said
+# "enterprise decision-makers" while named proof points (Deloitte, Harvard
+# Law Review, W3C) sat unused in the career file. High-precision by design:
+# only multi-word abstractions that are almost never legitimate proof. Bare
+# "stakeholders" is deliberately NOT listed (it is a common, valid JD term);
+# surfacing the concrete proof point is enforced editorially (checks 1/3) and
+# upstream by the diagnosis's per-slot proof-point field.
+WEAK_GENERIC_PHRASES = (
+    "enterprise decision-makers",
+    "enterprise decision makers",
+    "global process owners",
+    "analytical workstreams",
+    "client-ready",
+    "actionable insights",
+    "actionable recommendations",
+    "evidence-based reports",
+)
+
+
+def check_10_bullet_strength(experiences):
+    """Check 10: no experience bullet hides behind a generic abstraction.
+
+    Programmatic floor for the editorial bar "surface a concrete proof point,
+    not a generic noun". Flags the named filler phrases in WEAK_GENERIC_PHRASES.
+    Style-independent and needs no career file, so it never silently skips on
+    missing inputs (the trap checks 7/8/9 have) except when there are no
+    experiences at all.
+
+    Reads bullet text via _bullet_text so it works whether bullets are plain
+    strings or RichText (labeled / inline_bold mode).
+    """
+    if not experiences:
+        return True, "No experiences; bullet-strength check skipped."
+
+    hits = []
+    for i, e in enumerate(experiences):
+        text = " ".join(_bullet_text(b) for b in e.get("bullets", [])).lower()
+        for phrase in WEAK_GENERIC_PHRASES:
+            if phrase in text:
+                hits.append("slot " + str(i + 1) + " ("
+                            + str(e.get("company", "?")) + "): '" + phrase + "'")
+    ok = not hits
+    if ok:
+        note = "No generic-filler phrasing; bullets name concrete proof."
+    else:
+        note = ("Generic filler where a named proof point belongs: "
+                + "; ".join(hits) + ". Replace the abstraction with the "
+                "concrete credential or metric from the career file (e.g. "
+                "'cited by Deloitte and the Harvard Law Review', not 'enterprise "
+                "decision-makers'). See the diagnosis's per-slot proof points.")
+    return ok, note
+
+
 def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
                    expected_keywords, expect_bold=True, career_file_path=None):
     """Run the programmatic audit checks. Returns an AuditResult.
@@ -309,14 +382,41 @@ def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
     result.passed["check_9_grounding"] = ok9
     result.notes["check_9_grounding"] = note9
 
+    ok10, note10 = check_10_bullet_strength(experiences)
+    result.passed["check_10_bullet_strength"] = ok10
+    result.notes["check_10_bullet_strength"] = note10
+
     return result
+
+
+def _selftest():
+    """Smallest check that fails if check_10 logic breaks (weak/strong split)."""
+    weak = [{"company": "Statista", "bullets": [
+        "Tracked competitive positioning for enterprise decision-makers."]}]
+    strong = [{"company": "Statista", "bullets": [
+        "Synthesized findings into reports cited by Deloitte and the "
+        "Harvard Law Review, briefing global stakeholders."]}]
+    ok_weak, _ = check_10_bullet_strength(weak)
+    ok_strong, _ = check_10_bullet_strength(strong)
+    assert not ok_weak, "check_10 should FAIL a generic-filler bullet"
+    assert ok_strong, "check_10 should PASS a named-proof-point bullet"
+    # Works on RichText bullets too (labeled / inline_bold mode).
+    from md_to_richtext import md_to_richtext
+    rt_weak = [{"company": "X", "bullets": [
+        md_to_richtext("**Coverage:** served enterprise decision-makers.")]}]
+    ok_rt, _ = check_10_bullet_strength(rt_weak)
+    assert not ok_rt, "check_10 should read RichText bullets and FAIL filler"
+    print("audit self-test (check_10): passed.")
 
 
 if __name__ == "__main__":
     import sys
     import os
+    if len(sys.argv) >= 2 and sys.argv[1] == "--selftest":
+        _selftest()
+        sys.exit(0)
     if len(sys.argv) < 2:
-        print("Usage: python audit.py <rendered_cv.docx>")
+        print("Usage: python audit.py <rendered_cv.docx>  |  python audit.py --selftest")
         sys.exit(1)
     if not os.path.isfile(sys.argv[1]):
         print(f"Error: file not found: {sys.argv[1]}", file=sys.stderr)

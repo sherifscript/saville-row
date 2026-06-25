@@ -3,6 +3,42 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v1.6.0 — 2026-06-25
+
+Bullet strength. The 2026-06-25 Cairo batch passed every audit check and still
+shipped weak, generic bullets ("tracked positioning for enterprise
+decision-makers") while named proof points (cited by Deloitte, Harvard Law
+Review, W3C) sat unused in the career file. Tailoring decided *which* fact a
+bullet surfaced; nothing governed *how* it was written, so quality was
+luck-of-the-draw. Benchmarked against an external Gemini CV that surfaced the
+concrete credentials, the gap was clear.
+
+### Added
+
+- **Bullet-writing standard.** `cv-tailor/SKILL.md` "Write strong bullets" makes
+  the substance bar explicit: surface the named proof point (not a generic noun),
+  lead with the outcome/ownership verb, place the metric where it lands, reframe
+  into JD vocabulary.
+- **Per-slot proof points in the diagnosis.** `role-diagnosis` "Section angles"
+  now names, for each experience slot, the specific credential/institution/number
+  the bullets must surface, so cv-tailor has concrete material instead of
+  defaulting to generic nouns.
+- **Audit Check 10 (bullet strength).** Fails any bullet that hides behind a
+  high-precision blocklist of generic fillers ("enterprise decision-makers",
+  "global process owners", etc.). Reads RichText or plain-string bullets, so it
+  works in both bullet styles. The editorial checks 1 and 3 were strengthened to
+  demand a named proof point per lead slot.
+- **`cv.bullet_style: plain | labeled`.** Opt-in Gemini-style bold capability
+  lead-ins (`**Pipeline automation:** ...`); `plain` remains the default.
+
+### Fixed
+
+- **`render_cv.py` never rendered bold.** It called `convert_content_map()`
+  without the config flag, so `inline_bold: true` (and now `labeled`) produced no
+  bold runs and would fail audit Check 5. It now passes the resolved flag. The
+  string-based audit checks (8, 10) read bullet text via a `_bullet_text` helper
+  so they no longer break on RichText bullets in bold mode.
+
 ## v1.5.0 — 2026-06-25
 
 Whole-CV tailoring. The 2026-06-14 Denmark trial showed tailoring effort decaying
