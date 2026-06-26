@@ -93,6 +93,20 @@ proof point ("cited by Deloitte and the Harvard Law Review") is available. If th
 slot genuinely has no named proof point or metric, say so explicitly so cv-tailor
 does not invent one.
 
+Name the **concrete detail to carry**, not just an abstraction. The angle is the
+source cv-tailor light-edits from, so point it at the specific career-file texture
+the slot should keep — "COVID-19 incidence and vaccine-trial data across US/Canada,
+used by governments and media", not "high-frequency research." A one-word
+abstraction in the angle ("research", "analysis") gives cv-tailor nothing to
+preserve and licenses a thin bullet. The richer the angle's source detail, the
+richer the bullet.
+
+Name the **JD-vocabulary framing** for the labels. For each slot's capability
+label (labeled mode), and for the core_skills labels and summary, say which of the
+JD's verbatim keywords (section 5) frames it — the domain-translation move that
+makes the candidate's real work read in the target role's language. The label is
+the JD's concept; the clause underneath is the grounded career-file fact.
+
 ```
 - Slot 1 (most recent): [fact] | proof point: [named credential / metric to surface] angled as [connection to the problem]
 - Slot 2 (same-employer): [fact] | proof point: [named credential / metric] angled as [connection]
@@ -170,10 +184,18 @@ If the diagnosis can't pick one, the resulting CV will be generic — every sect
 
 These are not your interpretation of the JD's themes. They are *the exact strings the JD uses*. If the JD says "experimentation platform," do not write "A/B testing infrastructure" in the diagnosis. Write "experimentation platform." The CV's keyword density is measured against these exact strings.
 
+These keywords are not just ATS tokens to scatter — they are the **framing
+vocabulary** for the CV. The strongest tailoring renames the candidate's real work
+in these exact terms: a capability label, a core-skill header, or the summary's
+framing is written in the JD's concept, with the grounded career-file fact
+underneath (see SKILL.md "Domain translation"). A keyword that only appears once,
+buried mid-bullet, is under-used; the same keyword as the *frame* of a label or a
+skill row is doing the reframing work that makes the strongest tailoring land.
+
 Distribute the keywords across the whole document, not just the top:
 - 1–2 in the tagline
-- 2–3 in the summary
-- 1–2 per core skill row
+- 2–3 in the summary, as its framing
+- 1–2 per core skill row, framing the label
 - ≥2 in experience bullets (mandatory — checked by the post-render audit)
 - at least one diagnosed keyword or angle reaches *every* rendered experience
   slot, including the lower and branch slots (checked by the coverage audit)

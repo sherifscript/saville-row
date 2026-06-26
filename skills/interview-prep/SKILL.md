@@ -2,7 +2,7 @@
 name: interview-prep
 description: Produce an interview prep document for a specific role — role snapshot, STAR+R story map, likely hard questions, and smart questions to ask back. Pulls from the story bank and the career file.
 metadata:
-  version: 1.6.1
+  version: 1.7.0
   last_updated: 2026-06-11
 ---
 
