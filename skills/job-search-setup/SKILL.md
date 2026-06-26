@@ -2,7 +2,7 @@
 name: job-search-setup
 description: First-run wizard for saville-row. Reads the candidate's career file, proposes branches, prompts for voice references and regions, writes config.yaml. Run once per repo before any other skill.
 metadata:
-  version: 1.6.0
+  version: 1.6.1
   last_updated: 2026-06-11
 ---
 
@@ -128,6 +128,22 @@ Without bold:
 *Default is off. Turn it on if you want the emphasis."*
 
 Write `cv.inline_bold: true/false` to `config.yaml`. When `inline_bold: false`, the `convert_content_map()` helper in cv-tailor strips all `**` markers from every bullet before render — including experience, education, and any other field — so nothing renders bold regardless of what the content map contains.
+
+### Step 6b-ii — Bullet style
+
+Ask: *"How should your experience bullets read? Two styles:*
+
+*Plain (default) — each bullet is a sentence:*
+> Built a Python pipeline that cut report publication time 30%, removing manual prep from a high-frequency reporting cycle.
+
+*Labeled — each bullet opens with a short bold capability label, then the outcome:*
+> **Pipeline automation:** built a Python pipeline that cut report publication time 30%, removing manual prep from a high-frequency reporting cycle.
+
+*Labeled is the more scannable, modern look; plain is the more conservative one. The substance of each bullet is identical either way. Which do you want?"*
+
+Default: `plain`. Write `cv.bullet_style: plain` or `cv.bullet_style: labeled` to `config.yaml`.
+
+If the user picks `labeled`, note that it turns bold rendering on for the labels regardless of the `inline_bold` answer above (the label has to render bold to be a label). The "what to bold" discipline that governs plain mode (4–8 bold items, never bold a generic word) does not apply to the labels in labeled mode — see `cv-tailor/references/docxtpl-recipe.md`.
 
 ### Step 6c — Session date format
 

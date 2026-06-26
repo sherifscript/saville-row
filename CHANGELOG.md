@@ -3,6 +3,16 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v1.6.1 — 2026-06-26
+
+### Added
+
+- **Setup wizard exposes `cv.bullet_style`.** `job-search-setup` Step 6b-ii now
+  asks plain vs labeled (with a side-by-side example), so the v1.6.0 labeled-bullet
+  style is a real setup choice instead of a hand-edit. Closes the gap found in the
+  2026-06-25 test4 run, where the toggle existed in config and cv-tailor but the
+  wizard only asked about `inline_bold`.
+
 ## v1.6.0 — 2026-06-25
 
 Bullet strength. The 2026-06-25 Cairo batch passed every audit check and still
