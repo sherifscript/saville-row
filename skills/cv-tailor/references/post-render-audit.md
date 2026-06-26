@@ -28,6 +28,12 @@ If any check fails, the CV is **not shipped**. The framework either re-renders (
 
 The check fails when the CV could plausibly have been submitted for a different role at a different company. Often the diagnosis was weak — too generic, no real point of view on the role — and the CV inherited the genericness.
 
+Three things to judge explicitly, because a CV can pass every programmatic check and still be weak here:
+
+1. **Richness / substance.** Does each experience bullet keep the *concrete specifics* from the career file (named clients, exact numbers, specific nouns), or has it been compressed into category-nouns? The failure pattern: a real, specific fact ("monitored COVID-19 incidence and vaccine-trial data across US and Canadian regions, used by governments and media") rewritten thin ("engineered workflows across high-frequency publication cycles"). If a bullet is markedly shorter and vaguer than its career-file source, it was over-compressed — send it back to the substance bar in `../SKILL.md` "Write strong bullets".
+2. **Domain translation.** Are the capability labels, core-skill labels, and summary written in the JD's own vocabulary (the diagnosis's verbatim keywords), or are they literal restatements of the work? Labels like "Methodology under deadline" / "Structured under pressure" are the weak pattern; the JD's concepts framing a real fact ("Time-to-Value", "Competitive Landscape Mapping") are the bar. See `../SKILL.md` "Domain translation".
+3. **Could a recruiter without the title still see the fit?** The strongest tailoring makes adjacent experience read as the thing this team hires for, while every fact still traces to the career file (Check 9 guards the line). If the translation is missing, strengthen the diagnosis's "Section angles" framing and re-render.
+
 **Bolding discipline is part of this check (plain mode).** Scan every bolded phrase in the rendered CV at once. There should be roughly 4–8 bold items total, and every one should be a quantified outcome or a credential proper noun — never a JD keyword. If a phrase is bolded twice, or if most bullets carry a bold phrase, or if a plain skill word like "user research" is bolded, the CV reads as unedited. Fix the `**` markers in the content map (see docxtpl-recipe.md "what to bold") and re-render. In `bullet_style: labeled` this part is suspended: every bullet is supposed to open with a bold capability label, so the 4–8 ceiling does not apply; instead confirm each label is a 2–5 word capability phrase in the role's vocabulary, not a dumped JD keyword.
 
 **On failure:** strengthen the diagnosis first (specifically section 4, "which credential speaks loudest to that bar?"), then re-render. Do not patch the CV directly.
@@ -109,25 +115,29 @@ nothing.
 **On failure:** remove or correct the unsupported metric/claim, or add the fact to the
 career file if it is genuinely real and was simply missing. Re-render.
 
-### 10. Does any bullet hide behind a generic abstraction instead of a named proof point?
+### 10. Does any *ungrounded* bullet hide behind a generic abstraction instead of a named proof point?
 
 **Programmatic check.** Scan every experience bullet for a short blocklist of generic
 filler phrases ("enterprise decision-makers", "global process owners", "analytical
 workstreams", "client-ready", "evidence-based reports", "actionable insights /
-recommendations"). Any hit fails the CV. The list is deliberately high-precision —
-multi-word abstractions that are almost never legitimate proof; bare "stakeholders" is
-not listed because it is a common, valid JD term.
+recommendations"). A phrase fails the CV **only when the bullet carrying it has no
+concrete proof of its own** — no number and no named entity. A grounded bullet may keep
+one of these phrases ("managed analytical workstreams for 40+ multinationals across
+Technology and Telecom" is strong; the phrase is incidental). This is deliberate: the
+earlier unconditional substring ban was the v1.6.0 over-correction that pushed bullets
+toward thin paraphrase, failing the exact phrasing the rich benchmark CVs use legitimately.
 
-This is the programmatic floor under the editorial bar in check 1 and in `SKILL.md`
-"Write strong bullets". It does not, on its own, prove the proof point was surfaced
-(that judgment is check 1 plus the diagnosis's per-slot proof points); it catches the
-specific way the 2026-06-25 Cairo batch failed — bullets defaulting to a generic
-audience while named credentials (Deloitte, Harvard Law Review, W3C) sat unused.
+This is the programmatic floor under the editorial bar in checks 1 and 3 and in `SKILL.md`
+"Write strong bullets". It does not, on its own, prove the proof point was surfaced (that
+judgment is checks 1/3 plus the diagnosis's per-slot proof points); it catches the
+specific way the 2026-06-25 Cairo batch failed — *thin* bullets defaulting to a generic
+audience with no number or named credential anywhere in them.
 
-**On failure:** rewrite the flagged bullet to name the concrete credential or metric the
-diagnosis assigned that slot, then re-render. Implemented as `check_10_bullet_strength`
-in [`../scripts/audit.py`](../scripts/audit.py); reads RichText or plain-string bullets,
-so it works in both `plain` and `labeled` bullet styles.
+**On failure:** either ground the flagged bullet with the named credential or metric the
+diagnosis assigned that slot, or drop the abstraction — then re-render. Implemented as
+`check_10_bullet_strength` (with `_has_concrete_proof`) in
+[`../scripts/audit.py`](../scripts/audit.py); reads RichText or plain-string bullets, so
+it works in both `plain` and `labeled` bullet styles.
 
 ## Running the audit
 

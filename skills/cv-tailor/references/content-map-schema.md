@@ -34,14 +34,14 @@ grounding check (Check 9) flags any number or claim with no career-file source.
 | `personal_site` | string | regional-headers.yaml | Personal site shown on contact line 2 (e.g. `jordanpark.me`). |
 | `linkedin_url` | string | regional-headers.yaml | LinkedIn shown on contact line 2 (e.g. `linkedin.com/in/jordanpark`). |
 | `contact_line_2_suffix` | string | regional-headers.yaml | Trailing text after the personal-site / LinkedIn entries; varies by region |
-| `summary` | string | diagnosis | 3 sentences. Sentence 1: scope. Sentence 2: strongest proof point. Sentence 3: differentiator. No employer names. |
-| `core_skills` | list of `{label, description}` | diagnosis | 4 skill rows + 1 tools row. Each row: `{"label": "Bold Header", "description": "plain description"}` |
+| `summary` | string | diagnosis | 3 sentences, framed in the JD's vocabulary (see SKILL.md "Domain translation"). Sentence 1: scope. Sentence 2: strongest proof point. Sentence 3: differentiator. No employer names. |
+| `core_skills` | list of `{label, description}` | diagnosis | 4 skill rows + 1 tools row. Each row: `{"label": "Bold Header", "description": "plain description"}`. Labels are the role's domain vocabulary — the JD's own concepts — not literal restatements of the work (see SKILL.md "Domain translation"). |
 | `experiences` | list of experience dicts | diagnosis + career file + branches.yaml | Ordered list. Count = `cv.max_experience_slots` |
 | `experiences[i].title` | string | career file + diagnosis | Job title, possibly tailored to the JD's vocabulary |
 | `experiences[i].dates` | string | career file | Date range as written in the career file |
 | `experiences[i].company` | string | career file | Company name |
 | `experiences[i].location` | string | career file | City, Country |
-| `experiences[i].bullets` | list[string] | diagnosis | Must clear the substance bar in `SKILL.md` "Write strong bullets": surface the named proof point (not a generic noun), lead with the outcome/ownership verb, place the metric where it lands, reframe into JD vocabulary. The diagnosis's per-slot proof points say which credential each slot names. Bold: `plain` mode marks `**bold**` only on quantified outcomes and credential proper nouns, never JD keywords (see docxtpl-recipe.md "what to bold"); `labeled` mode opens each bullet with a `**Label:**` lead-in. Check 10 rejects generic fillers. |
+| `experiences[i].bullets` | list[string] | diagnosis | Must clear the substance bar in `SKILL.md` "Write strong bullets": **light-edit** the career-file bullet (don't rewrite it thin), **preserve its concrete specifics** (named clients, numbers, specific nouns), surface the named proof point, lead with ownership + scope, frame in the JD's vocabulary, ~25–40 words. The diagnosis's per-slot proof points say which credential each slot names. Bold: `plain` mode marks `**bold**` only on quantified outcomes and credential proper nouns, never JD keywords (see docxtpl-recipe.md "what to bold"); `labeled` mode opens each bullet with a `**Label:**` lead-in that translates the fact into the JD's vocabulary, followed by a full-substance clause. Check 10 rejects generic fillers that lack a concrete proof point. |
 | `msc_degree` | string | career file | Higher/most-recent degree name. |
 | `msc_date` | string | career file | Higher degree completion date. |
 | `msc_institution` | string | career file | Higher degree institution. |

@@ -21,7 +21,9 @@ Programmatic checks:
             to the career file, catching invented or inflated metrics.
   Check 10 — bullet strength: no experience bullet hides behind a generic
             abstraction ("enterprise decision-makers", "global process owners")
-            where a named proof point belongs. The programmatic floor for the
+            *while carrying no concrete proof of its own*. Grounding-aware: a
+            bullet with a number or named entity may keep natural phrasing; only
+            the thin, ungrounded bullet fails. Programmatic floor for the
             editorial "surface a concrete proof point, not a generic noun" bar.
 
 A CV that fails any check is NOT shipped.
@@ -289,10 +291,16 @@ def check_9_numeric_grounding(document_xml, career_file_text):
 # was an actual offender in the 2026-06-25 Cairo batch, where bullets said
 # "enterprise decision-makers" while named proof points (Deloitte, Harvard
 # Law Review, W3C) sat unused in the career file. High-precision by design:
-# only multi-word abstractions that are almost never legitimate proof. Bare
-# "stakeholders" is deliberately NOT listed (it is a common, valid JD term);
-# surfacing the concrete proof point is enforced editorially (checks 1/3) and
-# upstream by the diagnosis's per-slot proof-point field.
+# only multi-word abstractions. Bare "stakeholders" is deliberately NOT listed
+# (it is a common, valid JD term).
+#
+# These phrases are flagged only when the bullet carrying them has NO concrete
+# proof point of its own (no number, no named entity) — see _has_concrete_proof.
+# A grounded bullet may legitimately contain one of these phrases ("managed
+# analytical workstreams for 40+ multinationals across Technology and Telecom"
+# is strong; the phrase is incidental). The unconditional substring ban was the
+# v1.6.0 over-correction that pushed bullets toward thin paraphrase — it failed
+# the same phrasing the rich benchmark CVs legitimately use.
 WEAK_GENERIC_PHRASES = (
     "enterprise decision-makers",
     "enterprise decision makers",
@@ -304,15 +312,44 @@ WEAK_GENERIC_PHRASES = (
     "evidence-based reports",
 )
 
+# ponytail: heuristic proof detector, not an NER. A digit or a mid-sentence
+# proper noun is "concrete enough"; editorial check 3 is the real judge.
+_PROPER_NOUN_RE = re.compile(r"\b([A-Z][a-zA-Z]+|[A-Z]{2,})\b")
+
+
+def _has_concrete_proof(bullet_text):
+    """True if the bullet carries a number or a named entity.
+
+    A number (40+, 30%, $30K, 11M, a year) is unambiguous proof. For named
+    entities we strip any leading `Label:` lead-in (labeled bullet_style) so the
+    capability label's own capitalization does not count, then look for a
+    capitalized token that is not the first word of the clause — Deloitte,
+    Python, Power BI, US/Canadian, Statista. Crude but high-precision for the
+    job: it only gates whether a WEAK_GENERIC_PHRASE is allowed to stand.
+    """
+    if any(ch.isdigit() for ch in bullet_text):
+        return True
+    # Strip a short leading "Label:" segment (labeled mode) before noun scan.
+    clause = re.sub(r"^[^:]{0,40}:\s*", "", bullet_text).strip()
+    if not clause:
+        return False
+    first_word = clause.split()[0]
+    for m in _PROPER_NOUN_RE.finditer(clause):
+        if m.group(0) != first_word:  # ignore a capitalized sentence start
+            return True
+    return False
+
 
 def check_10_bullet_strength(experiences):
-    """Check 10: no experience bullet hides behind a generic abstraction.
+    """Check 10: no experience bullet hides behind a generic abstraction
+    *without any concrete proof of its own*.
 
     Programmatic floor for the editorial bar "surface a concrete proof point,
-    not a generic noun". Flags the named filler phrases in WEAK_GENERIC_PHRASES.
-    Style-independent and needs no career file, so it never silently skips on
-    missing inputs (the trap checks 7/8/9 have) except when there are no
-    experiences at all.
+    not a generic noun". A WEAK_GENERIC_PHRASE fails only when its bullet has no
+    number and no named entity (_has_concrete_proof). This lets a grounded bullet
+    keep natural phrasing while still catching the thin, abstract bullet the
+    phrase list was written for. Needs no career file; only skips when there are
+    no experiences at all.
 
     Reads bullet text via _bullet_text so it works whether bullets are plain
     strings or RichText (labeled / inline_bold mode).
@@ -322,20 +359,24 @@ def check_10_bullet_strength(experiences):
 
     hits = []
     for i, e in enumerate(experiences):
-        text = " ".join(_bullet_text(b) for b in e.get("bullets", [])).lower()
-        for phrase in WEAK_GENERIC_PHRASES:
-            if phrase in text:
-                hits.append("slot " + str(i + 1) + " ("
-                            + str(e.get("company", "?")) + "): '" + phrase + "'")
+        for b in e.get("bullets", []):
+            btext = _bullet_text(b)
+            if _has_concrete_proof(btext):
+                continue  # grounded bullet — phrase is incidental, allowed
+            low = btext.lower()
+            for phrase in WEAK_GENERIC_PHRASES:
+                if phrase in low:
+                    hits.append("slot " + str(i + 1) + " ("
+                                + str(e.get("company", "?")) + "): '" + phrase
+                                + "' in an ungrounded bullet")
     ok = not hits
     if ok:
-        note = "No generic-filler phrasing; bullets name concrete proof."
+        note = "No ungrounded generic-filler phrasing; bullets carry concrete proof."
     else:
-        note = ("Generic filler where a named proof point belongs: "
-                + "; ".join(hits) + ". Replace the abstraction with the "
-                "concrete credential or metric from the career file (e.g. "
-                "'cited by Deloitte and the Harvard Law Review', not 'enterprise "
-                "decision-makers'). See the diagnosis's per-slot proof points.")
+        note = ("Generic filler in a bullet with no concrete proof: "
+                + "; ".join(hits) + ". Either ground the bullet with the slot's "
+                "named proof point / metric from the career file, or drop the "
+                "abstraction. See the diagnosis's per-slot proof points.")
     return ok, note
 
 
@@ -400,6 +441,16 @@ def _selftest():
     ok_strong, _ = check_10_bullet_strength(strong)
     assert not ok_weak, "check_10 should FAIL a generic-filler bullet"
     assert ok_strong, "check_10 should PASS a named-proof-point bullet"
+    # Grounding-aware: a generic phrase is allowed when the bullet itself
+    # carries concrete proof (a number or named entity).
+    grounded = [{"company": "Statista", "bullets": [
+        "Managed analytical workstreams for 40+ multinationals across "
+        "Technology and Telecom, delivering client-ready outputs."]}]
+    ok_grounded, _ = check_10_bullet_strength(grounded)
+    assert ok_grounded, ("check_10 should PASS a grounded bullet even when it "
+                         "contains a phrase from WEAK_GENERIC_PHRASES")
+    assert _has_concrete_proof("Managed workstreams for 40+ corporations")
+    assert not _has_concrete_proof("served enterprise decision-makers")
     # Works on RichText bullets too (labeled / inline_bold mode).
     from md_to_richtext import md_to_richtext
     rt_weak = [{"company": "X", "bullets": [

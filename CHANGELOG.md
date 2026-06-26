@@ -3,6 +3,51 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v1.7.0 — 2026-06-27
+
+Rich tailoring. v1.6.0 added a "bullet strength" bar to fix generic, un-tailored
+bullets — but it over-corrected toward *punchy* and produced *thin*. Side-by-side
+against the original-workflow benchmark CV and an external Gemini CV (same JD), the
+plugin's bullets were ~16 words of category-nouns where the benchmarks were ~25–40
+words that kept the concrete texture (named clients, exact numbers, "COVID-19
+incidence and vaccine-trial data across US and Canadian regions"). Two spec defects
+caused it: the substance bar told the model to compress and banned the natural verbs
+that carry rich bullets, and the Check 10 blocklist failed grounded phrasing the
+strong CVs legitimately use. This release rebalances toward rich + concrete + domain
+translation, with factuality kept as a hard guardrail.
+
+### Changed
+
+- **Substance bar rewritten** (`cv-tailor/SKILL.md` "Write strong bullets"). Now
+  leads with *preserve the concrete specifics* and *light-edit the source bullet
+  (don't rewrite thin)*, adds a ~25–40-word substance floor, and drops the
+  blanket ban on natural lead verbs (managed / monitored / conducted) — only the
+  *naked duty* bullet with no scope or outcome is weak. Reconciles with the
+  "don't paste verbatim" rule so it reads as *light-edit per role*, not *rewrite
+  from scratch*.
+- **Check 10 is grounding-aware** (`cv-tailor/scripts/audit.py`). A
+  `WEAK_GENERIC_PHRASES` hit now fails a bullet only when that bullet carries no
+  concrete proof of its own (no number, no named entity) via `_has_concrete_proof`.
+  This stops the v1.6.0 ban from rejecting rich, grounded bullets that happen to
+  contain a phrase like "client-ready" — including bullets that use a verbatim JD
+  keyword.
+- **Audit Check 3 given teeth** (`cv-tailor/references/post-render-audit.md`). The
+  "feels like a generic version of my career?" editorial read now explicitly judges
+  richness/substance and domain translation, not just keyword fit.
+
+### Added
+
+- **Domain translation** (`cv-tailor/SKILL.md` new section + `role-diagnosis`
+  Section angles). Capability labels, `core_skills` labels, and the summary are
+  framed in the JD's own vocabulary (sourced from the diagnosis's verbatim
+  keywords), translating real work into the concepts the role hires for — the
+  reproducible mechanism behind the strongest tailoring. Aggressiveness scales with
+  the diagnosis's stretch read; a hard guardrail keeps translation vocabulary-only,
+  never inventing a fact (Check 9 still enforces grounding).
+- **Diagnosis Section angles carry concrete detail.** The per-slot angle must name
+  the specific career-file texture to preserve and the JD-keyword framing for
+  labels, so cv-tailor has rich source to light-edit instead of a thin abstraction.
+
 ## v1.6.1 — 2026-06-26
 
 ### Added

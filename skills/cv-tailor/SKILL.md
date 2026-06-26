@@ -2,8 +2,8 @@
 name: cv-tailor
 description: Render diagnosis-driven, ATS-optimized CVs as .docx via docxtpl. Modular section composition, region-aware headers, inline-bold helper, and a mandatory post-render audit (tailoring coverage, numeric grounding, and named structural failure modes).
 metadata:
-  version: 1.6.1
-  last_updated: 2026-06-25
+  version: 1.7.0
+  last_updated: 2026-06-27
 ---
 
 # cv-tailor
@@ -49,52 +49,101 @@ Every content field is angled by the diagnosis, not just the lead slot. Build th
 role. The career file is the source of facts (dates, employers, what happened,
 every number); the diagnosis decides which fact to surface and how to frame it.
 
-Do not copy career-file phrasing verbatim into bullets. The shipped failure mode:
+Do not paste career-file phrasing *unchanged* across CVs. The shipped failure mode:
 the lead slot was tailored and slots 2..N, education, and `additional` were pasted
-from the career file unchanged, so they came out byte-for-byte identical across
+from the career file untouched, so they came out byte-for-byte identical across
 every CV in a batch (the 2026-06-14 Denmark batch shipped the same Atheneum slot in
 all ten CVs). Check 8 of the post-render audit now fails a slot that ships un-angled.
-The angle re-frames a real fact; it never adds one. Check 9 enforces that. See
+The fix is to **light-edit per role** — reframe the wording and angle for *this*
+diagnosis while keeping the bullet's concrete detail — not to rewrite it thin (see
+"Write strong bullets" below). The angle re-frames a real fact; it never adds one.
+Check 9 enforces that. See
 [`references/content-map-schema.md`](./references/content-map-schema.md) "Facts vs angle".
 
 ### Write strong bullets (the substance bar)
 
 Tailoring decides *which* fact each bullet surfaces; this decides *how* it is
-written. A bullet that is angled to the role but written as a generic
-responsibility is still weak. The shipped failure mode (2026-06-25 Cairo batch):
-bullets said "tracked positioning for **enterprise decision-makers**" while the
-named proof points (cited by Deloitte, Harvard Law Review, W3C) sat unused in the
-career file. Every bullet must clear this bar:
+written. The benchmark is the candidate's own career-file bullet, **lightly
+edited** — not a thin rewrite. There are two opposite failure modes, and both
+ship weak CVs:
 
-1. **Surface the named proof point, not a generic noun.** If the career file
-   names the institutions that cited the work (Deloitte, Harvard Law Review,
-   Freedom House, W3C), the clients, the platforms, or a number (40+
-   multinationals, 30% faster, $30K, 11M views), the bullet names it. Never
-   write "enterprise decision-makers", "global process owners", "analytical
-   workstreams", "client-ready outputs", "evidence-based reports", or
-   "actionable insights" when a concrete proof point exists. The diagnosis's
-   per-slot **proof points** (see `role-diagnosis/references/diagnosis-template.md`,
-   "Section angles") tell you which one to use for each slot. Check 10 fails the
-   generic fillers; the editorial checks (1, 3) fail a slot that hides behind a
-   generic noun.
-2. **Lead with the outcome or an ownership verb, not a responsibility verb.**
-   Open with what was achieved or owned ("Built a pipeline that cut publication
-   time 30%", "Owned coverage of 40+ multinationals"), not the duty performed
-   ("Managed documentation workflows", "Coordinated with teams", "Conducted
-   interviews"). Banned bare leads: managed, coordinated, conducted, supported,
-   handled, assisted, maintained.
-3. **Put the metric where it lands.** A number is proof; place it in the lead or
-   as the bullet's terminal, emphasized fact, not buried mid-clause behind
-   filler ("...30%, improving accuracy and consistency" → drop the filler).
-4. **Reframe into the role's vocabulary.** Use the diagnosis's verbatim JD
-   keywords in the bullet wording so the same real fact reads as the thing this
-   team is hiring for.
-5. **Shape:** scope + action + outcome with concrete detail. Ground everything;
-   the proof point must already exist in the career file (Check 9).
+- **Un-tailored:** a career-file bullet pasted byte-for-byte across every CV in a
+  batch (the 2026-06-14 Denmark batch shipped the same lower slot in all ten).
+- **Thin:** a bullet rewritten from scratch into a short, abstract fragment that
+  boils off the concrete texture the career file gave it. The 2026-06-25 Cairo
+  batch did this — "engineered Python data analysis workflows across
+  high-frequency publication cycles" in place of the real, specific fact
+  ("monitored COVID-19 incidence and vaccine-trial data across US and Canadian
+  regions, used by international institutions, governments, and media").
 
-The golden reference for this bar is the rebuilt Henkel CV from the 2026-06-25
-session (`build_one.py`); the first-pass `build_cairo.py` bullets are the
-negative the new checks now reject.
+Every bullet must clear this bar:
+
+1. **Preserve the concrete specifics; reframe only the vocabulary.** The career
+   file's named clients, exact numbers, and specific nouns *are* the substance —
+   keep them. Reframing turns a fact's wording toward the role; it never dissolves
+   the specifics into category-nouns. A real test: if a bullet carries fewer
+   concrete nouns/numbers than the career-file bullet it came from, you
+   over-compressed — put the detail back.
+2. **Light-edit the source bullet; do not rewrite from scratch.** Start from the
+   actual career-file bullet for the fact you are surfacing. Keep its structure
+   and detail; change its wording to the role's language and fold in the JD's
+   terms. Sameyness across a batch is prevented by the *diagnosis choosing
+   different facts and angles per role* — never by stripping detail from a shared
+   skeleton.
+3. **Surface the named proof point, not a generic noun.** When the career file
+   names the institutions that cited the work, the clients, the platforms, or a
+   number (e.g. 40+ multinationals, 30% faster, $30K, 11M views), the bullet names
+   it. The diagnosis's per-slot **proof points** (see
+   `role-diagnosis/references/diagnosis-template.md`, "Section angles") tell you
+   which one each slot carries.
+4. **Lead with ownership and scope.** Open with a verb that carries ownership
+   *and* is immediately followed by concrete scope, number, or outcome — "Managed
+   analytical workstreams for 40+ multinationals across Technology and Telecom,
+   delivering outputs under deadline" is strong even though it opens with
+   "Managed." A plain verb is only weak when the bullet behind it is empty: the
+   thing to avoid is the *naked duty* bullet ("Managed documentation workflows",
+   "Coordinated with teams") that names no scope, number, or result. Do not
+   contort around a natural verb to satisfy a blocklist — a grounded "Monitored /
+   Conducted / Built" bullet beats an awkward synonym.
+5. **Frame in the role's vocabulary (see "Domain translation" below).** Use the
+   diagnosis's verbatim JD keywords as the *framing* of the bullet — the same real
+   fact read as the thing this team is hiring for — not as tokens sprinkled to
+   satisfy ATS.
+6. **Shape and length.** Scope + action + outcome with concrete detail, roughly
+   25–40 words — the substance and shape of the career file's own bullets. This is
+   a floor on substance, not a hard cap; the diagnosis decides how much each slot
+   needs, but a ~12-word fragment is almost always under-written. Put the metric
+   where it lands (lead or terminal), not buried mid-clause behind filler.
+
+Everything stays grounded: the proof point and every number must already exist in
+the career file (Checks 9, 10). Reframe what is true; invent nothing.
+
+### Domain translation (frame real work in the JD's vocabulary)
+
+The strongest tailoring does not just preserve specifics — it **renames the
+candidate's real work in the target role's own vocabulary**, so a recruiter reads
+the CV and thinks "even without the exact title, this covers what we need." The
+source of that vocabulary is already in hand: the diagnosis's **verbatim JD
+keywords** block. Today those keywords are mostly *sprinkled* to satisfy ATS (Check
+2 only wants two of them to appear somewhere). Promote them to **framing**:
+
+- **Capability labels (labeled mode), `core_skills` labels, and the `summary`** are
+  written in the JD's concepts, not as literal restatements of the underlying work.
+  A research-throughput fact reframed for a customer-facing role becomes a label
+  like "Time-to-Value" or a skill like "Value Realization"; the same fact for a
+  market-intelligence role becomes "Competitive Landscape Mapping." The label or
+  skill name does the reframing; the clause underneath carries the grounded detail.
+- **Scale the aggressiveness to the diagnosis's stretch assessment.** The diagnosis
+  names the role's *actual bar* and an honest stretch read (e.g. "stretch-to-strong:
+  the title is new but the underlying work matches"). A genuine stretch translates
+  aggressively — pull the role's framing all the way onto adjacent real work. A
+  close match stays near the source wording, because heavy translation there reads
+  as straining. Let the diagnosis decide the dial.
+- **Hard guardrail — vocabulary only.** Translation changes *wording and framing*,
+  never the facts. It never invents a title, a number, a tool, or a responsibility,
+  and never upgrades a contributor role to owner. A label is a lens on a real fact,
+  not a new claim. Checks 9 (numeric grounding) and its honesty companion enforce
+  this. This is the line that keeps every CV uploadable without re-checking.
 
 ### `autoescape=True` is mandatory
 
@@ -140,6 +189,18 @@ way in both modes; this is only the surface form.
   30%`). The model writes the label as `**Label:**` at the start of each bullet.
   `labeled` turns bold rendering on for bullets regardless of `inline_bold`, so
   the labels render as real bold runs.
+
+Two rules keep `labeled` mode from going thin:
+
+- **The label is domain translation, not a literal restatement.** It names the
+  fact in the JD's vocabulary (see "Domain translation") — "Time-to-Value
+  Optimization", "Competitive Landscape Mapping" — not a flat paraphrase of the
+  clause ("Methodology under deadline", "Structured under pressure" are the weak
+  pattern to avoid).
+- **The label is an addition, not a budget cut.** The clause after the colon still
+  meets the full substance bar above — ~25–40 words, the named proof point, the
+  concrete specifics. A label followed by a 6-word fragment is an under-written
+  bullet wearing a hat.
 
 The label re-frames a real fact in the JD's language; it never adds a fact. In
 `labeled` mode the "what to bold" discipline (4–8 bold items, never bold a
