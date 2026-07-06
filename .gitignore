@@ -40,6 +40,10 @@ Requests/
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 
+# Session handover records (contain live job-search details; keep local)
+RUN_INFO.md
+SESSION_RECORD.md
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db
