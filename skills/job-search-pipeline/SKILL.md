@@ -50,13 +50,38 @@ For a `Run [Country/City]` command, the pipeline runs start to finish from one p
 ```
 1. job-discovery   — search, blacklist filter, score, dedup, append to job log
 2. role-diagnosis  — for each top-N selected role, write Diagnosis.md   [GATE]
-3. cv-tailor       — render a CV per diagnosis, run the post-render audit
+3. cv-tailor       — per-CV checklist (below), one role at a time
 4. cover-letter    — write a cover letter per role (Western markets; multinationals only in Egypt/Gulf)
 5. cover-letter    — draft LinkedIn nudges where a recruiter was identified
 6. session notes   — log anything unexpected
 ```
 
 Each stage gates the next: no diagnosis means no CV; a failed audit means the CV is not shipped.
+
+**The cv-tailor stage is a per-CV checklist, not a loop to rush.** Batch
+effort decay is a named failure mode (2026-06-14: the tenth CV got a fraction
+of the first CV's attention; 2026-06-27: bullet counts silently shrank down
+the batch). For EACH selected role, in order:
+
+1. Lint the diagnosis (`lint_diagnosis.py` — `render()` also enforces it).
+2. Author the content map fresh from THIS role's diagnosis — every slot from
+   its Section angle, at the full substance bar. Define batch constants
+   (contact lines, education facts, the Languages string) ONCE in the driver
+   and reference them; never re-type them per role (the 2026-06-27 batch
+   shipped two different Languages strings from two drivers).
+3. Render via `render_cv.render()` (validation → render → postprocess →
+   programmatic audit).
+4. Record the two editorial verdicts on the returned result —
+   `result.record_editorial('check_1_lead_slots', ...)` and
+   `('check_3_recruiter_fit', ...)` — with one honest line each. The audit's
+   `all_passed` stays False until both are recorded; recording them is
+   authoring work, not a pause, and never stops the run.
+5. Ship only on `all_passed`; a failure means fix and re-render, not skip.
+
+After the last CV, run the batch sameyness sweep
+(`python audit.py --sameyness <session folder>`) and carry any warnings into
+the closing summary — duplicated bullets across CVs must be a visible choice,
+not silent drift.
 
 **No mid-run confirmation pauses.** Do not stop between stages to ask whether to proceed, whether to generate all CVs, or whether the selection looks right. Present the results table and the selected roles, then proceed immediately into diagnosis, CV rendering, and cover letters. The only interactive stop in a full-pipeline run is the branch-selection menu when a `Run [Country]` prompt names no branch — and only that.
 
@@ -102,6 +127,7 @@ After a pipeline run completes, tell the user in plain text:
 3. **What was produced** — a one-line count: "5 diagnoses, 5 CVs, 4 cover letters, 1 LinkedIn nudge file."
 4. **Any exceptions** — low yield, connector failures, or skipped cover letters (Egypt/Gulf local companies), stated in one sentence each.
 5. **Sweep result** — one line: either "Output folders are clean" or what was moved to `.scratch/` and why.
+6. **Sameyness sweep** — one line from `python audit.py --sameyness <session folder>`: either "no duplicate bullets across CVs" or each shared bullet named with the CVs that share it.
 
 This summary makes it easy to find the output without hunting through folders, and gives a quick sanity-check on what the pipeline completed.
 

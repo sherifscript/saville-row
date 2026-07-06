@@ -212,6 +212,12 @@ def _three_slot_map():
 KEYWORDS = ["pipeline", "dashboards", "data quality", "market research"]
 
 
+def _record_editorial_pass(result):
+    """Tests stand in for the model's required editorial verdicts."""
+    result.record_editorial("check_1_lead_slots", True, "test fixture verdict")
+    result.record_editorial("check_3_recruiter_fit", True, "test fixture verdict")
+
+
 def test_render_end_to_end_labeled(tmp_path):
     config = {"cv": {"bullet_style": "labeled", "max_experience_slots": 3}}
     out = tmp_path / "cv.docx"
@@ -223,6 +229,10 @@ def test_render_end_to_end_labeled(tmp_path):
         output_path=str(out),
         expected_keywords=KEYWORDS,
     )
+    # all_passed is deliberately False until the editorial verdicts are
+    # recorded — a CV can no longer pass by omission.
+    assert not result.all_passed
+    _record_editorial_pass(result)
     assert result.all_passed, result.failure_summary
 
     # Every bullet must be readable and the labels bold — what Word and an
@@ -253,6 +263,7 @@ def test_render_region_override_removes_summary(tmp_path):
         expected_keywords=KEYWORDS,
         region="EU",
     )
+    _record_editorial_pass(result)
     assert result.all_passed, result.failure_summary
     texts = [p.text.strip() for p in Document(str(out)).paragraphs]
     assert "PROFESSIONAL SUMMARY" not in texts
