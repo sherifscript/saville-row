@@ -26,21 +26,40 @@ Programmatic checks:
             slot ships as un-angled career-file boilerplate.
   Check 9 — grounding: every number/percentage/count in the rendered CV traces
             to the career file, catching invented or inflated metrics.
-  Check 10 — bullet strength: no experience bullet hides behind a generic
-            abstraction ("enterprise decision-makers", "global process owners")
-            *while carrying no concrete proof of its own*. Grounding-aware: a
-            bullet with a number or named entity may keep natural phrasing; only
-            the thin, ungrounded bullet fails. Programmatic floor for the
-            editorial "surface a concrete proof point, not a generic noun" bar.
+  Check 10 — bullet strength / proof density: no experience bullet hides
+            behind a generic abstraction *while carrying no concrete proof of
+            its own*, and (when the career file is supplied) each slot clears
+            a proof-density floor — most of its bullets must carry a digit or
+            a named entity that actually appears in the career file. One
+            interpretive/ungrounded bullet per 3-bullet slot is allowed by
+            design (the domain-translation pattern).
+  Check 11 — proof-point presence: the diagnosis's per-slot "proof point:"
+            (parsed from Diagnosis.md — the source of truth, not a
+            model-copied field) must surface in that slot's bullets. Catches
+            "the 30% fell out of the lead slot".
+
+Editorial checks 1 and 3 are REQUIRED: run_full_audit seeds them as failed,
+and all_passed stays False until the model records a verdict for each via
+result.record_editorial(...). Recording them is authoring work, not a pause.
+
+Batch-level (not part of run_full_audit): scan_batch_sameyness(session_dir)
+warns on exact-duplicate bullets across different CVs in a session folder.
 
 A CV that fails any check is NOT shipped.
 """
 
+import os
 import zipfile
 import re
 from dataclasses import dataclass, field
 
 from docx import Document
+
+
+# The two editorial checks the model must grade explicitly. Seeded as failed
+# by run_full_audit so a CV can never pass by omission — the 2026-06-27
+# Berlin batch shipped with these silently skipped.
+EDITORIAL_CHECKS = ("check_1_lead_slots", "check_3_recruiter_fit")
 
 
 @dataclass
@@ -59,6 +78,22 @@ class AuditResult:
             if not ok:
                 lines.append("  FAIL [" + name + "]: " + self.notes.get(name, ""))
         return "\n".join(lines) if lines else "All checks passed."
+
+    def record_editorial(self, check_name, ok, note):
+        """Record the model's verdict for an editorial check (1 or 3).
+
+        check_1_lead_slots — do the lead slots serve the diagnosed problem
+        with their named proof points surfaced?
+        check_3_recruiter_fit — richness vs the career file, domain
+        translation, recruiter-fit, and the Check 9 honesty companion
+        (no semantic inflation: "supported" did not become "led").
+        """
+        if check_name not in EDITORIAL_CHECKS:
+            raise KeyError(
+                "unknown editorial check %r; expected one of %s"
+                % (check_name, EDITORIAL_CHECKS))
+        self.passed[check_name] = bool(ok)
+        self.notes[check_name] = note
 
 
 def _read_document_xml(docx_path):
@@ -98,21 +133,31 @@ def _iter_strings(obj):
             yield from _iter_strings(v)
 
 
-def check_2_keywords_in_experience(document_xml, expected_keywords):
-    """Check 2: >= 2 JD keywords appear verbatim in the rendered document.
+def check_2_keywords_in_experience(experiences, expected_keywords):
+    """Check 2: >= 2 JD keywords appear verbatim in EXPERIENCE BULLETS.
 
-    Editorial review (checks 1/3) confirms the keywords land in experience
-    bullets specifically.
+    Reads the authored bullets; Check 5 (rendered-text integrity) guarantees
+    they match the rendered document. The pre-v1.8.0 version searched the
+    whole document's visible text, so a CV could pass on tagline/summary
+    keywords while every experience bullet stayed generic — contradicting
+    this check's own spec in post-render-audit.md.
     """
-    text = _visible_text(document_xml).lower()
+    if not expected_keywords:
+        return True, "No keywords supplied; check skipped."
+    text = " ".join(
+        _bullet_text(b)
+        for e in experiences
+        for b in (e.get("bullets") or [])
+    ).lower()
     hits = [kw for kw in expected_keywords if kw.lower() in text]
     ok = len(hits) >= 2
     if ok:
         note = str(len(hits)) + "/" + str(len(expected_keywords)) \
-            + " keywords found verbatim: " + str(hits)
+            + " keywords found verbatim in experience bullets: " + str(hits)
     else:
-        note = "Only " + str(len(hits)) + " keyword(s) found verbatim (" \
-            + str(hits) + "); need >= 2."
+        note = ("Only " + str(len(hits)) + " keyword(s) found verbatim in "
+                "experience bullets (" + str(hits) + "); need >= 2. Keywords "
+                "in the tagline/summary/skills do not count for this check.")
     return ok, note
 
 
@@ -291,27 +336,41 @@ def check_7_experience_structure(experiences):
 
     `experiences` is the list of dicts from the content_map (before rendering).
     Each dict must have: company, title, end_year (int; use 9999 for 'Present').
+    An entry may set `concurrent: true` — an ongoing SIDE engagement (e.g.
+    freelance) that overlaps the primary block; it is exempted from the
+    reverse-chronology sort (it legitimately sits below the block) but not
+    from the contiguous-block rule.
 
-    Returns (ok, note). Returns (True, skip-note) if experiences has fewer
-    than 2 entries or if end_year keys are absent — those cases need manual
-    review, not a hard fail.
+    Returns (ok, note). Returns (True, skip-note) only when experiences has
+    fewer than 2 entries. A missing end_year is a FAIL, not a skip — the old
+    skip-on-absence let the 2026-06-27 Berlin driver bypass this check
+    entirely by passing end_years=None.
     """
     if not experiences or len(experiences) < 2:
         return True, "Fewer than 2 experience entries; structure check skipped."
 
-    if not all("end_year" in e for e in experiences):
-        return True, ("end_year not present on all entries; "
-                      "chronology check requires manual review.")
+    missing = [str(e.get("company", "slot " + str(i + 1)))
+               for i, e in enumerate(experiences)
+               if not isinstance(e.get("end_year"), int)]
+    if missing:
+        return False, (
+            "end_year missing (or not an int) on: " + ", ".join(missing)
+            + ". Required on every entry (9999 = Present) — chronology "
+            "cannot be verified without it, and skip-on-absence was the "
+            "dodge that let unordered CVs ship."
+        )
 
-    # Check strict reverse-chronological order
-    years = [e["end_year"] for e in experiences]
+    # Check strict reverse-chronological order (concurrent side roles exempt).
+    ordered = [e for e in experiences if not e.get("concurrent")]
+    years = [e["end_year"] for e in ordered]
     if years != sorted(years, reverse=True):
         return False, (
             "Experience entries are not in strict reverse-chronological order. "
             "Order: " + str([str(e.get("company", "?")) + " " + str(e.get("end_year"))
                              for e in experiences]) + ". "
             "Most recent role (highest end_year) must be slot 1. "
-            "Ongoing roles use end_year=9999."
+            "Ongoing roles use end_year=9999; an ongoing side engagement that "
+            "belongs below the primary block must set concurrent: true."
         )
 
     # Check that slots 1 and 2 share the same employer (contiguous block rule)
@@ -366,15 +425,29 @@ def check_8_slot_coverage(experiences, expected_keywords):
     return ok, note
 
 
+# Metric shapes Check 9 verifies against the career file. Deliberately
+# excluded: bare integers, years, and letter-digit tokens (B2, Phase III) —
+# flagging those would fail legitimate dates and language levels.
+_METRIC_RE = re.compile(
+    r"\$\d[\d,.]*[KMB]?"                       # $30K, $2M, $1,500
+    r"|\b\d+(?:\.\d+)?[KMB]\b"                 # 30K, 11M, 2.5B
+    r"|\b\d+ ?(?:million|billion|thousand)\b"  # 11 million
+    r"|\d+%"                                   # 30%
+    r"|\d+\+",                                 # 40+
+    re.IGNORECASE,
+)
+
+
 def check_9_numeric_grounding(document_xml, career_file_text):
     """Check 9: every metric in the rendered CV traces to the career file.
 
-    Catches invented/inflated numbers (e.g. a "30%" or "40+" the career file
-    never states). Conservative: only flags percentages (\\d+%) and count
-    claims (\\d+\\+), and only when the digit sequence appears nowhere in the
-    career file — so a real number written slightly differently still passes.
-    Semantic inflation ("supported" -> "led") is the editorial honesty
-    companion, not this check.
+    Catches invented/inflated numbers (e.g. a "30%" or "$50K" the career file
+    never states). Flags percentages, count claims (40+), currency amounts,
+    and K/M/B / million-style magnitudes — and only when the digit sequence
+    appears nowhere in the career file (checked against both the raw text and
+    a digits-only squash, so "$30,000" grounds "30000"). A real number written
+    slightly differently still passes. Semantic inflation ("supported" ->
+    "led") is the editorial honesty companion, not this check.
 
     Skipped when no career file text is provided.
     """
@@ -382,12 +455,13 @@ def check_9_numeric_grounding(document_xml, career_file_text):
         return True, "No career file provided; numeric grounding skipped."
 
     text = _visible_text(document_xml)
-    metrics = re.findall(r"\d+%|\d+\+", text)
-    career_digits = career_file_text
+    metrics = _METRIC_RE.findall(text)
+    career_squashed = re.sub(r"\D", "", career_file_text)
     ungrounded = []
     for m in metrics:
         digits = re.sub(r"\D", "", m)
-        if digits and digits not in career_digits:
+        if digits and digits not in career_file_text \
+                and digits not in career_squashed:
             ungrounded.append(m)
     # de-dup while keeping order
     seen = set()
@@ -433,21 +507,46 @@ WEAK_GENERIC_PHRASES = (
 # proper noun is "concrete enough"; editorial check 3 is the real judge.
 _PROPER_NOUN_RE = re.compile(r"\b([A-Z][a-zA-Z]+|[A-Z]{2,})\b")
 
+# Capitalized tokens that are NOT proof even when the career file contains
+# them: sector nouns, languages, months, and sentence-starter noise. Without
+# this, "across Technology and Telecom" would count as grounded because the
+# career file names those sectors.
+_GENERIC_TOKEN_STOPLIST = frozenset({
+    "Technology", "Telecom", "Telecommunications", "Media", "Health",
+    "English", "German", "Arabic", "The", "An", "It", "This", "These",
+    "January", "February", "March", "April", "May", "June", "July",
+    "August", "September", "October", "November", "December", "Present",
+})
+
+_CAP_TOKEN_RE = re.compile(r"\b[A-Z][A-Za-z0-9+&.-]+\b")
+
+
+def _career_whitelist(career_file_text):
+    """Capitalized tokens from the career file, minus the generic stoplist.
+
+    These are the named entities a bullet may cite as proof: Deloitte,
+    Python, Statista, MENA, W3C, Spotify. Membership is what separates a
+    career-grounded proper noun from decorative capitalization.
+    """
+    if not career_file_text:
+        return frozenset()
+    tokens = set(_CAP_TOKEN_RE.findall(career_file_text))
+    return frozenset(t for t in tokens if t not in _GENERIC_TOKEN_STOPLIST)
+
 
 def _has_concrete_proof(bullet_text):
-    """True if the bullet carries a number or a named entity.
+    """True if the bullet carries a number or a named entity (no career file).
 
-    A number (40+, 30%, $30K, 11M, a year) is unambiguous proof. For named
-    entities we strip any leading `Label:` lead-in (labeled bullet_style) so the
-    capability label's own capitalization does not count, then look for a
-    capitalized token that is not the first word of the clause — Deloitte,
-    Python, Power BI, US/Canadian, Statista. Crude but high-precision for the
-    job: it only gates whether a WEAK_GENERIC_PHRASE is allowed to stand.
+    Fallback detector when no career file is supplied. A number is
+    unambiguous proof. For named entities we strip any leading `Label:`
+    lead-in (labeled bullet_style) so the capability label's own
+    capitalization does not count, then look for a capitalized token that is
+    not the first word of the clause. Crude but high-precision for the job.
     """
     if any(ch.isdigit() for ch in bullet_text):
         return True
     # Strip a short leading "Label:" segment (labeled mode) before noun scan.
-    clause = re.sub(r"^[^:]{0,40}:\s*", "", bullet_text).strip()
+    clause = re.sub(r"^[^:]{0,60}:\s*", "", bullet_text).strip()
     if not clause:
         return False
     first_word = clause.split()[0]
@@ -457,28 +556,62 @@ def _has_concrete_proof(bullet_text):
     return False
 
 
-def check_10_bullet_strength(experiences):
-    """Check 10: no experience bullet hides behind a generic abstraction
-    *without any concrete proof of its own*.
+def _is_proofed(bullet_text, whitelist):
+    """True if the bullet carries a digit or a career-file named entity.
 
-    Programmatic floor for the editorial bar "surface a concrete proof point,
-    not a generic noun". A WEAK_GENERIC_PHRASE fails only when its bullet has no
-    number and no named entity (_has_concrete_proof). This lets a grounded bullet
-    keep natural phrasing while still catching the thin, abstract bullet the
-    phrase list was written for. Needs no career file; only skips when there are
-    no experiences at all.
+    The whitelist version of _has_concrete_proof: a capitalized token counts
+    only when the career file actually contains it (and it is not a stoplisted
+    sector/language noun), so "Technology and Telecom" no longer grounds a
+    bullet while "Deloitte" and "Python" still do.
+    """
+    if any(ch.isdigit() for ch in bullet_text):
+        return True
+    clause = re.sub(r"^[^:]{0,60}:\s*", "", bullet_text).strip()
+    for m in _CAP_TOKEN_RE.finditer(clause):
+        if m.start() == 0:
+            continue  # sentence-start capital is not a named entity
+        if m.group(0) in whitelist:
+            return True
+    return False
 
-    Reads bullet text via _bullet_text so it works whether bullets are plain
-    strings or RichText (labeled / inline_bold mode).
+
+def check_10_bullet_strength(experiences, career_file_text=None):
+    """Check 10: bullet strength — generic-filler test + proof-density floor.
+
+    Two layers:
+
+    1. **Weak-phrase test** (always on): a WEAK_GENERIC_PHRASE fails only
+       when its bullet has no concrete proof of its own. A grounded bullet
+       may keep natural phrasing.
+    2. **Proof-density floor** (when `career_file_text` is supplied): per
+       slot, most bullets must be proofed — carry a digit or a capitalized
+       token that appears in the career file (minus the generic stoplist).
+       Floor: slots with >= 3 bullets need >= 2 proofed; 2-bullet slots need
+       >= 1. One interpretive/ungrounded bullet per 3-bullet slot is allowed
+       by design — that is the domain-translation pattern, not a defect.
+
+    Without a career file the density floor is skipped and proof detection
+    falls back to the heuristic _has_concrete_proof (any mid-clause
+    capitalized token) — the pre-v1.8.0 behavior, which the 2026-06-27
+    Berlin batch showed is trivially satisfied ("Technology", a year).
     """
     if not experiences:
         return True, "No experiences; bullet-strength check skipped."
 
+    whitelist = _career_whitelist(career_file_text)
+    if whitelist:
+        def proofed(text):
+            return _is_proofed(text, whitelist)
+    else:
+        proofed = _has_concrete_proof
+
     hits = []
+    density = []
     for i, e in enumerate(experiences):
-        for b in e.get("bullets", []):
-            btext = _bullet_text(b)
-            if _has_concrete_proof(btext):
+        bullets = [_bullet_text(b) for b in (e.get("bullets") or [])]
+        flags = [proofed(t) for t in bullets]
+        for btext, is_proofed_flag in zip(bullets, flags):
+            if is_proofed_flag:
                 continue  # grounded bullet — phrase is incidental, allowed
             low = btext.lower()
             for phrase in WEAK_GENERIC_PHRASES:
@@ -486,32 +619,211 @@ def check_10_bullet_strength(experiences):
                     hits.append("slot " + str(i + 1) + " ("
                                 + str(e.get("company", "?")) + "): '" + phrase
                                 + "' in an ungrounded bullet")
-    ok = not hits
+        if whitelist and bullets:
+            floor = 2 if len(bullets) >= 3 else 1
+            n_proofed = sum(flags)
+            if n_proofed < floor:
+                unproofed = [t[:50] for t, f in zip(bullets, flags) if not f]
+                density.append(
+                    "slot " + str(i + 1) + " ("
+                    + str(e.get("company", "?")) + "): only "
+                    + str(n_proofed) + "/" + str(len(bullets))
+                    + " bullets carry a digit or career-file named entity "
+                    "(floor " + str(floor) + "). Unproofed: " + str(unproofed))
+
+    ok = not hits and not density
     if ok:
-        note = "No ungrounded generic-filler phrasing; bullets carry concrete proof."
+        note = ("No ungrounded generic-filler phrasing; proof density "
+                + ("met per slot." if whitelist
+                   else "heuristic only (no career file supplied)."))
     else:
-        note = ("Generic filler in a bullet with no concrete proof: "
-                + "; ".join(hits) + ". Either ground the bullet with the slot's "
-                "named proof point / metric from the career file, or drop the "
-                "abstraction. See the diagnosis's per-slot proof points.")
+        note = ("; ".join(hits + density)
+                + ". Ground the flagged bullets with the slot's named proof "
+                "point / metric from the career file (see the diagnosis's "
+                "per-slot proof points), or drop the abstraction.")
     return ok, note
+
+
+def _parse_slot_proof_points(diagnosis_text):
+    """Parse `- Slot N ... proof point: <text>` lines from a Diagnosis.md.
+
+    Returns {slot_number: proof_point_string}. The diagnosis file is the
+    source of truth — a model-copied content_map field would be a dodge
+    surface (copy a weaker proof point, pass the check).
+    """
+    points = {}
+    for line in diagnosis_text.splitlines():
+        line = line.strip()
+        m = re.match(r"[-*]\s*Slot\s*(\d+)", line, re.IGNORECASE)
+        if not m:
+            continue
+        pp = re.search(r"proof point:\s*(.+?)(?:\||$)", line, re.IGNORECASE)
+        if pp:
+            points[int(m.group(1))] = pp.group(1).strip()
+    return points
+
+
+def _distinctive_tokens(proof_point_text):
+    """Numbers and career-grade capitalized tokens from a proof-point string.
+
+    These are the strings whose presence in the slot's bullets proves the
+    proof point was surfaced. Returns [] for 'none' or a proof point with
+    nothing distinctive (the check then skips loudly rather than false-fail).
+    """
+    text = proof_point_text.strip().rstrip(".")
+    if text.lower() in ("none", "n/a", "no proof point"):
+        return []
+    tokens = re.findall(r"\$?\d[\d,.%+]*[KMB]?", text)
+    tokens += [t for t in _CAP_TOKEN_RE.findall(text)
+               if t not in _GENERIC_TOKEN_STOPLIST]
+    return tokens
+
+
+def check_11_proof_points(experiences, diagnosis_md_path):
+    """Check 11: each slot's diagnosis proof point surfaces in its bullets.
+
+    Check 8 proves a slot carries *a* keyword; this proves the slot carries
+    *its assigned proof point* — the named credential/metric the diagnosis
+    said the bullets must surface. Catches the observed drift where the lead
+    slot's "+30% publication speed" proof point silently fell out of the
+    rendered bullets (2026-06-27 Berlin batch).
+
+    A slot passes when >= 1 distinctive token from its proof point appears
+    (word-bounded, case-insensitive) in its bullets. Proof points with no
+    distinctive token skip loudly. Skipped entirely when no diagnosis file.
+    """
+    if not diagnosis_md_path or not os.path.exists(diagnosis_md_path):
+        return True, "No diagnosis file supplied; proof-point check skipped."
+    with open(diagnosis_md_path, encoding="utf-8", errors="replace") as f:
+        text = f.read()
+    points = _parse_slot_proof_points(text)
+    if not points:
+        return True, ("No 'Slot N ... proof point:' lines found in the "
+                      "diagnosis; check skipped (lint_diagnosis enforces "
+                      "their presence upstream).")
+
+    problems, skipped = [], []
+    for slot_no, pp in sorted(points.items()):
+        idx = slot_no - 1
+        if idx >= len(experiences):
+            continue
+        tokens = _distinctive_tokens(pp)
+        if not tokens:
+            skipped.append("slot %d (proof point %r has no distinctive "
+                           "token)" % (slot_no, pp[:40]))
+            continue
+        blob = " ".join(
+            _bullet_text(b)
+            for b in (experiences[idx].get("bullets") or [])).lower()
+        found = any(
+            re.search(r"(?<!\w)" + re.escape(t.lower()) + r"(?!\w)", blob)
+            for t in tokens)
+        if not found:
+            problems.append(
+                "slot %d (%s): none of the diagnosis proof-point tokens %s "
+                "appear in its bullets (proof point: %r)"
+                % (slot_no, experiences[idx].get("company", "?"),
+                   tokens[:6], pp[:60]))
+
+    ok = not problems
+    if ok:
+        note = "Every slot surfaces its diagnosis proof point."
+        if skipped:
+            note += " Skipped (no distinctive token): " + "; ".join(skipped)
+    else:
+        note = ("; ".join(problems)
+                + ". The proof point is the slot's assigned credential — "
+                "put it back in a bullet, or fix the diagnosis if the "
+                "assignment changed.")
+        if skipped:
+            note += " Skipped: " + "; ".join(skipped)
+    return ok, note
+
+
+def scan_batch_sameyness(session_dir):
+    """Batch-level sweep (WARN only, not part of run_full_audit): exact
+    duplicate experience bullets across different CVs in a session folder.
+
+    Cross-CV reuse of a bullet is sometimes legitimate (the same true fact
+    for two similar JDs) — the sweep exists so it is a visible choice, not
+    silent drift (2026-06-14 Denmark: one slot byte-identical across all
+    ten CVs). Returns a list of warning strings, empty when clean.
+    """
+    bullet_files = {}
+    for fname in sorted(os.listdir(session_dir)):
+        if not (fname.startswith("CV - ") and fname.endswith(".docx")):
+            continue
+        doc = Document(os.path.join(session_dir, fname))
+        in_experience = False
+        for p in doc.paragraphs:
+            text = p.text.strip()
+            if text == "PROFESSIONAL EXPERIENCE":
+                in_experience = True
+                continue
+            if text == "EDUCATION":
+                in_experience = False
+            if not in_experience or not text:
+                continue
+            # Title rows carry a tab; company lines carry the middle dot.
+            if "\t" in text or "·" in text:
+                continue
+            norm = " ".join(text.split()).lower()
+            bullet_files.setdefault(norm, set()).add(fname)
+
+    warnings = []
+    reported = set()
+    for norm, files in sorted(bullet_files.items()):
+        if len(files) > 1:
+            warnings.append("bullet shared by %s: %r"
+                            % (", ".join(sorted(files)), norm[:70]))
+            reported.add(norm)
+    # Clause-level pass: same clause behind different labels.
+    clause_files = {}
+    for norm, files in bullet_files.items():
+        clause = re.sub(r"^[^:]{0,60}:\s*", "", norm)
+        if clause != norm and clause:
+            clause_files.setdefault(clause, set()).update(files)
+    for clause, files in sorted(clause_files.items()):
+        if len(files) > 1 and clause not in reported:
+            warnings.append("clause shared (different labels) by %s: %r"
+                            % (", ".join(sorted(files)), clause[:70]))
+    return warnings
 
 
 def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
                    expected_keywords, expect_bold=True, career_file_path=None,
-                   bold_plan=None):
+                   bold_plan=None, require_editorial=True):
     """Run the programmatic audit checks. Returns an AuditResult.
-
-    The editorial checks (#1, #3) are recorded by the model into the same
-    result via result.passed['check_1'] / result.passed['check_3'].
 
     `bold_plan` is the plan returned by build_bold_plan(); Check 5 uses it
     to verify each planned bold span rendered as a real bold run.
+
+    The editorial checks (1: lead slots serve the diagnosed problem with
+    their proof points; 3: recruiter-fit / richness / domain translation /
+    honesty companion) are seeded as FAILED when `require_editorial` is True
+    (the default). `all_passed` stays False until the model records a
+    verdict for each via result.record_editorial(name, ok, note) — a CV can
+    no longer pass by omission. Recording the verdicts is authoring work,
+    not a pause.
     """
     document_xml = _read_document_xml(rendered_docx_path)
+    experiences = content_map.get("experiences", [])
     result = AuditResult()
 
-    ok2, note2 = check_2_keywords_in_experience(document_xml, expected_keywords)
+    if require_editorial:
+        result.passed["check_1_lead_slots"] = False
+        result.notes["check_1_lead_slots"] = (
+            "editorial verdict not recorded. Read the lead slots against the "
+            "diagnosis's problem statement and per-slot proof points, then "
+            "call result.record_editorial('check_1_lead_slots', ok, note).")
+        result.passed["check_3_recruiter_fit"] = False
+        result.notes["check_3_recruiter_fit"] = (
+            "editorial verdict not recorded. Judge richness vs the career "
+            "file, domain translation, recruiter-fit, and the honesty "
+            "companion (no semantic inflation), then call "
+            "result.record_editorial('check_3_recruiter_fit', ok, note).")
+
+    ok2, note2 = check_2_keywords_in_experience(experiences, expected_keywords)
     result.passed["check_2_keywords"] = ok2
     result.notes["check_2_keywords"] = note2
 
@@ -529,7 +841,6 @@ def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
     result.passed["check_6_em_dashes"] = ok6
     result.notes["check_6_em_dashes"] = note6
 
-    experiences = content_map.get("experiences", [])
     ok7, note7 = check_7_experience_structure(experiences)
     result.passed["check_7_structure"] = ok7
     result.notes["check_7_structure"] = note7
@@ -546,9 +857,13 @@ def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
     result.passed["check_9_grounding"] = ok9
     result.notes["check_9_grounding"] = note9
 
-    ok10, note10 = check_10_bullet_strength(experiences)
+    ok10, note10 = check_10_bullet_strength(experiences, career_text)
     result.passed["check_10_bullet_strength"] = ok10
     result.notes["check_10_bullet_strength"] = note10
+
+    ok11, note11 = check_11_proof_points(experiences, diagnosis_md_path)
+    result.passed["check_11_proof_points"] = ok11
+    result.notes["check_11_proof_points"] = note11
 
     return result
 
@@ -580,17 +895,45 @@ def _selftest():
         "Coverage: served enterprise decision-makers."]}]
     ok_labeled, _ = check_10_bullet_strength(labeled_weak)
     assert not ok_labeled, "check_10 should FAIL filler behind a label lead-in"
+    # Whitelist mode: sector nouns do not ground a bullet; career entities do.
+    career = ("Synthesized reports cited by Deloitte and W3C. "
+              "Built a Python pipeline, +30% speed, across Technology "
+              "and Telecom sectors.")
+    sector_only = [{"company": "X", "bullets": [
+        "Coverage: tracked positioning across Technology and Telecom.",
+        "Coverage two: tracked more positioning across sectors broadly.",
+        "Reporting: synthesized findings cited by Deloitte and W3C.",
+    ]}]
+    ok_density, note_density = check_10_bullet_strength(sector_only, career)
+    assert not ok_density, "density floor should FAIL 1/3 proofed"
+    two_proofed = [{"company": "X", "bullets": [
+        "Coverage: tracked positioning for 40+ multinationals.",
+        "Coverage two: tracked more positioning across sectors broadly.",
+        "Reporting: synthesized findings cited by Deloitte and W3C.",
+    ]}]
+    ok_two, _ = check_10_bullet_strength(two_proofed, career)
+    assert ok_two, "2/3 proofed should PASS the density floor"
     print("audit self-test (check_10): passed.")
 
 
 if __name__ == "__main__":
     import sys
-    import os
     if len(sys.argv) >= 2 and sys.argv[1] == "--selftest":
         _selftest()
         sys.exit(0)
+    if len(sys.argv) >= 3 and sys.argv[1] == "--sameyness":
+        warnings = scan_batch_sameyness(sys.argv[2])
+        if warnings:
+            print("Sameyness sweep: %d duplicate(s) across CVs" % len(warnings))
+            for w in warnings:
+                print("  WARN:", w)
+        else:
+            print("Sameyness sweep: clean (no duplicate bullets across CVs).")
+        sys.exit(0)
     if len(sys.argv) < 2:
-        print("Usage: python audit.py <rendered_cv.docx>  |  python audit.py --selftest")
+        print("Usage: python audit.py <rendered_cv.docx>"
+              "  |  python audit.py --selftest"
+              "  |  python audit.py --sameyness <session_dir>")
         sys.exit(1)
     if not os.path.isfile(sys.argv[1]):
         print(f"Error: file not found: {sys.argv[1]}", file=sys.stderr)

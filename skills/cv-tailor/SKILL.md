@@ -20,7 +20,9 @@ The renderer. Takes a Diagnosis.md, a candidate's career file, and a chosen temp
 
 Before doing anything, check for `Diagnosis - [Company] - [Job Title].md` in the target folder. If absent, defer to the opinionation policy (warn-once-then-comply by default; strict mode refuses). See `role-diagnosis/SKILL.md`.
 
-Exception: `Run CV only` shortcut explicitly skips the diagnosis gate. The CV is rendered against broad branch judgment instead.
+The diagnosis must also **pass lint**: `scripts/lint_diagnosis.py` validates its structure (sections present, 6–10 keywords, one `Slot N` angle line per experience slot, each with a real `proof point:` and enough substance). `render_cv.render()` runs the lint automatically and refuses to render from a diagnosis that fails — a thin diagnosis licenses a thin CV, so fix the diagnosis, not the CV.
+
+Exception: `Run CV only` shortcut explicitly skips the diagnosis gate (and the lint). The CV is rendered against broad branch judgment instead.
 
 ## What it does
 
@@ -266,6 +268,16 @@ Before `tpl.render()`:
 
 The post-render audit at [`references/post-render-audit.md`](./references/post-render-audit.md). Refuses to ship the CV if any check fails.
 
+**The two editorial checks must be explicitly recorded.** After
+`run_full_audit()` returns, record a one-line verdict for each:
+`result.record_editorial('check_1_lead_slots', ok, note)` (lead slots serve
+the diagnosed problem with their proof points surfaced) and
+`result.record_editorial('check_3_recruiter_fit', ok, note)` (richness vs
+the career file, domain translation, no semantic inflation). The audit seeds
+both as failed, so `all_passed` stays False until they are recorded — a CV
+can no longer pass by omission. Recording the verdicts is authoring work,
+not a pause; it never stops a batch run.
+
 ## Modular sections
 
 CV sections are composable. Default order (configurable in `config.yaml`):
@@ -326,7 +338,9 @@ The render driver script and any content-map JSON/YAML dumps used to build a CV 
 - [`references/experience-slot-logic.md`](./references/experience-slot-logic.md) — slot 1/2/3 rules
 - [`references/content-map-schema.md`](./references/content-map-schema.md) — every key in the content_map
 - [`scripts/render_cv.py`](./scripts/render_cv.py) — the main entry point
-- [`scripts/md_to_richtext.py`](./scripts/md_to_richtext.py) — the bold-marker helper
-- [`scripts/audit.py`](./scripts/audit.py) — the audit checks as code
-- [`scripts/section_composer.py`](./scripts/section_composer.py) — section partial stitching
+- [`scripts/md_to_richtext.py`](./scripts/md_to_richtext.py) — marker stripping + the bold plan (`build_bold_plan`)
+- [`scripts/postprocess.py`](./scripts/postprocess.py) — post-render bold application + section removal
+- [`scripts/audit.py`](./scripts/audit.py) — the audit checks as code (+ `--sameyness` batch sweep)
+- [`scripts/lint_diagnosis.py`](./scripts/lint_diagnosis.py) — the diagnosis structure lint (the render gate's mechanical backstop)
+- [`scripts/section_composer.py`](./scripts/section_composer.py) — section partial stitching (inactive until real partials ship)
 - [`scripts/build_template.py`](./scripts/build_template.py) — one-time template-from-CV converter

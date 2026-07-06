@@ -120,6 +120,15 @@ career file. Neither ever adds a fact, a number, or a title the career file does
 not contain. See the grounding gate (Check 9) and the bullet-strength gate
 (Check 10) in `../../cv-tailor/references/post-render-audit.md`.
 
+**This section is mechanically enforced.** cv-tailor lints every diagnosis
+before rendering (`cv-tailor/scripts/lint_diagnosis.py`): one `- Slot N ...`
+line per experience slot, each carrying `proof point:` followed by a real
+credential/metric (or the explicit word `none`), each with enough substance
+to light-edit from (a short abstraction fails the lint). The rendered bullets
+are then checked against these proof points by audit Check 11 — a slot whose
+assigned proof point never surfaces in its bullets fails the audit. Write the
+angle lines as if cv-tailor will execute them literally, because it will.
+
 ## Honest assessment (optional)
 
 One sentence. Is the candidacy a strong match, a stretch, or a reach?

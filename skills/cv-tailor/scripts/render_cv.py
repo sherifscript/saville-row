@@ -33,6 +33,7 @@ from docxtpl import DocxTemplate
 from md_to_richtext import build_bold_plan
 from postprocess import postprocess_cv
 from audit import run_full_audit, _iter_strings
+from lint_diagnosis import lint_diagnosis
 
 try:
     from section_composer import compose_template
@@ -205,6 +206,21 @@ def render(diagnosis_path, content_map, config, repo_root, output_path,
     template_name = cv_cfg.get("template", "OPUS")
     mode = resolve_bold_mode(config)
     enabled, disabled = effective_sections(config, region)
+
+    # 0. Lint the diagnosis — the mechanical backstop to the SKILL-text gate.
+    #    A thin diagnosis licenses a thin CV; refuse to render from one.
+    #    (`Run CV only` passes diagnosis_path=None and skips this.)
+    if diagnosis_path and os.path.exists(diagnosis_path):
+        with open(diagnosis_path, encoding="utf-8", errors="replace") as f:
+            diagnosis_text = f.read()
+        expected_slots = len(content_map.get("experiences", []) or []) \
+            or cv_cfg.get("max_experience_slots", 3)
+        lint_ok, lint_errors = lint_diagnosis(diagnosis_text,
+                                              expected_slots=expected_slots)
+        if not lint_ok:
+            raise ValueError(
+                "Diagnosis failed lint (fix the diagnosis, then re-render):"
+                "\n  - " + "\n  - ".join(lint_errors))
 
     # 1. Pre-render validation.
     validate_content_map(content_map, config, enabled_sections=enabled,

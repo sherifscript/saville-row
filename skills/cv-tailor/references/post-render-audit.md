@@ -1,8 +1,10 @@
-# Post-render audit — the five questions every shipped CV must pass
+# Post-render audit — the checks every shipped CV must pass
 
-Before any CV is shipped (saved to the session folder for the user to send), it passes the audit below. The numbered checks are a mix of editorial and programmatic. The programmatic checks (2, 4, 5, 6, 7, 8, 9, 10) are implemented in [`../scripts/audit.py`](../scripts/audit.py) and run automatically; the editorial checks (1, 3, and the honesty companion to 9) are prompted to the user or run as model inference. The "five questions" framing is historical; the list has grown as new failure modes were caught.
+Before any CV is shipped (saved to the session folder for the user to send), it passes the audit below. The programmatic checks (2, 4, 5, 6, 7, 8, 9, 10, 11) are implemented in [`../scripts/audit.py`](../scripts/audit.py) and run automatically by `run_full_audit()`. The editorial checks (1, 3, and the honesty companion to 9) are graded by the model — and since v1.8.0 they are **required**: `run_full_audit()` seeds them as failed, and `all_passed` stays False until the model records a one-line verdict for each via `result.record_editorial(name, ok, note)`. A CV can no longer pass by omission (the 2026-06-27 Berlin batch shipped with the editorial checks silently skipped). Recording the verdicts is authoring work, not a pause — it never stops a batch run.
 
-If any check fails, the CV is **not shipped**. The framework either re-renders (for programmatic failures) or prompts the user to regenerate the failing section (for editorial failures).
+There is also a batch-level sweep (12, warn-only) that runs once per session folder, not per CV.
+
+If any check fails, the CV is **not shipped**. The framework either re-renders (for programmatic failures) or regenerates the failing section from the diagnosis (for editorial failures).
 
 ## The five questions
 
@@ -16,9 +18,11 @@ If any check fails, the CV is **not shipped**. The framework either re-renders (
 
 **On failure:** regenerate the failing slot from its diagnosis proof point. The diagnosis is usually fine; the bullet writer drifted into generic phrasing or left the proof point on the table.
 
+**Recording the verdict (required):** after the programmatic audit returns, call `result.record_editorial('check_1_lead_slots', ok, note)` with a one-line verdict. `all_passed` stays False until it is recorded.
+
 ### 2. Do at least two experience bullets contain JD keywords verbatim?
 
-**Programmatic check.** Count occurrences of each diagnosed keyword in the rendered docx (search `word/document.xml`). At least two of the keywords must appear in experience bullets specifically (not just tagline, summary, or core skills).
+**Programmatic check.** Count diagnosed keywords in the **experience bullets** (the authored bullet strings — Check 5 guarantees they match the rendered document). At least two distinct keywords must appear there specifically; keywords that live only in the tagline, summary, or core skills do not count. (The pre-v1.8.0 implementation searched the whole document and contradicted this spec.)
 
 **On failure:** rewrite one or two bullets to incorporate the missing keywords. This is usually a 60-second fix — the bullet writer used a synonym ("A/B testing infrastructure") where the JD used a specific term ("experimentation platform").
 
@@ -37,6 +41,8 @@ Three things to judge explicitly, because a CV can pass every programmatic check
 **Bolding discipline is part of this check (plain mode).** Scan every bolded phrase in the rendered CV at once. There should be roughly 4–8 bold items total, and every one should be a quantified outcome or a credential proper noun — never a JD keyword. If a phrase is bolded twice, or if most bullets carry a bold phrase, or if a plain skill word like "user research" is bolded, the CV reads as unedited. Fix the `**` markers in the content map (see docxtpl-recipe.md "what to bold") and re-render. In `bullet_style: labeled` this part is suspended: every bullet is supposed to open with a bold capability label, so the 4–8 ceiling does not apply; instead confirm each label is a 2–5 word capability phrase in the role's vocabulary, not a dumped JD keyword.
 
 **On failure:** strengthen the diagnosis first (specifically section 4, "which credential speaks loudest to that bar?"), then re-render. Do not patch the CV directly.
+
+**Recording the verdict (required):** call `result.record_editorial('check_3_recruiter_fit', ok, note)` with a one-line verdict covering richness, domain translation, and the honesty companion (no semantic inflation). `all_passed` stays False until it is recorded.
 
 ### 4. Is every `&` from the content_map present in the rendered docx?
 
@@ -100,7 +106,9 @@ redesigned so the corruption cannot recur silently.
 
 2. **Contiguous employer block in slots 1 + 2.** If the candidate has two adjacent roles at the same primary employer (e.g., Statista Research Expert + Statista Research Assistant), those two roles must occupy Slots 1 and 2 — and no other role may appear between them. This is the hard rule that prevents visible employment gaps. A CV that puts Atheneum (an ongoing role) in Slot 2 below Statista Expert (ended Oct 2025) violates chronology. A CV that skips the Statista Assistant entirely leaves a gap (2020–2023) that a recruiter will notice immediately.
 
-**On failure:** rebuild the `experiences` list in the content map. Slot 1 = most recent full-time role. Slot 2 = the adjacent role at the same employer (if `continuous_employer_block: true`). Slot 3 = branch-driven choice from `branches.yaml`. Re-render. The check runs against the `content_map.experiences` list before docxtpl rendering; no XML inspection required.
+**`end_year` is mandatory (v1.8.0).** Every experience entry must carry an integer `end_year` (9999 = Present); a missing one now FAILS the check instead of skipping it — the old skip-on-absence let the 2026-06-27 Berlin driver bypass chronology entirely by passing no end years. An ongoing SIDE engagement that legitimately sits below the primary block (e.g. concurrent freelance work) sets `concurrent: true` and is exempted from the reverse-chronology sort — but not from the contiguous-block rule.
+
+**On failure:** rebuild the `experiences` list in the content map. Slot 1 = most recent full-time role. Slot 2 = the adjacent role at the same employer (if `continuous_employer_block: true`). Slot 3 = branch-driven choice from `branches.yaml`; mark it `concurrent: true` if it is an ongoing side engagement. Re-render. The check runs against the `content_map.experiences` list before docxtpl rendering; no XML inspection required.
 
 **Incident root cause (2026-05-24 Cairo trial):** `experience-slot-logic.md` had the hard rule; `cv-tailor/SKILL.md` had only a soft one-liner ("adjacent role at the same employer *if applicable*"). The render script read the soft rule and treated the Statista Assistant as droppable. This check ensures the structural failure is caught before the CV ships even if the render script makes the same mistake.
 
@@ -124,9 +132,14 @@ bullets are absent.
 
 ### 9. Does every number in the CV trace to the career file?
 
-**Programmatic check.** Extract percentages (`\d+%`) and count claims (`\d+\+`) from the
-rendered text. Each must have its digit sequence present somewhere in the career file.
-Conservative by design: only metrics are checked, and only a total absence of the digits
+**Programmatic check.** Extract metrics from the rendered text — percentages
+(`30%`), count claims (`40+`), currency amounts (`$30K`, `$2M`, `$1,500`),
+K/M/B magnitudes (`11M`, `2.5B`), and written magnitudes (`11 million`). Each
+must have its digit sequence present somewhere in the career file (checked
+against both the raw text and a digits-only squash, so `$30,000` grounds
+`30000`). Deliberately excluded: bare integers, years, and letter-digit
+tokens (`B2`, `Phase III`) — flagging those would fail legitimate dates and
+language levels. Conservative by design: only a total absence of the digits
 fails, so a real figure written slightly differently still passes.
 
 This is the truth gate the framework historically lacked ("What the audit does not catch:
@@ -161,11 +174,59 @@ judgment is checks 1/3 plus the diagnosis's per-slot proof points); it catches t
 specific way the 2026-06-25 Cairo batch failed — *thin* bullets defaulting to a generic
 audience with no number or named credential anywhere in them.
 
+**Proof-density floor (v1.8.0, career file supplied).** Beyond the phrase
+blocklist, each slot must clear a density floor: slots with 3+ bullets need
+**at least 2 proofed** bullets; 2-bullet slots need at least 1. "Proofed"
+means the bullet carries a digit or a capitalized token that actually appears
+in the career file — minus a stoplist of sector/language nouns (Technology,
+Telecom, Media, English, ...) that the old heuristic wrongly counted as
+grounding. One interpretive/ungrounded bullet per 3-bullet slot is allowed
+**by design**: that is the domain-translation pattern, not a defect. Without
+a career file the floor is skipped and detection falls back to the old
+heuristic.
+
 **On failure:** either ground the flagged bullet with the named credential or metric the
 diagnosis assigned that slot, or drop the abstraction — then re-render. Implemented as
-`check_10_bullet_strength` (with `_has_concrete_proof`) in
-[`../scripts/audit.py`](../scripts/audit.py); reads RichText or plain-string bullets, so
-it works in both `plain` and `labeled` bullet styles.
+`check_10_bullet_strength` (with `_is_proofed` / `_career_whitelist`) in
+[`../scripts/audit.py`](../scripts/audit.py).
+
+### 11. Does each slot surface the proof point the diagnosis assigned it?
+
+**Programmatic check.** Parse the `- Slot N ... | proof point: ...` lines
+from the Diagnosis.md (the file is the source of truth — a model-copied field
+would be a dodge surface), extract each proof point's distinctive tokens
+(numbers/metrics and career-grade capitalized phrases), and require at least
+one to appear (word-bounded, case-insensitive) in that slot's rendered
+bullets.
+
+Check 8 proves a slot carries *a* keyword; this proves the slot carries *its
+assigned credential*. It catches the observed drift where the lead slot's
+"+30% publication speed" proof point silently fell out of the rendered
+bullets while everything else still passed (2026-06-27 Berlin batch).
+
+A proof point written as `none` — or one with no distinctive token (e.g.
+"data used by institutions, governments, media") — is **skipped loudly**
+(named in the note), never false-failed. Skipped entirely when no diagnosis
+file is supplied (`Run CV only`).
+
+**On failure:** put the named credential/metric back into one of the slot's
+bullets, or fix the diagnosis if the assignment genuinely changed — then
+re-render. Implemented as `check_11_proof_points` in
+[`../scripts/audit.py`](../scripts/audit.py).
+
+### 12. Batch sameyness sweep (per session folder, WARN only)
+
+**Batch-level, not part of `run_full_audit`.** After the last CV of a batch,
+`python audit.py --sameyness <session folder>` scans every `CV - *.docx` for
+exact-duplicate experience bullets across different CVs — both whole bullets
+and identical clauses hiding behind different capability labels.
+
+Warn-only by design: reusing a true fact across two similar JDs is sometimes
+legitimate. The sweep exists so cross-CV duplication is a **visible choice in
+the closing summary**, not silent drift (2026-06-14 Denmark: one slot
+byte-identical across all ten CVs, discovered only by a later investigation).
+Implemented as `scan_batch_sameyness` in [`../scripts/audit.py`](../scripts/audit.py);
+wired into the pipeline's closing summary.
 
 ## Running the audit
 
@@ -174,12 +235,22 @@ from audit import run_full_audit
 
 audit_result = run_full_audit(
     rendered_docx_path="CV - Northwind - Senior PM.docx",
-    diagnosis_md_path="Diagnosis - Northwind - Senior PM.md",
+    diagnosis_md_path="Diagnosis - Northwind - Senior PM.md",  # Check 11 reads it
     content_map=content_map,          # post-build_bold_plan (plain strings)
     expected_keywords=["workflow automation", "B2B SaaS", "..."],
-    career_file_path="career.txt",    # enables Check 9 numeric grounding
+    career_file_path="career.txt",    # enables Checks 9 + 10 grounding
     bold_plan=bold_plan,              # from build_bold_plan(); Check 5 bold
 )
+
+# REQUIRED: record the editorial verdicts — all_passed stays False otherwise.
+audit_result.record_editorial(
+    "check_1_lead_slots", True,
+    "lead bullets serve the diagnosed dashboard-consolidation problem; "
+    "the 30% pipeline proof point leads slot 1")
+audit_result.record_editorial(
+    "check_3_recruiter_fit", True,
+    "bullets keep the career-file specifics; labels frame in JD vocabulary; "
+    "no semantic inflation")
 
 if not audit_result.all_passed:
     print(audit_result.failure_summary)
