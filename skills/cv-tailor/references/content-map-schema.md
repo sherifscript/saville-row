@@ -36,11 +36,13 @@ grounding check (Check 9) flags any number or claim with no career-file source.
 | `contact_line_2_suffix` | string | regional-headers.yaml | Trailing text after the personal-site / LinkedIn entries; varies by region |
 | `summary` | string | diagnosis | 3 sentences, framed in the JD's vocabulary (see SKILL.md "Domain translation"). Sentence 1: scope. Sentence 2: strongest proof point. Sentence 3: differentiator. No employer names. |
 | `core_skills` | list of `{label, description}` | diagnosis | 4 skill rows + 1 tools row. Each row: `{"label": "Bold Header", "description": "plain description"}`. Labels are the role's domain vocabulary — the JD's own concepts — not literal restatements of the work (see SKILL.md "Domain translation"). |
-| `experiences` | list of experience dicts | diagnosis + career file + branches.yaml | Ordered list. Count = `cv.max_experience_slots` |
+| `experiences` | list of experience dicts | diagnosis + career file + branches.yaml | Ordered list. Count = `cv.max_experience_slots` (a `transition`-positioned diagnosis may add one slot — see experience-slot-logic.md) |
 | `experiences[i].title` | string | career file + diagnosis | Job title, possibly tailored to the JD's vocabulary |
 | `experiences[i].dates` | string | career file | Date range as written in the career file |
 | `experiences[i].company` | string | career file | Company name |
 | `experiences[i].location` | string | career file | City, Country |
+| `experiences[i].end_year` | int | career file | **Required.** The role's end year; `9999` for an ongoing (Present) role. Feeds the Check 7 chronology gate — validation rejects a map without it (the old skip-when-absent behavior was exploitable). |
+| `experiences[i].concurrent` | bool | career file | Optional, default false. Mark `true` on an ongoing *side* engagement (e.g. freelance) that overlaps the primary block, so chronology checks treat it as concurrent rather than out of order. |
 | `experiences[i].bullets` | list[string] | diagnosis | Must clear the substance bar in `SKILL.md` "Write strong bullets": **light-edit** the career-file bullet (don't rewrite it thin), **preserve its concrete specifics** (named clients, numbers, specific nouns), surface the named proof point, lead with ownership + scope, frame in the JD's vocabulary, ~25–40 words. The diagnosis's per-slot proof points say which credential each slot names. Bold: `plain` mode marks `**bold**` only on quantified outcomes and credential proper nouns, never JD keywords (see docxtpl-recipe.md "what to bold"); `labeled` mode opens each bullet with a `**Label:**` lead-in that translates the fact into the JD's vocabulary, followed by a full-substance clause. Check 10 rejects generic fillers that lack a concrete proof point. |
 | `msc_degree` | string | career file | Higher/most-recent degree name. |
 | `msc_date` | string | career file | Higher degree completion date. |
@@ -53,28 +55,50 @@ grounding check (Check 9) flags any number or claim with no career-file source.
 | `ba_location` | string | career file | Lower degree location (City, Country). |
 | `ba_bullets` | list[string] | diagnosis | 1–2 descriptive bullets under the lower degree. Same rules. |
 | `additional` | list of `{label, description}` | diagnosis + region | Diagnosis-driven items. Work Authorization included for Western/EU/EEA targets, omitted for Egypt/Gulf. Languages typically last. |
+| `publications` | list of `{title, venue, year, link}` | career file | Only present if `cv.sections` includes `publications` |
+| `certifications` | list of `{name, issuer, year}` | career file | Only present if `cv.sections` includes `certifications` |
+| `volunteering` | list of `{role, organization, dates, description}` | career file | Only present if `cv.sections` includes `volunteering` |
 
 > The `msc_*` / `ba_*` keys are named for the two-degree default. They are
 > just "higher degree" and "lower degree" slots — a candidate with one
 > degree leaves the `ba_*` keys empty and disables the BA region in the
 > template; a candidate with a PhD puts it in the `msc_*` slot.
-| `publications` | list of `{title, venue, year, link}` | career file | Only present if `cv.sections` includes `publications` |
-| `certifications` | list of `{name, issuer, year}` | career file | Only present if `cv.sections` includes `certifications` |
-| `volunteering` | list of `{role, organization, dates, description}` | career file | Only present if `cv.sections` includes `volunteering` |
+
+## Bullets are plain strings — always
+
+Every bullet value is a **plain string** carrying optional `**bold**` markers.
+The render pipeline strips the markers before `tpl.render()` and applies bold
+afterwards via `postprocess_cv()` — a `RichText` object anywhere in the
+content_map is a hard error (`build_bold_plan` raises). RichText through the
+template's plain placeholders was the 2026-05-11 / test5 corruption that
+rendered every bullet invisible; see docxtpl-recipe.md "RichText is banned
+from the render path".
 
 ## Section presence
 
-A key is present in `content_map` only if its section is enabled in `cv.sections`. Templates use `{% if publications %}...{% endif %}` guards on optional sections to avoid rendering empty headers.
+A key is present in `content_map` only if its section is enabled for the
+render. Section enablement = `cv.sections` (or the default list) minus any
+`cv.region_section_overrides[region]` entries set to `false` — resolved by
+`render_cv.effective_sections(config, region)`. A region-disabled section
+(e.g. `EU: summary: false`) is removed from the rendered document by the
+postprocess pass; its content_map key may be omitted entirely.
 
 ## Validation
 
 Before `tpl.render()`, `render_cv.py` runs validate:
 
-- Required keys exist (`tagline`, `contact_line_1`, `summary`, `core_skills`, `experiences`, `msc_bullets`, `ba_bullets`)
+- Required keys exist (`candidate_name`, `tagline`, `contact_line_1`,
+  `core_skills`, `experiences`; `summary` only when the summary section is
+  enabled for the target region)
 - No required key is empty or None
-- `experiences` length matches `cv.max_experience_slots`
+- `experiences` length matches `cv.max_experience_slots` (+1 allowed only in
+  `transition` positioning)
+- Every experience has an integer `end_year` (9999 = Present)
+- Bullet floors: the lead slot has >= 3 bullets; every other slot >= 2
+- In `labeled` mode, every experience bullet opens with a `**Label:**` lead-in
 - No employer name appears in `summary`
 - No company name appears in any bullet
+- No em dash in any content_map value (banned in employer-facing output)
 - `contact_line_1` and `contact_line_2_suffix` match the target region
 
 If validation fails, render aborts with the specific failure.

@@ -113,6 +113,10 @@ Default: `OPUS`. Write `cv.template: [choice]` to `config.yaml`.
 
 Ask: *"Which CV sections do you want by default? You can override per application."* Default-on: tagline, contact, summary, core_skills, experience, education, additional. Default-off: publications, certifications, volunteering. The user can toggle anything.
 
+If the user targets multiple regions, also offer per-region toggles: *"Should any section differ by region — e.g. many European CVs drop the summary?"* Write the answer to `cv.region_section_overrides` (keys = the region names from Step 3, e.g. `EU: {summary: false}`); the render removes those sections from that region's CVs.
+
+Note: the OPUS template renders only its built-in sections — turning ON publications/certifications/volunteering has no render path yet; offer to surface that content as an `additional` item instead (see `../cv-tailor/references/modular-sections.md`).
+
 ### Step 6b — Inline bold
 
 Ask: *"Should selected phrases in your experience and education bullets appear in bold? Bold helps a recruiter's eye land on quantified outcomes (40+ clients, 30%) and recognizable credentials (Deloitte, Harvard Law Review) in a 6-second scan. But it's also increasingly read as an AI tell — many recruiters now treat heavy bold as a signal that the CV was AI-drafted.*

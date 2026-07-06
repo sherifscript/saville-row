@@ -6,15 +6,26 @@ This file documents the small set of hard rules that make the CV render reliably
 
 ```python
 from docxtpl import DocxTemplate
-from md_to_richtext import convert_content_map
+from md_to_richtext import build_bold_plan
+from postprocess import postprocess_cv
 
-tpl = DocxTemplate("templates/OPUS/OPUS_Template.docx")
-content_map = convert_content_map(content_map)  # MANDATORY
-tpl.render(content_map, autoescape=True)         # autoescape=True is MANDATORY
+content_map, bold_plan = build_bold_plan(content_map, mode=mode)  # MANDATORY
+tpl = DocxTemplate("templates/OPUS/full_template.docx")
+tpl.render(content_map, autoescape=True)          # autoescape=True is MANDATORY
 tpl.save("CV - Company - Job Title.docx")
+postprocess_cv("CV - Company - Job Title.docx", bold_plan)  # MANDATORY
 ```
 
-Three things must be true: (1) you used `docxtpl`, not unpack/edit/repack; (2) you called `convert_content_map()` before rendering; (3) you passed `autoescape=True`.
+(`mode` is `"labeled"` when `cv.bullet_style: labeled`, `"inline"` when
+`cv.inline_bold: true`, else `"plain"` — `render_cv.resolve_bold_mode()`
+derives it. Prefer calling `render_cv.render()`, which runs this whole
+pipeline plus validation and the audit.)
+
+Four things must be true: (1) you used `docxtpl`, not unpack/edit/repack;
+(2) you called `build_bold_plan()` before rendering, so every bullet is a
+**plain string** at render time; (3) you passed `autoescape=True`;
+(4) you called `postprocess_cv()` after saving, so planned bold becomes real
+runs and disabled sections are removed.
 
 ## Why `autoescape=True` is mandatory
 
@@ -42,21 +53,55 @@ The recruiter sees the double space and assumes a typo. The CV looks unprofessio
 
 **Fix:** pass `autoescape=True` to every `tpl.render()` call without exception. The escaping converts `&` to `&amp;` in the XML, which Word renders as `&` correctly.
 
-## Why `convert_content_map()` is mandatory
+## RichText is banned from the render path (the 2026-05-11 trigger, pinned)
 
-The framework uses `**phrase**` markdown-style markers inside bullets to indicate which phrases should render bold. docxtpl does not interpret these markers — it treats them as literal characters. Without conversion:
+The framework uses `**phrase**` markdown-style markers inside bullets to
+indicate which phrases should render bold. docxtpl does not interpret these
+markers. Until v1.8.0 the pipeline converted them to docxtpl `RichText`
+objects before render. **That was the bug.**
 
-- In **experience and education bullets** where bold is allowed → the markers render as literal `**` asterisks in Word, surrounding the intended phrase. The result is `**stakeholder management**` in plain text.
-- In **other fields** (tagline, summary, core_skills descriptions, additional descriptions) → same problem.
+**The pinned trigger:** the template's bullet placeholders are plain
+`{{ bullet }}`, not the RichText form `{{r bullet }}`. When a `RichText`
+value passes through a plain placeholder, docxtpl embeds the RichText's
+run-XML **inside** the placeholder's `<w:t>` element (RichText's `__html__`
+bypasses autoescape, so the markup is inserted raw). `<w:r>` nested inside
+`<w:t>` is invalid OOXML: **Word, python-docx, and ATS parsers all read the
+paragraph as EMPTY.** The text is still visible to a raw-XML regex — which
+is why the old audit passed the corruption.
 
-`convert_content_map()` does two things:
+- **Incident 2026-05-11 (General CV regression):** every bullet containing
+  `**markdown**` rendered as an empty bullet. The trigger above was not
+  identified at the time; the old audit check #5 (a bold-run regex count)
+  was added in response — and could never fail on OPUS, whose section
+  headers are themselves bold.
+- **Incidents 2026-06-25 (Cairo, v1.6.0) and 2026-06-27 (Berlin, v1.7.0):**
+  the same corruption shipped in *every* labeled-mode CV of both batches —
+  three job titles, zero visible bullets — with a passing audit. It is
+  deterministic, not intermittent: any render where bullets are RichText
+  through a plain placeholder corrupts (renders whose bullets carried no
+  `**` markers, like the 2026-05-06 BMG CV, stayed plain strings and were
+  fine — that is why the failure looked random).
 
-1. In allowed fields (experience bullets, msc_bullets, ba_bullets): replaces `**phrase**` with a docxtpl `RichText` object containing a bold run.
-2. In disallowed fields: strips `**` markers entirely.
+**The v1.8.0 rule:** bullets are **plain strings** at render time, always.
+`build_bold_plan()` ([`../scripts/md_to_richtext.py`](../scripts/md_to_richtext.py))
+strips every `**` marker before render — allowed fields get their bold spans
+recorded in a plan, disallowed fields (tagline, summary, core_skills
+descriptions, additional descriptions) are stripped outright. After
+`tpl.save()`, `postprocess_cv()`
+([`../scripts/postprocess.py`](../scripts/postprocess.py)) applies the plan
+as **real bold runs** by cloning the rendered run element — the clone
+inherits the template run's full rPr (Calibri, sz 20, paired `w:b`/`w:bCs`),
+so no formatting is re-declared in code. It also verifies every planned
+bullet is actually present in the document and raises `PostprocessError`
+if not — a loud render-time failure instead of a silent blank CV.
 
-**Incident 2026-05-11 (General CV regression):** every experience bullet containing `**markdown**` rendered as an empty bullet. The RichText XML was being written inside a `<w:t>` text node instead of as sibling `<w:r>` runs, which Word silently ignores. The trigger was never pinned down. Audit check #5 was added in response.
+Audit Check 5 (`check_5_rendered_integrity`) then reads the rendered file
+with python-docx and refuses to ship a CV whose bullets are not readable —
+the check that makes this corruption class unshippable even if a future
+driver script reintroduces RichText.
 
-The helper is at [`../scripts/md_to_richtext.py`](../scripts/md_to_richtext.py). Always call it on the content_map immediately before `tpl.render()`.
+`convert_content_map()` still exists as a deprecated strip-only shim for
+pre-v1.8.0 driver scripts; it never produces RichText.
 
 ## Editorial guidance — what to bold
 
@@ -120,7 +165,7 @@ The personal site and LinkedIn links in contact line 2 must render as **real cli
 
 **What "plain text URL" means to a recruiter:** a PDF viewer and Word both make clickable links from `https://` strings automatically, but a `.docx` attachment opened in a corporate email environment may not. A real hyperlink relationship ensures the link is clickable in every context.
 
-**Post-render verification:** after rendering, check that `word/_rels/document.xml.rels` contains at least two `Relationship` entries with `Type=".../hyperlink"`. If it contains zero, the links are plain text and must be fixed before shipping.
+**Post-render verification:** after rendering, check that `word/_rels/document.xml.rels` contains at least two `Relationship` entries with `Type=".../hyperlink"`. If it contains zero, the links are plain text and must be fixed before shipping. Audit Check 5(e) enforces this automatically — it also guards the `postprocess_cv()` save round-trip, which must preserve the relationships (python-docx keeps unknown parts and rels intact).
 
 ## When unpack/edit/repack is allowed
 
