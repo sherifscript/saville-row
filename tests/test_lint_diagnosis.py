@@ -3,7 +3,7 @@ Tests for lint_diagnosis — the mechanical floor under the diagnosis spec.
 A thin diagnosis licenses a thin CV; the lint refuses to let cv-tailor
 render from one.
 """
-from lint_diagnosis import lint_diagnosis
+from lint_diagnosis import lint_diagnosis, parse_positioning_mode
 
 
 def _good_diagnosis():
@@ -48,6 +48,13 @@ research-market-intelligence: keyword overlap on market research.
 - Slot 3 (Atheneum, research/recency): conduct technical interviews with industry experts | proof point: SWANA expert interviews for global research | angled as primary research feeding strategic recommendations.
 - Higher degree (MSc PEP): economics and quantitative methods | angled as analytical rigor.
 - core_skills: market research & competitive intelligence, quantitative analysis, tools.
+
+## Positioning
+
+**Mode: direct**
+
+This is the candidate's actual last job under a different logo; energy-sector
+specificity is the only gap, learnable and not the bar.
 """
 
 
@@ -121,3 +128,18 @@ def test_short_slot_angle_fails():
     ok, errors = lint_diagnosis(text)
     assert not ok
     assert any("chars" in e for e in errors)
+
+
+def test_missing_positioning_fails():
+    text = _good_diagnosis().split("## Positioning")[0]
+    ok, errors = lint_diagnosis(text)
+    assert not ok
+    assert any("Positioning" in e for e in errors)
+
+
+def test_parse_positioning_mode():
+    assert parse_positioning_mode(_good_diagnosis()) == "direct"
+    assert parse_positioning_mode(
+        "## Positioning\n\n**Mode: transition** — career change.") == "transition"
+    assert parse_positioning_mode("Mode: adjacent, did the work") == "adjacent"
+    assert parse_positioning_mode("no positioning here") is None

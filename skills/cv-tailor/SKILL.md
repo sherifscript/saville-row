@@ -2,8 +2,8 @@
 name: cv-tailor
 description: Render diagnosis-driven, ATS-optimized CVs as .docx via docxtpl. Modular section composition, region-aware headers, inline-bold helper, and a mandatory post-render audit (tailoring coverage, numeric grounding, and named structural failure modes).
 metadata:
-  version: 1.7.0
-  last_updated: 2026-06-27
+  version: 1.8.0
+  last_updated: 2026-07-06
 ---
 
 # cv-tailor
@@ -62,12 +62,66 @@ diagnosis while keeping the bullet's concrete detail — not to rewrite it thin 
 Check 9 enforces that. See
 [`references/content-map-schema.md`](./references/content-map-schema.md) "Facts vs angle".
 
+### Positioning drives the frame
+
+The diagnosis's required `## Positioning` section (`Mode: direct | adjacent |
+transition` + rationale) decides how every headline element is framed.
+`render_cv.render()` reads the mode from the diagnosis automatically.
+
+**Tagline construction per mode:**
+
+- `direct`: open with the role title as the JD states it —
+  `[Role Title]  |  [Pillar 1] · [Pillar 2] · [Pillar 3]`.
+- `adjacent`: open with the candidate's real functional identity written in
+  the JD's vocabulary. Claiming the role *family* is fair when the career
+  file substantively supports it ("Data Analyst" for years of pipeline +
+  dashboard + validation work), but never claim a seniority or exact title
+  the career file cannot back ("Senior X" only when the seniority is real).
+- `transition`: build the bridge tagline —
+  `[Real capability identity]  |  Transitioning to [Target function]`
+  (the benchmark pattern: "Client Engagement & Analytics Specialist |
+  Transitioning to Customer Success"). A transition CV never states the
+  target title as a held identity; the honest bridge is what makes the rest
+  of the translation credible. A recruiter who feels bait-and-switched stops
+  reading; one who sees an honest bridge keeps going.
+
+**Summary framing per mode:**
+
+- `direct`: sentence 1 states the matching scope in the JD's terms.
+- `adjacent`: sentence 1 names the real background and reads it as the
+  target capability ("five years [real work], operating as [JD concept]").
+- `transition`: sentence 1 is the explicit bridge — "leveraging a background
+  in [real domain] to transition into [target domain]" — then sentences 2–3
+  carry the strongest transferable proof. Naming the transition IS the
+  strategy.
+
+**Slot latitude:** `transition` mode may re-pick slots beyond the branch
+default — see `references/experience-slot-logic.md` "Transition-mode slot
+latitude". `direct`/`adjacent` use today's slot rules exactly.
+
 ### Write strong bullets (the substance bar)
 
 Tailoring decides *which* fact each bullet surfaces; this decides *how* it is
 written. The benchmark is the candidate's own career-file bullet, **lightly
-edited** — not a thin rewrite. There are two opposite failure modes, and both
-ship weak CVs:
+edited** — not a thin rewrite.
+
+**The canonical bullet formula:** `[career-file fact, concrete specifics
+kept] + [interpretive clause in the JD's vocabulary]`. The interpretive
+clause *appends* the target-domain reading of the fact; it never replaces
+the fact. Worked examples (transition-grade):
+
+- "...structuring qualitative inputs into strategic deliverables used by
+  enterprise clients, **mirroring an Executive Business Review (EBR)
+  motion**"
+- "...built an automated Python pipeline that increased publication speed by
+  30%, **directly optimizing client Time-to-Value (TTV)**"
+
+The fact half carries the specifics and the numbers; the interpretive half
+names the concept this team hires for. One interpretive/ungrounded bullet
+per 3-bullet slot is the pattern's natural ceiling (audit Check 10's density
+floor allows exactly that).
+
+There are two opposite failure modes, and both ship weak CVs:
 
 - **Un-tailored:** a career-file bullet pasted byte-for-byte across every CV in a
   batch (the 2026-06-14 Denmark batch shipped the same lower slot in all ten).
@@ -111,11 +165,17 @@ Every bullet must clear this bar:
    diagnosis's verbatim JD keywords as the *framing* of the bullet — the same real
    fact read as the thing this team is hiring for — not as tokens sprinkled to
    satisfy ATS.
-6. **Shape and length.** Scope + action + outcome with concrete detail, roughly
-   25–40 words — the substance and shape of the career file's own bullets. This is
-   a floor on substance, not a hard cap; the diagnosis decides how much each slot
-   needs, but a ~12-word fragment is almost always under-written. Put the metric
-   where it lands (lead or terminal), not buried mid-clause behind filler.
+6. **Shape, length, and count.** Scope + action + outcome with concrete detail,
+   roughly 25–40 words — the substance and shape of the career file's own
+   bullets. This is a floor on substance, not a hard cap; the diagnosis decides
+   how much each slot needs, but a ~12-word fragment is almost always
+   under-written. Put the metric where it lands (lead or terminal), not buried
+   mid-clause behind filler. **Bullet counts per slot:** the diagnosis decides,
+   with hard floors enforced at validation — the lead slot carries at least 3
+   bullets (default to 4 when the career file supports it; the source role has
+   7), every other slot at least 2 (default 3). The 2026-06-27 batch silently
+   shrank the lead slot from 4 bullets to 3 and dropped its strongest metric;
+   floors make shrinkage a deliberate choice, not drift.
 
 Everything stays grounded: the proof point and every number must already exist in
 the career file (Checks 9, 10). Reframe what is true; invent nothing.
@@ -135,12 +195,16 @@ keywords** block. Today those keywords are mostly *sprinkled* to satisfy ATS (Ch
   like "Time-to-Value" or a skill like "Value Realization"; the same fact for a
   market-intelligence role becomes "Competitive Landscape Mapping." The label or
   skill name does the reframing; the clause underneath carries the grounded detail.
-- **Scale the aggressiveness to the diagnosis's stretch assessment.** The diagnosis
-  names the role's *actual bar* and an honest stretch read (e.g. "stretch-to-strong:
-  the title is new but the underlying work matches"). A genuine stretch translates
-  aggressively — pull the role's framing all the way onto adjacent real work. A
-  close match stays near the source wording, because heavy translation there reads
-  as straining. Let the diagnosis decide the dial.
+- **Scale the aggressiveness to the diagnosis's Positioning mode, not to a
+  vibe.** `direct` stays near the source wording — heavy translation on a true
+  match reads as straining. `adjacent` translates the framing: capability
+  labels, core-skill labels, the summary, and the lead bullets carry the JD's
+  concepts while every clause keeps its career-file specifics. `transition`
+  translates aggressively: every experience slot carries at least one
+  interpretive clause reading the real work in the target domain's own motions
+  and metrics ("mirroring an EBR motion", "optimizing Time-to-Value"), and
+  every label is written in the target's vocabulary. The mode is declared in
+  the diagnosis's `## Positioning` section; see "Positioning drives the frame".
 - **Hard guardrail — vocabulary only.** Translation changes *wording and framing*,
   never the facts. It never invents a title, a number, a tool, or a responsibility,
   and never upgrades a contributor role to owner. A label is a lens on a real fact,

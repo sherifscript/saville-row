@@ -92,10 +92,42 @@ The diagnosis can:
 - Pick the branch → controls Slot 3
 - Specify section overrides → controls which sections render
 - Specify keywords → controls bullet wording
+- Declare the Positioning mode → in `transition` mode only, unlocks the slot
+  latitude below
 
 The diagnosis cannot:
-- Add a 4th slot when `max_experience_slots: 3` (the config wins)
-- Promote Slot 3 above Slot 1 or 2 (chronology is enforced)
+- Add an extra slot beyond `max_experience_slots` (the config wins) — except
+  the single transition-mode allowance below
+- Promote Slot 3 above Slot 1 or 2 (chronology is enforced; an ongoing side
+  engagement below the block must be marked `concurrent: true` in the
+  content map)
 - Drop the continuous block in favor of a non-block third role (if continuous_employer_block is true, the block holds slots 1+2)
 
 These constraints exist because they protect the structure that makes the CV scannable in 6 seconds.
+
+## Transition-mode slot latitude
+
+When the diagnosis's `## Positioning` declares `Mode: transition` (a
+deliberate career change), the branch's default slot picks may not carry the
+target-domain evidence — the roles that prove a Customer Success story can be
+old client-facing jobs the branch logic would never select. In transition
+mode ONLY, the diagnosis MAY:
+
+- **(a) override the branch's third slot** with a target-relevant role from
+  the career file, and/or
+- **(b) add ONE slot beyond `cv.max_experience_slots`** when an older role
+  carries direct target-domain evidence no in-cap slot can
+  (`validate_content_map` accepts max+1 only in transition mode).
+
+Both require an explicit **`Slot plan:`** line in the diagnosis naming every
+slot and its one-line justification — the extra slot must be argued, not
+assumed. Everything else survives unchanged: the continuous-employer block
+still holds slots 1+2, reverse chronology is still enforced (Check 7;
+ongoing side roles marked `concurrent: true`), and the ~10-year lookback
+still applies unless the old role is the only credential for the target
+domain (the existing exception). In `direct` and `adjacent` modes, slot
+rules are exactly the defaults above — the latitude does not exist.
+
+The cap's purpose (forced editorial choice) is preserved: a transition
+diagnosis that wants slot latitude has to write down why each slot earns
+its place.

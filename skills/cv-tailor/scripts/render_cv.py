@@ -33,7 +33,7 @@ from docxtpl import DocxTemplate
 from md_to_richtext import build_bold_plan
 from postprocess import postprocess_cv
 from audit import run_full_audit, _iter_strings
-from lint_diagnosis import lint_diagnosis
+from lint_diagnosis import lint_diagnosis, parse_positioning_mode
 
 try:
     from section_composer import compose_template
@@ -221,6 +221,10 @@ def render(diagnosis_path, content_map, config, repo_root, output_path,
             raise ValueError(
                 "Diagnosis failed lint (fix the diagnosis, then re-render):"
                 "\n  - " + "\n  - ".join(lint_errors))
+        # Pick the Positioning mode up from the diagnosis automatically so a
+        # driver cannot forget to wire it. An explicit argument wins.
+        if positioning_mode is None:
+            positioning_mode = parse_positioning_mode(diagnosis_text)
 
     # 1. Pre-render validation.
     validate_content_map(content_map, config, enabled_sections=enabled,

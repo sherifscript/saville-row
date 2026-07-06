@@ -129,20 +129,22 @@ are then checked against these proof points by audit Check 11 — a slot whose
 assigned proof point never surfaces in its bullets fails the audit. Write the
 angle lines as if cv-tailor will execute them literally, because it will.
 
-## Honest assessment (optional)
+## Positioning
 
-One sentence. Is the candidacy a strong match, a stretch, or a reach?
-Name the largest risk plainly. This section is for the candidate's eyes
-only — it never enters the CV or cover letter. It is most useful on
-stretch or borderline roles where the cover letter will need to address
-an obvious objection.
+**Mode: direct | adjacent | transition** — pick exactly one, on its own line.
+
+1–2 sentences of rationale: the gap between the titles the candidate has
+held and this role, and the largest honest risk in plain words.
 
 Examples:
-- "Strong match: the Statista tenure directly mirrors the core ask."
-- "Stretch: seniority is right but no public-sector context; cover
-  letter should address the gap head-on."
-- "Reach: three of five required skills are absent from the career
-  file; proceed only if the Match Score rationale is compelling."
+- "Mode: direct — Market Research Analyst is the candidate's actual last
+  job under a different logo; sector specificity is the only gap."
+- "Mode: adjacent — never held the 'Data Analyst' title, but the pipeline,
+  dashboard, and validation work IS the job; risk is named-tool mismatch,
+  addressed in the letter."
+- "Mode: transition — first dedicated Customer Success role; the bridge is
+  client-facing research delivery and value-realization evidence; risk is
+  no CSM title anywhere, named in the letter."
 ```
 
 ## How to write each section well
@@ -214,6 +216,44 @@ tailored and the lower slots, education, and additional sections shipped as
 identical career-file boilerplate across every CV. The "Section angles"
 section above exists to prevent exactly that. A reader comparing two of your
 CVs side by side should not find a paragraph that is word-for-word the same.
+
+### Positioning — the mode that frames everything
+
+Required since v1.8.0 (it replaces the old optional "Honest assessment",
+absorbing its honesty function). Unlike that section, Positioning is **not**
+candidate-eyes-only: its mode and rationale are consumed downstream — the
+rationale's *text* never appears verbatim in an employer-facing document,
+but the mode decides how every document is framed:
+
+- **cv-tailor** reads the mode for the tagline construction, the summary's
+  first sentence, the domain-translation aggressiveness, and (in
+  `transition` mode) slot latitude. See cv-tailor SKILL.md "Positioning
+  drives the frame".
+- **cover-letter** builds its objection paragraph from the rationale
+  instead of re-deriving the risk.
+
+How to pick the mode:
+
+- **direct** — the candidate has held this title or an unambiguous
+  equivalent. The CV states the identity plainly and stays near the source
+  wording; heavy translation on a true match reads as straining.
+- **adjacent** — the candidate has done the work without holding the title.
+  This is the most common case. The CV frames the real work in the JD's
+  vocabulary; claiming the role *family* is fair when the career file
+  substantively supports it, but never a seniority or exact title it cannot
+  back.
+- **transition** — a deliberate career change. The CV builds an honest
+  bridge ("Transitioning to [target function]") and never asserts
+  equivalence; aggressive domain translation plus re-picked slots carry the
+  fit. In this mode the diagnosis must also write a `Slot plan:` line if it
+  uses the transition slot latitude (see
+  `../../cv-tailor/references/experience-slot-logic.md`).
+
+Mis-picking corrupts everything downstream: `adjacent` framed as `direct`
+claims a title the CV cannot back (a credibility kill at interview);
+`adjacent` framed as `transition` undersells real experience as a career
+change. When torn between two modes, pick the more honest one — the
+translation machinery exists precisely so honesty costs nothing.
 
 ## What a good diagnosis is not
 

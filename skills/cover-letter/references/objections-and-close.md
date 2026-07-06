@@ -4,6 +4,10 @@ A recruiter reads a cover letter doing one thing: risk assessment. Two parts of 
 
 ## Part 1 — naming the obvious objection
 
+### Where the objection comes from: the diagnosis
+
+Do not re-derive the objection from the CV. The diagnosis's `## Positioning` section already made the call: its **mode** (direct | adjacent | transition) and its rationale name the gap and the largest honest risk. Read it before drafting. `transition` and `adjacent` candidacies get an objection paragraph built from that rationale; `direct` skips it unless the rationale names another live risk (tool mismatch, geography). A letter that contradicts the CV's positioning — the CV framing the candidate as adjacent while the letter apologizes for a career change — is worse than either alone.
+
 ### Why this matters
 
 Every candidacy that is not a perfect on-paper match has a visible risk. The recruiter sees it in the first ten seconds of the CV, before they reach the cover letter. The question is not whether they will notice it. They already have. The question is whether the letter addresses it or pretends it is not there.
@@ -94,7 +98,7 @@ Pure boilerplate. It says nothing only this candidate could say. Cut.
 
 ```
 Best regards,
-Jordan **Park**
+Jordan Park
 ```
 
-Last name in bold, nothing else styled. The signature is not part of the word count.
+Plain text, no bold on any part of the name (see SKILL.md "Format" — bold in a signature is an AI tell). The signature is not part of the word count.
