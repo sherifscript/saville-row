@@ -92,6 +92,16 @@ cv:
     # - certifications # uncomment if certifications matter in your field
     # - volunteering   # uncomment to include volunteer work
 
+  # Per-region section toggles, keyed by the region names used in
+  # regional-headers.yaml. A section mapped to false is removed from CVs
+  # rendered for that region (the postprocess pass deletes it). Common use:
+  # European CVs often drop the summary. Optional; empty by default.
+  # region_section_overrides:
+  #   EU:
+  #     summary: false
+  #   Denmark:
+  #     summary: false
+
 
 discovery:
   # Roles scoring below this Match Score (0-10) are filtered out before the

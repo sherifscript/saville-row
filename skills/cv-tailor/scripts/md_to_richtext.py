@@ -1,48 +1,35 @@
 """
-md_to_richtext.py — convert **markdown bold** markers to docxtpl RichText runs.
+md_to_richtext.py — strip **markdown bold** markers and build the bold plan.
 
-The framework uses `**phrase**` markers inside CV bullets to indicate which
-phrases should render bold. docxtpl does not interpret these — without
-conversion they render as literal asterisks in Word.
+(The module name is historical: until v1.8.0 it converted markers to docxtpl
+RichText objects. RichText through the template's plain `{{ bullet }}`
+placeholders embeds run-XML inside <w:t> — invalid OOXML that Word/python-docx/
+ATS read as EMPTY bullets. That was the 2026-05-11 incident and the corruption
+in every labeled-mode CV of the 2026-06-25/27 batches. RichText is now banned
+from the render path; see docxtpl-recipe.md.)
 
-`convert_content_map()` does two things:
-  1. In allowed fields (experience bullets, msc_bullets, ba_bullets):
-     converts **phrase** to RichText bold runs WHEN inline_bold is True.
-     When inline_bold is False (the default), strips markers instead.
-  2. In disallowed fields (tagline, summary, core_skills, additional):
-     strips stray ** markers so a leaked marker cannot render literally.
+The v1.8.0 pipeline:
 
-The inline_bold parameter maps to config.yaml > cv.inline_bold (default false).
-When false, ** markers in ALL fields are stripped — nothing renders bold.
+  1. `build_bold_plan(cm, mode)` — called immediately before
+     `tpl.render(cm, autoescape=True)`. Strips `**` markers from every field,
+     and (when mode is "labeled" or "inline") records which character spans of
+     each bullet should render bold. Bullets stay plain strings.
+  2. `postprocess_cv(path, plan, ...)` (postprocess.py) — after `tpl.save()`,
+     applies the recorded spans as real bold runs by cloning the rendered
+     run (template formatting inherited exactly).
 
-Always call convert_content_map(cm) immediately before
-    tpl.render(cm, autoescape=True)
-
-See skills/cv-tailor/references/docxtpl-recipe.md for the rationale and the named
-failure modes (2026-04-28 ampersand strip, 2026-05-11 empty-bold regression).
+Marker rules are unchanged from the old design:
+  - Boldable fields: experiences[i].bullets, msc_bullets, ba_bullets.
+  - Never-bold fields (tagline, summary, contact lines, core_skills
+    descriptions, additional descriptions): markers are stripped so a leaked
+    `**` can never render literally.
 """
 
 import re
-from docxtpl import RichText
 
+_MARKER_RE = re.compile(r"(\*\*[^*]+?\*\*)")
 
-def md_to_richtext(text):
-    """Convert **phrase** markers in a string to docxtpl bold runs.
-
-    Plain strings (no ** markers) pass through unchanged — docxtpl renders
-    them normally via autoescape.
-    """
-    if not isinstance(text, str) or "**" not in text:
-        return text
-    rt = RichText("")
-    for part in re.split(r"(\*\*[^*]+?\*\*)", text):
-        if not part:
-            continue
-        if part.startswith("**") and part.endswith("**"):
-            rt.add(part[2:-2], bold=True)
-        else:
-            rt.add(part)
-    return rt
+BOLD_MODES = ("plain", "inline", "labeled")
 
 
 def _strip_markers(text):
@@ -50,29 +37,81 @@ def _strip_markers(text):
     return text.replace("**", "") if isinstance(text, str) else text
 
 
-def convert_content_map(cm, inline_bold=False):
-    """Walk the content_map. Convert markdown-bold to RichText in the
-    Experience and Education sections when inline_bold is True; strip stray
-    ** markers everywhere else (and from ALL fields when inline_bold is False).
+def _strip_and_spans(text):
+    """Strip ** markers; return (stripped_text, spans).
 
-    inline_bold maps to config.yaml > cv.inline_bold (default false).
-    Pass the value loaded from config; default is False (strip all markers).
-
-    Mutates and returns cm.
+    Spans are (start, end) character offsets into the STRIPPED string, one
+    per **marked** phrase — the coordinates postprocess_cv bolds at.
     """
-    # Determine converter for the boldable fields based on the toggle
-    _convert = md_to_richtext if inline_bold else _strip_markers
+    spans = []
+    out = []
+    pos = 0
+    for part in _MARKER_RE.split(text):
+        if not part:
+            continue
+        if part.startswith("**") and part.endswith("**"):
+            inner = part[2:-2]
+            spans.append((pos, pos + len(inner)))
+            out.append(inner)
+            pos += len(inner)
+        else:
+            out.append(part)
+            pos += len(part)
+    return "".join(out), spans
 
-    # --- Bolding ALLOWED fields (convert or strip based on toggle) ---------
-    for role in cm.get("experiences", []):
+
+def build_bold_plan(cm, mode="plain"):
+    """Strip markers across the content_map; record the bold plan.
+
+    mode: "plain"  — no bold anywhere; every marker stripped, spans empty.
+          "inline" — bold the **phrase** spans in boldable fields.
+          "labeled" — same span mechanics; the convention is a bold
+                      `**Label:**` lead-in on every experience bullet
+                      (validated by render_cv.validate_content_map).
+
+    Returns (cm, plan). Mutates cm in place: after this call every bullet is
+    a plain string with no markers — safe for `{{ bullet }}` placeholders.
+    Plan entries are in document order (experience slots, then msc, then ba):
+
+        {"section": "experience"|"msc"|"ba", "slot": int|None,
+         "text": "<stripped bullet>", "spans": [(start, end), ...]}
+
+    Every bullet gets an entry even in plain mode (spans empty) — the
+    postprocess pass uses the entries to verify each bullet is actually
+    present and readable in the rendered document.
+    """
+    if mode not in BOLD_MODES:
+        raise ValueError("mode must be one of %s, got %r" % (BOLD_MODES, mode))
+    record_spans = mode != "plain"
+    plan = []
+
+    def handle(bullets, section, slot=None):
+        new = []
+        for b in bullets:
+            if not isinstance(b, str):
+                raise TypeError(
+                    "bullets must be plain strings; got %s. RichText is "
+                    "banned from the render path (2026-05-11 corruption — "
+                    "see docxtpl-recipe.md)." % type(b).__name__)
+            stripped, spans = _strip_and_spans(b)
+            plan.append({
+                "section": section,
+                "slot": slot,
+                "text": stripped,
+                "spans": spans if record_spans else [],
+            })
+            new.append(stripped)
+        return new
+
+    for i, role in enumerate(cm.get("experiences", [])):
         if "bullets" in role:
-            role["bullets"] = [_convert(b) for b in role["bullets"]]
+            role["bullets"] = handle(role["bullets"], "experience", i)
 
-    for key in ("msc_bullets", "ba_bullets"):
-        if key in cm:
-            cm[key] = [_convert(b) for b in cm[key]]
+    for key, section in (("msc_bullets", "msc"), ("ba_bullets", "ba")):
+        if cm.get(key):
+            cm[key] = handle(cm[key], section)
 
-    # --- Bolding NOT ALLOWED: always strip stray markers ------------------
+    # Never-bold fields: strip stray markers so none can render literally.
     for key in ("tagline", "summary", "contact_line_1", "contact_line_2_suffix"):
         if key in cm:
             cm[key] = _strip_markers(cm[key])
@@ -85,13 +124,25 @@ def convert_content_map(cm, inline_bold=False):
         if "description" in item:
             item["description"] = _strip_markers(item["description"])
 
+    return cm, plan
+
+
+def convert_content_map(cm, inline_bold=False):
+    """DEPRECATED shim (pre-v1.8.0 API). Strips ** markers from every field.
+
+    It no longer produces RichText — RichText through a plain `{{ bullet }}`
+    placeholder was the 2026-05-11 / labeled-mode corruption. The
+    `inline_bold` argument is accepted and ignored; bold now happens after
+    render via build_bold_plan() + postprocess_cv(). Existing driver scripts
+    that call this keep producing valid (plain) CVs.
+    """
+    cm, _ = build_bold_plan(cm, mode="plain")
     return cm
 
 
 if __name__ == "__main__":
     import copy
 
-    # Quick self-test
     sample = {
         "tagline": "Senior PM | Growth",
         "summary": "Plain prose, no **bold** here please.",
@@ -104,19 +155,38 @@ if __name__ == "__main__":
         "additional": [{"label": "Languages", "description": "English, **Korean**"}],
     }
 
-    # Test inline_bold=True (default old behavior)
-    out_bold = convert_content_map(copy.deepcopy(sample), inline_bold=True)
-    assert "**" not in out_bold["summary"]
-    assert "**" not in out_bold["core_skills"][0]["description"]
-    assert "**" not in out_bold["additional"][0]["description"]
-    assert isinstance(out_bold["experiences"][0]["bullets"][0], RichText)
-    assert isinstance(out_bold["msc_bullets"][0], RichText)
-    print("md_to_richtext self-test (inline_bold=True): passed.")
+    # inline mode: markers stripped everywhere, spans recorded for bullets.
+    cm, plan = build_bold_plan(copy.deepcopy(sample), mode="inline")
+    bullet = cm["experiences"][0]["bullets"][0]
+    assert bullet == "Lifted activation by 18%, covered in TechCrunch."
+    assert isinstance(bullet, str) and "**" not in bullet
+    entry = plan[0]
+    assert entry["section"] == "experience" and entry["slot"] == 0
+    assert [bullet[s:e] for s, e in entry["spans"]] == [
+        "activation by 18%", "TechCrunch"]
+    assert "**" not in cm["summary"]
+    assert "**" not in cm["core_skills"][0]["description"]
+    assert "**" not in cm["additional"][0]["description"]
+    # msc entry recorded after experience entries; ba has no spans.
+    assert plan[1]["section"] == "msc" and len(plan[1]["spans"]) == 1
+    assert plan[2]["section"] == "ba" and plan[2]["spans"] == []
 
-    # Test inline_bold=False (new default): all ** stripped, no RichText objects
-    out_plain = convert_content_map(copy.deepcopy(sample), inline_bold=False)
-    assert "**" not in out_plain["summary"]
-    assert isinstance(out_plain["experiences"][0]["bullets"][0], str)
-    assert "**" not in out_plain["experiences"][0]["bullets"][0]
-    assert isinstance(out_plain["msc_bullets"][0], str)
-    print("md_to_richtext self-test (inline_bold=False): passed.")
+    # plain mode: same stripping, no spans anywhere.
+    cm_p, plan_p = build_bold_plan(copy.deepcopy(sample), mode="plain")
+    assert all(e["spans"] == [] for e in plan_p)
+    assert cm_p["experiences"][0]["bullets"][0] == bullet
+
+    # labeled-style span at position 0.
+    cm_l, plan_l = build_bold_plan(
+        {"experiences": [{"bullets": ["**Pipeline automation:** built it."]}]},
+        mode="labeled")
+    text = cm_l["experiences"][0]["bullets"][0]
+    s, e = plan_l[0]["spans"][0]
+    assert text[s:e] == "Pipeline automation:" and s == 0
+
+    # deprecated shim: strips, never converts.
+    out = convert_content_map(copy.deepcopy(sample), inline_bold=True)
+    assert isinstance(out["experiences"][0]["bullets"][0], str)
+    assert "**" not in out["experiences"][0]["bullets"][0]
+
+    print("md_to_richtext self-test: passed.")

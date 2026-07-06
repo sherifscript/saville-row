@@ -29,11 +29,11 @@ Exception: `Run CV only` shortcut explicitly skips the diagnosis gate. The CV is
 3. Loads `branches.yaml` to get the third-slot company for the chosen branch.
 4. Loads `regional-headers.yaml` to get the header for the target region.
 5. Builds a `content_map` dict for docxtpl. See [`references/content-map-schema.md`](./references/content-map-schema.md).
-6. Composes sections per `cv.sections` order in config. Disabled sections are omitted; the template's partials are stitched together at render time. See [`references/modular-sections.md`](./references/modular-sections.md).
-7. Renders via `docxtpl` with `autoescape=True` mandatory. See [`references/docxtpl-recipe.md`](./references/docxtpl-recipe.md).
-8. Converts `**markdown bold**` markers in experience and education bullets to docxtpl `RichText` runs. See [`references/docxtpl-recipe.md`](./references/docxtpl-recipe.md).
-9. Saves `.docx` to the target folder.
-10. Runs the post-render audit. See [`references/post-render-audit.md`](./references/post-render-audit.md). Refuses to ship the CV if any check fails.
+6. Resolves the section list for the target region — `cv.sections` minus any `cv.region_section_overrides[region]` set to false (e.g. `EU: summary: false`). See [`references/modular-sections.md`](./references/modular-sections.md).
+7. Strips `**markdown bold**` markers via `build_bold_plan()` and records which spans should be bold. Bullets stay **plain strings** — RichText is banned from the render path (the 2026-05-11 / test5 corruption rendered every bullet invisible). See [`references/docxtpl-recipe.md`](./references/docxtpl-recipe.md).
+8. Renders via `docxtpl` with `autoescape=True` mandatory and saves the `.docx`. See [`references/docxtpl-recipe.md`](./references/docxtpl-recipe.md).
+9. Runs `postprocess_cv()` on the saved file: applies the planned bold as real runs (cloning the template's own run formatting) and removes region-disabled sections. Raises if any bullet cannot be located.
+10. Runs the post-render audit. See [`references/post-render-audit.md`](./references/post-render-audit.md). Refuses to ship the CV if any check fails — including Check 5, which re-opens the file with python-docx and fails any CV whose bullets are not actually readable.
 11. (Optional) Converts to PDF via LibreOffice if `output_formats` includes `pdf`.
 
 ## Critical correctness rules
@@ -149,20 +149,40 @@ keywords** block. Today those keywords are mostly *sprinkled* to satisfy ATS (Ch
 
 Without it, `&` characters in content_map values are silently stripped from the rendered XML. `Artist & Label` becomes `Artist  Label`. Always pass `autoescape=True` to `tpl.render()`.
 
-### `convert_content_map()` runs before render
+### `build_bold_plan()` before render, `postprocess_cv()` after save
 
-The helper at `scripts/md_to_richtext.py`:
-- Converts `**phrase**` markers to RichText bold runs in experience bullets and education bullets only.
-- Strips stray `**` markers from all other fields (tagline, summary, core_skills descriptions, additional descriptions).
+Bullets are **plain strings all the way through the render** — never RichText.
+(RichText through the template's plain `{{ bullet }}` placeholders embeds
+run-XML inside `<w:t>`; Word, python-docx, and ATS parsers read the bullet as
+EMPTY. That corruption shipped every labeled-mode CV of the 2026-06-25 and
+2026-06-27 batches blank. See `references/docxtpl-recipe.md`.)
 
-If you do not run it, leaked `**` markers render as literal asterisks in Word.
+The two mandatory helpers around `tpl.render()`:
+
+- `build_bold_plan(cm, mode)` (`scripts/md_to_richtext.py`) — strips every
+  `**` marker before render. In the boldable fields (experience bullets,
+  msc/ba bullets) it records the bold spans in a plan; in all other fields
+  (tagline, summary, core_skills descriptions, additional descriptions) it
+  strips outright so a leaked marker cannot render literally.
+- `postprocess_cv(path, plan, disabled_sections)` (`scripts/postprocess.py`)
+  — after `tpl.save()`, applies the plan as real bold runs by cloning the
+  rendered run (template formatting inherited exactly), verifies every
+  planned bullet is actually present, and removes region-disabled sections.
+
+`render_cv.render()` runs both; drivers should call it rather than
+hand-rolling the pipeline.
 
 ### Inline bold scope
 
-Inline bold is controlled by `config.yaml > cv.inline_bold` (default: `false`).
+Bold rendering is controlled by `config.yaml > cv.inline_bold` (default:
+`false`) and `cv.bullet_style` (labeled mode turns bold on for labels).
 
-- **When `inline_bold: false` (default):** `convert_content_map()` strips all `**` markers from every field before render. Nothing renders bold regardless of what the content map contains. This is the default because selective bold is increasingly read by recruiters as an AI tell.
-- **When `inline_bold: true`:** `**phrase**` markers in the three allowed fields convert to bold runs; markers in disallowed fields are stripped.
+- **When `inline_bold: false` (default):** all `**` markers are stripped and
+  no spans are recorded. Nothing renders bold. This is the default because
+  selective bold is increasingly read by recruiters as an AI tell.
+- **When `inline_bold: true`:** `**phrase**` markers in the three allowed
+  fields become recorded bold spans, applied by the postprocess pass;
+  markers in disallowed fields are stripped.
 
 | Field | Bold allowed (when inline_bold: true)? |
 | --- | --- |
@@ -265,9 +285,17 @@ cv:
     - volunteering    # toggleable; default off
 ```
 
-A user can disable any toggleable section globally in `config.yaml`. A diagnosis can also override per-application — e.g., a publications-heavy academic role can turn `publications: on` for that CV only.
+A user can disable any toggleable section globally in `config.yaml`, or per
+region via `cv.region_section_overrides` (e.g. `EU: summary: false` — common
+for European CVs). A diagnosis can also override per-application — e.g., a
+publications-heavy academic role can turn `publications: on` for that CV only.
 
-The template (`${CLAUDE_PLUGIN_ROOT}/templates/[chosen]/`) ships every possible section as a partial docx file. `scripts/section_composer.py` reads the section order and stitches partials in order, then the result is rendered by docxtpl. See [`references/modular-sections.md`](./references/modular-sections.md).
+Mechanism today: partial composition is inactive (no template ships real
+partials yet), so the full template renders whole and `postprocess_cv()`
+**removes** disabled sections from the saved file. Toggling ON a section the
+full template lacks (publications/certifications/volunteering on OPUS) has no
+render path yet — surface that content as an `additional` item. See
+[`references/modular-sections.md`](./references/modular-sections.md).
 
 ## Output
 

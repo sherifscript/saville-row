@@ -80,11 +80,11 @@ def test_check10_passes_named_proof_point():
     assert check_10_bullet_strength(exp)[0] is True
 
 
-def test_check10_reads_richtext_bullets():
-    """Labeled / inline_bold mode: bullets are RichText, not strings."""
-    from md_to_richtext import md_to_richtext
+def test_check10_reads_labeled_bullets():
+    """Labeled mode: bullets are plain strings with a bold-label lead-in
+    (since v1.8.0 bullets are always plain strings by audit time)."""
     exp = [{"company": "X", "bullets": [
-        md_to_richtext("**Coverage:** served global process owners.")]}]
+        "Coverage: served global process owners."]}]
     assert check_10_bullet_strength(exp)[0] is False
 
 

@@ -2,6 +2,39 @@
 
 CVs are not monolithic. Different users want different sections; different roles want different sections within the same user. The framework treats sections as **partials** that get stitched in order at render time.
 
+> **Current state (v1.8.0): partial composition is INACTIVE.** No shipped
+> template has real partials yet (`templates/OPUS/partials/` holds only a
+> placeholder), so `render_cv._resolve_template()` uses partials **only when
+> every needed partial actually exists** and otherwise falls back to
+> `full_template.docx` silently — the composer can no longer crash a render.
+> The *operative* toggle mechanism today is: render the full template, then
+> `postprocess_cv()` **removes** disabled sections (header paragraph through
+> the paragraph before the next section header). This honors
+> `cv.region_section_overrides` (e.g. `EU: summary: false`) for real —
+> before v1.8.0 that key was silently ignored. Toggling a section ON that
+> the full template does not contain (publications, certifications,
+> volunteering on OPUS) still has no render path; surface such content as an
+> `additional` item until the partials are built.
+
+## Region-aware section overrides
+
+```yaml
+cv:
+  sections: [tagline, contact, summary, core_skills, experience, education, additional]
+  region_section_overrides:
+    EU:
+      summary: false        # European CVs commonly drop the summary
+    Denmark:
+      summary: false
+```
+
+`render_cv.effective_sections(config, region)` resolves the final list per
+render: it starts from `cv.sections` and subtracts every section a region
+override maps to `false`. Precedence: per-application override in the
+diagnosis > `region_section_overrides` > global `cv.sections`. Required
+sections (`tagline`, `contact`, `experience`, `education`) can never be
+disabled — the postprocess pass refuses and warns.
+
 ## The canonical section list
 
 ```yaml

@@ -31,10 +31,27 @@ map.
 ## Modular sections
 
 `full_template.docx` contains every section. The `partials/` folder is for
-the modular-composition path (`skills/cv-tailor/references/modular-sections.md`).
-Splitting OPUS into partials is a v1.1 task — until then, the renderer uses
-`full_template.docx` whole and section toggling is done by leaving the
-relevant content-map keys empty.
+the modular-composition path (`skills/cv-tailor/references/modular-sections.md`)
+and is still a placeholder — the renderer uses `full_template.docx` whole.
+
+Section toggling works via the **postprocess pass**, not by leaving
+content-map keys empty (an empty key would still render the section header):
+`postprocess_cv()` deletes a disabled section's header paragraph through the
+paragraph before the next header. `cv.sections` and
+`cv.region_section_overrides` (e.g. `EU: summary: false`) both feed it.
+Sections the full template does not contain (publications, certifications,
+volunteering) cannot be toggled ON until real partials exist — surface that
+content as an `additional` item instead.
+
+## Bullets and bold
+
+Every bullet placeholder is plain `{{ bullet }}`. Bullets must therefore be
+**plain strings** at render time — a docxtpl `RichText` value through a plain
+placeholder embeds run-XML inside `<w:t>` and Word/ATS read the bullet as
+EMPTY (the 2026-05-11 / test5 corruption). Bold (`inline_bold`, `labeled`)
+is applied after render by `postprocess_cv()`, which clones the rendered
+run so the template's Calibri/size/bold-pairing formatting is inherited
+exactly. See `docxtpl-recipe.md` "RichText is banned from the render path".
 
 ## Editing this template
 

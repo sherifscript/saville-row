@@ -48,15 +48,43 @@ Double spaces are **not** a fail criterion. Many templates (OPUS included) legit
 
 **Incident:** 2026-04-28, Believe CV batch. Every `&` silently dropped because `autoescape=False` was the default at the time. The fix was to make `autoescape=True` mandatory in the helper.
 
-### 5. Does the rendered XML actually contain bolded runs inside the experience loop?
+### 5. Is every authored bullet actually READABLE in the rendered file?
 
-**Programmatic check.** Open `word/document.xml`. Count occurrences of `<w:b/>` (paired with `<w:bCs/>`) inside `<w:r>` elements located between the first `experiences` paragraph and the Education section header. If the diagnosis specified bold-worthy phrases for any experience bullet and the count comes back zero, the render failed silently.
+**Programmatic check — rendered-text integrity** (`check_5_rendered_integrity`).
+Open the rendered .docx with **python-docx** — the same parse Word and ATS
+systems perform — and assert:
 
-The failure mode: the RichText XML gets written inside a `<w:t>` text node instead of as sibling `<w:r>` runs. Word silently ignores it. The user sees empty bullets where the bolded text should be.
+1. every authored experience bullet appears as a whole, non-empty paragraph,
+   in order; per-slot readable counts match the content map;
+2. the same for `msc_bullets` / `ba_bullets`;
+3. no paragraph text contains raw markup (`<w:`) or leftover `**` markers;
+4. when bold was planned (`bullet_style: labeled` or `inline_bold: true`),
+   each planned span's text is covered by a run with `run.bold` True — real
+   run inspection, not a regex;
+5. the contact hyperlinks survived the postprocess round-trip (>= 2 hyperlink
+   relationships in `word/_rels/document.xml.rels`).
 
-**On failure:** re-render. Inspect `convert_content_map()` for the suspect bullet. The trigger has never been definitively pinned, but it typically resolves on a re-render with the same content_map.
+**This supersedes the old bold-run regex count**, which could never fail on
+the OPUS template (its section headers are themselves bold, so the count was
+always non-zero) and therefore passed the corruption it was written to catch.
 
-**Incident:** 2026-05-11, "Run CV only: General" session. Every bullet containing `**markdown**` rendered as an empty bullet. The BMG CV rendered five days earlier (2026-05-06) used the same template, same loop structure, and same helper, and rendered cleanly. The trigger was never identified — until it is, audit check 5 treats the symptom as the hard gate.
+**The failure mode it exists for:** docxtpl `RichText` passed through the
+template's plain `{{ bullet }}` placeholder embeds run-XML inside `<w:t>` —
+invalid OOXML that Word/python-docx/ATS read as an **empty paragraph**, while
+the text stays visible to a raw-XML regex. An empty bullet paragraph in a
+rendered CV is a hard render failure. Full mechanism and the pinned trigger:
+`docxtpl-recipe.md` "RichText is banned from the render path".
+
+**On failure:** do not re-render and hope. The render path passed a non-string
+bullet (RichText) or the postprocess pass did not run. Fix the driver to use
+`build_bold_plan()` + `postprocess_cv()` (or simply `render_cv.render()`),
+then re-render.
+
+**Incidents:** 2026-05-11 ("Run CV only: General" — every `**markdown**`
+bullet empty; trigger unpinned at the time); 2026-06-25 Cairo and 2026-06-27
+Berlin (every labeled-mode CV in both batches shipped blank experience
+sections with a passing audit). The trigger is now pinned and the render path
+redesigned so the corruption cannot recur silently.
 
 ### 6. Does the rendered CV contain any em dashes?
 
@@ -147,9 +175,10 @@ from audit import run_full_audit
 audit_result = run_full_audit(
     rendered_docx_path="CV - Northwind - Senior PM.docx",
     diagnosis_md_path="Diagnosis - Northwind - Senior PM.md",
-    content_map=content_map,
+    content_map=content_map,          # post-build_bold_plan (plain strings)
     expected_keywords=["workflow automation", "B2B SaaS", "..."],
-    career_file_path="career.txt",   # enables Check 9 numeric grounding
+    career_file_path="career.txt",    # enables Check 9 numeric grounding
+    bold_plan=bold_plan,              # from build_bold_plan(); Check 5 bold
 )
 
 if not audit_result.all_passed:

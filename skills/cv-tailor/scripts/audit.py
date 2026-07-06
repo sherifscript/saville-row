@@ -8,8 +8,15 @@ are run by the model, not here.
 Programmatic checks:
   Check 2 — at least two JD keywords appear verbatim in the rendered CV.
   Check 4 — every & from the content_map survives into the rendered XML.
-  Check 5 — bolded runs (<w:b/>) exist inside the experience section when the
-            diagnosis specified bold-worthy phrases.
+  Check 5 — rendered-text integrity: every authored bullet is readable via
+            python-docx (the parser Word and ATS systems agree with), per-slot
+            counts match, no raw markup in any paragraph text, planned bold
+            spans are real bold runs, and the contact hyperlinks survive.
+            Supersedes the old bold-run regex count, which could never fail
+            on the OPUS template (its section headers are bold) and passed
+            the 2026-05-11 / test5 corruption where every bullet rendered
+            EMPTY (RichText embedded inside <w:t> is invisible to Word but
+            visible to a regex).
   Check 6 — no em dashes in the rendered CV (employer-facing output; see
             shared/conventions.md).
   Check 7 — experience section is in strict reverse-chronological order and
@@ -32,6 +39,8 @@ A CV that fails any check is NOT shipped.
 import zipfile
 import re
 from dataclasses import dataclass, field
+
+from docx import Document
 
 
 @dataclass
@@ -66,11 +75,10 @@ def _visible_text(document_xml):
 def _bullet_text(bullet):
     """Return the plain text of a content_map bullet.
 
-    A bullet is a plain string in plain mode, or a docxtpl RichText object
-    once convert_content_map() has run with bold on (inline_bold or the
-    labeled bullet_style). The content checks (8, 10) run on the post-convert
-    content_map, so they must read text out of either form. RichText stores
-    its runs as XML; pull the <w:t> text the same way _visible_text does.
+    Since v1.8.0 bullets are always plain strings (build_bold_plan strips
+    the ** markers; RichText is banned from the render path). The RichText
+    branch below is kept ONLY for forensics of files/content maps produced
+    before v1.8.0 — do not rely on it for new renders.
     """
     if isinstance(bullet, str):
         return bullet
@@ -135,18 +143,127 @@ def check_4_ampersands(document_xml, content_map):
     return ok, note
 
 
-def check_5_bold_in_experience(document_xml, expect_bold):
-    """Check 5: bolded runs exist when the diagnosis specified bold phrases."""
-    if not expect_bold:
-        return True, "No bold phrases specified by diagnosis; check skipped."
-    bold_runs = len(re.findall(r"<w:b\s*/>", document_xml))
-    ok = bold_runs > 0
+def _norm_ws(text):
+    return " ".join(text.split())
+
+
+def check_5_rendered_integrity(rendered_docx_path, content_map,
+                               bold_plan=None, expect_bold=False):
+    """Check 5: rendered-text integrity (supersedes the bold-run regex count).
+
+    Opens the rendered docx with python-docx — the same parse Word and ATS
+    systems perform — and asserts the authored content is actually visible:
+
+      a. every authored experience bullet appears as a whole, non-empty
+         paragraph, in order; per-slot readable counts match the content map;
+      b. same for msc_bullets / ba_bullets;
+      c. no paragraph text contains raw markup ('<w:') or leftover '**';
+      d. when bold was planned: each planned span's text is covered by a run
+         with run.bold True in its paragraph (real run inspection);
+      e. the contact hyperlinks survived the postprocess round-trip
+         (>= 2 hyperlink relationships — asherif.me + LinkedIn in OPUS).
+
+    Why it exists: the old check counted <w:b/> in the raw XML. The OPUS
+    template's own section headers are bold, so that count could never be
+    zero — the check was unfailable — and it passed the 2026-05-11 / test5
+    corruption where every bullet rendered EMPTY (RichText embedded inside
+    <w:t> is invisible to Word but visible to a regex). This check reads
+    what a recruiter reads.
+    """
+    problems = []
+    doc = Document(rendered_docx_path)
+    paras = doc.paragraphs
+
+    def find(text, start):
+        target = _norm_ws(text)
+        for i in range(start, len(paras)):
+            if _norm_ws(paras[i].text) == target:
+                return i
+        return None
+
+    # a + b: every authored bullet is a readable paragraph, in order.
+    expected_lists = []
+    for si, role in enumerate(content_map.get("experiences", [])):
+        label = "slot %d (%s)" % (si + 1, role.get("company", "?"))
+        expected_lists.append((label, role.get("bullets", []) or []))
+    for key in ("msc_bullets", "ba_bullets"):
+        if content_map.get(key):
+            expected_lists.append((key, content_map[key]))
+
+    cursor = 0
+    total_expected = 0
+    total_found = 0
+    for label, bullets in expected_lists:
+        found = 0
+        for b in bullets:
+            btext = _bullet_text(b)
+            if not btext.strip():
+                continue
+            total_expected += 1
+            idx = find(btext, cursor)
+            if idx is None:
+                problems.append(
+                    "%s: bullet NOT readable in rendered doc: %r"
+                    % (label, btext[:60]))
+                continue
+            cursor = idx + 1
+            found += 1
+            total_found += 1
+        expected = len([b for b in bullets if _bullet_text(b).strip()])
+        if found != expected:
+            problems.append(
+                "%s: only %d/%d bullets readable" % (label, found, expected))
+
+    # c: no raw markup or leftover markers in any visible paragraph.
+    for i, p in enumerate(paras):
+        if "<w:" in p.text or "**" in p.text:
+            problems.append(
+                "paragraph %d contains raw markup or ** markers: %r"
+                % (i, p.text[:60]))
+
+    # d: planned bold spans rendered as real bold runs.
+    bold_checked = 0
+    if expect_bold and bold_plan:
+        cursor2 = 0
+        for spec in bold_plan:
+            spans = spec.get("spans") or []
+            if not spans:
+                continue
+            idx = find(spec["text"], cursor2)
+            if idx is None:
+                continue  # already reported unreadable above
+            cursor2 = idx + 1
+            bold_text = _norm_ws(
+                "".join(r.text for r in paras[idx].runs if r.bold))
+            for s, e in spans:
+                span_text = _norm_ws(spec["text"][s:e])
+                if span_text and span_text not in bold_text:
+                    problems.append(
+                        "bold span not rendered bold: %r in %r"
+                        % (span_text[:40], spec["text"][:40]))
+                else:
+                    bold_checked += 1
+    elif expect_bold and not bold_plan:
+        problems.append("expect_bold=True but no bold_plan was supplied")
+
+    # e: contact hyperlinks survived the round-trip.
+    with zipfile.ZipFile(rendered_docx_path) as z:
+        rels = z.read("word/_rels/document.xml.rels").decode(
+            "utf-8", errors="replace")
+    n_links = rels.count("/relationships/hyperlink")
+    if n_links < 2:
+        problems.append(
+            "hyperlink relationships: %d found, >= 2 expected (personal "
+            "site + LinkedIn) — the postprocess round-trip may have dropped "
+            "them" % n_links)
+
+    ok = not problems
     if ok:
-        note = str(bold_runs) + " bold run(s) found in rendered XML."
+        note = ("%d/%d bullets readable via python-docx; %d bold span(s) "
+                "verified; %d hyperlink rel(s) intact."
+                % (total_found, total_expected, bold_checked, n_links))
     else:
-        note = ("Zero bold runs found, but diagnosis specified bold phrases. "
-                "RichText likely embedded as text inside <w:t> — re-render. "
-                "(See 2026-05-11 regression in post-render-audit.md.)")
+        note = "; ".join(problems)
     return ok, note
 
 
@@ -381,11 +498,15 @@ def check_10_bullet_strength(experiences):
 
 
 def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
-                   expected_keywords, expect_bold=True, career_file_path=None):
+                   expected_keywords, expect_bold=True, career_file_path=None,
+                   bold_plan=None):
     """Run the programmatic audit checks. Returns an AuditResult.
 
     The editorial checks (#1, #3) are recorded by the model into the same
     result via result.passed['check_1'] / result.passed['check_3'].
+
+    `bold_plan` is the plan returned by build_bold_plan(); Check 5 uses it
+    to verify each planned bold span rendered as a real bold run.
     """
     document_xml = _read_document_xml(rendered_docx_path)
     result = AuditResult()
@@ -398,9 +519,11 @@ def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
     result.passed["check_4_ampersands"] = ok4
     result.notes["check_4_ampersands"] = note4
 
-    ok5, note5 = check_5_bold_in_experience(document_xml, expect_bold)
-    result.passed["check_5_bold"] = ok5
-    result.notes["check_5_bold"] = note5
+    ok5, note5 = check_5_rendered_integrity(
+        rendered_docx_path, content_map,
+        bold_plan=bold_plan, expect_bold=expect_bold)
+    result.passed["check_5_integrity"] = ok5
+    result.notes["check_5_integrity"] = note5
 
     ok6, note6 = check_6_no_em_dashes(document_xml)
     result.passed["check_6_em_dashes"] = ok6
@@ -451,12 +574,12 @@ def _selftest():
                          "contains a phrase from WEAK_GENERIC_PHRASES")
     assert _has_concrete_proof("Managed workstreams for 40+ corporations")
     assert not _has_concrete_proof("served enterprise decision-makers")
-    # Works on RichText bullets too (labeled / inline_bold mode).
-    from md_to_richtext import md_to_richtext
-    rt_weak = [{"company": "X", "bullets": [
-        md_to_richtext("**Coverage:** served enterprise decision-makers.")]}]
-    ok_rt, _ = check_10_bullet_strength(rt_weak)
-    assert not ok_rt, "check_10 should read RichText bullets and FAIL filler"
+    # Works on labeled-style bullets too (bold label lead-in, plain string —
+    # since v1.8.0 bullets are always plain strings by the time checks run).
+    labeled_weak = [{"company": "X", "bullets": [
+        "Coverage: served enterprise decision-makers."]}]
+    ok_labeled, _ = check_10_bullet_strength(labeled_weak)
+    assert not ok_labeled, "check_10 should FAIL filler behind a label lead-in"
     print("audit self-test (check_10): passed.")
 
 
@@ -472,10 +595,17 @@ if __name__ == "__main__":
     if not os.path.isfile(sys.argv[1]):
         print(f"Error: file not found: {sys.argv[1]}", file=sys.stderr)
         sys.exit(1)
-    xml = _read_document_xml(sys.argv[1])
-    bold_count = len(re.findall(r"<w:b\s*/>", xml))
-    amp_count = xml.count("&amp;")
-    double_space_count = len(re.findall(r"\S  \S", _visible_text(xml)))
-    print("Bold runs in document:", bold_count)
-    print("Escaped ampersands:", amp_count)
-    print("Double-space occurrences:", double_space_count)
+    path = sys.argv[1]
+    xml = _read_document_xml(path)
+    doc = Document(path)
+    paras = doc.paragraphs
+    empty = sum(1 for p in paras if not p.text.strip())
+    with zipfile.ZipFile(path) as z:
+        rels = z.read("word/_rels/document.xml.rels").decode(
+            "utf-8", errors="replace")
+    print("Paragraphs (python-docx):", len(paras))
+    print("Empty paragraphs:", empty,
+          " <- empty bullets = the 2026-05-11/test5 corruption; investigate")
+    print("Escaped ampersands:", xml.count("&amp;"))
+    print("Hyperlink relationships:", rels.count("/relationships/hyperlink"))
+    print("Em dashes:", _visible_text(xml).count("—"))
