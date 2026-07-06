@@ -29,7 +29,7 @@ grounding check (Check 9) flags any number or claim with no career-file source.
 | Key | Type | Source | Notes |
 | --- | --- | --- | --- |
 | `candidate_name` | string | config.yaml | The candidate's full name. Appears as the CV header name. |
-| `tagline` | string | diagnosis | Format: `[Role Title]  \|  [Pillar 1] · [Pillar 2] · [Pillar 3]`. One pipe between role and pillars; middle dots between pillars. |
+| `tagline` | string | diagnosis | Format: `[Identity]  \|  [Pillar 1] · [Pillar 2] · [Pillar 3]`. One pipe between identity and pillars; middle dots between pillars. The identity follows the diagnosis's Positioning mode — `direct`: the JD's role title; `adjacent`: the real functional identity in the JD's vocabulary (never an unheld seniority/exact title); `transition`: the bridge form `[Real capability identity] \| Transitioning to [Target function]`. See SKILL.md "Positioning drives the frame". |
 | `contact_line_1` | string | regional-headers.yaml | "City, Country \| +phone \| email" |
 | `personal_site` | string | regional-headers.yaml | Personal site shown on contact line 2 (e.g. `jordanpark.me`). |
 | `linkedin_url` | string | regional-headers.yaml | LinkedIn shown on contact line 2 (e.g. `linkedin.com/in/jordanpark`). |

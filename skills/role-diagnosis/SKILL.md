@@ -24,7 +24,11 @@ Reads a job description (from a URL, pasted text, or scraped data) and produces 
 Diagnosis - [Company Name] - [Job Title].md
 ```
 
-The file contains the five core sections plus a Section-angles block (and an optional honest-assessment). It is the editorial brief that drives every downstream choice — bullet order, lead angles, which experience to emphasize, what to drop, and how every part below the headline is framed. If a bullet does not serve the diagnosis, it does not belong on that CV.
+The file contains the five core sections plus a Section-angles block and a required **Positioning** section. It is the editorial brief that drives every downstream choice — bullet order, lead angles, which experience to emphasize, what to drop, and how every part below the headline is framed. If a bullet does not serve the diagnosis, it does not belong on that CV.
+
+Before saving, self-check the file against the mechanical lint
+(`../cv-tailor/scripts/lint_diagnosis.py`) — cv-tailor runs it at its gate
+and will refuse to render from a diagnosis that fails it.
 
 ## The five sections
 
@@ -37,6 +41,16 @@ See [`references/diagnosis-template.md`](./references/diagnosis-template.md) for
 5. **Keywords from the JD that must appear verbatim in the CV.** — Bulleted list of 6–10 exact strings from the JD. ATS terms.
 
 Plus a **Section angles** block: one line per rendered part (every experience slot, each degree, core_skills, additional, and any enabled optional section), each naming a real career-file fact and how it connects to the diagnosed problem. For every experience slot the line also names the **proof point** — the specific named credential, institution, client, platform, or number the slot's bullets must surface — so cv-tailor writes "cited by Deloitte and the Harvard Law Review" rather than a generic "enterprise decision-makers". Section 4 sets the headline; this block tailors everything below it so no part ships as career-file boilerplate. The angle re-frames a real fact, never invents one. See [`references/diagnosis-template.md`](./references/diagnosis-template.md).
+
+Plus a required **Positioning** section: `Mode: direct | adjacent | transition`
+with a 1–2 sentence rationale naming the gap between held titles and this role
+and the largest honest risk. The mode drives the CV's tagline construction,
+summary framing, domain-translation aggressiveness, slot latitude (transition
+only), and the cover letter's objection paragraph — pick it deliberately.
+`direct` = held the title; `adjacent` = did the work without the title (the
+common case); `transition` = career change, bridge honestly. See
+[`references/diagnosis-template.md`](./references/diagnosis-template.md)
+"Positioning — the mode that frames everything".
 
 ## The anti-rigidity clause
 

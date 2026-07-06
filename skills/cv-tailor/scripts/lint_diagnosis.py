@@ -17,6 +17,10 @@ Checks:
   5. Every Slot line is >= 90 chars — a one-word abstraction in the angle
      gives cv-tailor nothing to preserve and licenses a thin bullet
      (the observed good angle lines run ~200 chars).
+  6. A Positioning mode is declared: `Mode: direct | adjacent | transition`.
+     The mode drives the tagline construction, summary framing, translation
+     aggressiveness, slot latitude, and the cover letter's objection — a
+     diagnosis without it leaves every downstream frame undefined.
 
 Wired into cv-tailor's gate: render_cv.render() runs this on the diagnosis
 and refuses to render when it fails. CLI:
@@ -40,10 +44,24 @@ REQUIRED_SECTIONS = (
 _SLOT_LINE_RE = re.compile(r"^[-*]\s*Slot\s*\d", re.IGNORECASE)
 _PROOF_POINT_RE = re.compile(r"proof point:\s*(.+?)(?:\||$)", re.IGNORECASE)
 _HEADING_RE = re.compile(r"^#{2,3}\s+(.*)$")
+_POSITIONING_RE = re.compile(
+    r"mode:\s*\**\s*(direct|adjacent|transition)\b", re.IGNORECASE)
 
 MIN_KEYWORDS = 6
 MAX_KEYWORDS = 10
 MIN_SLOT_LINE_CHARS = 90
+
+POSITIONING_MODES = ("direct", "adjacent", "transition")
+
+
+def parse_positioning_mode(md_text):
+    """Return the diagnosis's Positioning mode, or None when absent.
+
+    render_cv.render() uses this to pick up the mode automatically so a
+    driver cannot forget to wire it.
+    """
+    m = _POSITIONING_RE.search(md_text)
+    return m.group(1).lower() if m else None
 
 
 def _keyword_bullets(lines):
@@ -101,6 +119,14 @@ def lint_diagnosis(md_text, expected_slots=3):
                 "slot angle line under %d chars — a thin angle licenses a "
                 "thin bullet; name the concrete career-file detail to carry: "
                 "%r" % (MIN_SLOT_LINE_CHARS, preview))
+
+    # 6. Positioning mode declared.
+    if not parse_positioning_mode(md_text):
+        errors.append(
+            "missing Positioning mode — add a '## Positioning' section with "
+            "'Mode: direct | adjacent | transition' plus a 1-2 sentence "
+            "rationale (drives the tagline, summary framing, translation "
+            "dial, slot latitude, and the cover letter's objection)")
 
     return (not errors), errors
 

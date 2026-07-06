@@ -3,6 +3,88 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v1.8.0 — 2026-07-06
+
+Render integrity, audit teeth, first-class positioning. The 2026-06-27
+Berlin batch exposed the worst defect in the plugin's history: **every
+labeled-mode CV since v1.6.0 shipped with an invisible experience section.**
+`convert_content_map()` turned bullets into docxtpl RichText, the OPUS
+template's placeholders are plain `{{ bullet }}`, and docxtpl embedded the
+run-XML inside `<w:t>` — invalid OOXML that Word, python-docx, and ATS
+parsers read as EMPTY paragraphs. The audit passed anyway (its bold check
+regex-counted `<w:b/>`, which the template's own bold headers always
+satisfy), and the "empty `.text` is normal for RichText, read raw XML"
+doctrine enshrined the corruption as a parser quirk. This release pins the
+long-unpinned 2026-05-11 incident to that exact trigger and rebuilds the
+render, the audit, and the positioning system.
+
+### Fixed
+
+- **RichText corruption (the blank-CV bug).** Bullets are now plain strings
+  through the whole render; bold is applied after save by
+  `scripts/postprocess.py`, which clones the rendered run so the template's
+  formatting (Calibri, sz 20, paired `w:b`/`w:bCs`) is inherited exactly.
+  RichText is banned from the render path (`build_bold_plan` raises on one).
+  The corruption class is structurally impossible now.
+- **Audit Check 5 superseded** by `check_5_rendered_integrity`: re-opens the
+  rendered file with python-docx and fails any CV whose authored bullets are
+  not readable, with real bold-run inspection and a hyperlink-rels guard.
+- **`cv.region_section_overrides` finally works** (e.g. `EU: summary:
+  false`): `effective_sections()` resolves it, the postprocess pass removes
+  the section. The composer no longer crashes on the stub partials dir.
+- **Doctrine reversed** in CLAUDE.md / docxtpl-recipe.md: an empty
+  python-docx bullet paragraph IS a render failure.
+- **cover-letter signature contradiction** — objections-and-close.md now
+  matches SKILL.md: plain text, no bold on any part of the name.
+
+### Added
+
+- **Required `## Positioning` in every diagnosis** (`Mode: direct | adjacent
+  | transition` + rationale; replaces the optional Honest assessment). The
+  mode drives the tagline construction (transition gets an honest bridge
+  tagline, never an unheld title), summary framing, domain-translation
+  aggressiveness, transition-mode slot latitude (branch override and/or one
+  extra slot via an explicit `Slot plan:`), and the cover letter's objection
+  paragraph (sourced from the diagnosis, never re-derived).
+- **Canonical bullet formula** in cv-tailor: `[career-file fact, specifics
+  kept] + [interpretive clause in the JD's vocabulary]`, with worked
+  examples ("mirroring an Executive Business Review (EBR) motion").
+- **`scripts/lint_diagnosis.py`**, wired into `render()`: sections present,
+  6–10 keywords, one `Slot N` angle line per slot with a real `proof point:`
+  and enough substance, Positioning mode declared. A thin diagnosis refuses
+  to render instead of licensing a thin CV.
+- **Audit Check 11 (`check_11_proof_points`)**: each slot's diagnosis proof
+  point must surface in its rendered bullets (parsed from Diagnosis.md).
+- **Batch sameyness sweep** (`python audit.py --sameyness <dir>`, warn-only):
+  duplicate bullets/clauses across a session's CVs, reported in the
+  pipeline's closing summary.
+- **Editorial verdicts are required**: `run_full_audit` seeds checks 1 and 3
+  as failed; `all_passed` stays False until the model records both via
+  `result.record_editorial(...)`. No more pass-by-omission.
+- **Per-CV tailor checklist** in job-search-pipeline (batch effort decay is
+  a named failure mode); bullet-count floors (lead slot ≥ 3, others ≥ 2).
+
+### Changed
+
+- Check 2 scoped to experience bullets (per its own spec). Check 7: missing
+  `end_year` now fails (the skip-dodge is closed); ongoing side engagements
+  are marked `concurrent: true`. Check 9 broadened to `$` amounts and K/M/B
+  magnitudes. Check 10 upgraded to a proof-density floor per slot using a
+  career-file whitelist minus a sector/language stoplist.
+
+### Breaking
+
+- `experiences[i].end_year` (int, 9999 = Present) is **required** in every
+  content map — add it to driver scripts.
+- `run_full_audit(...).all_passed` is False until both editorial verdicts
+  are recorded — call `result.record_editorial(...)` twice after each audit.
+- New diagnoses must carry `## Positioning` with a `Mode:` line; a pre-1.8
+  diagnosis fails the lint until one line is added (e.g.
+  `**Mode: adjacent** — did the work, not the title; risk: tool mismatch.`).
+- `convert_content_map()` is a deprecated strip-only shim: it never produces
+  RichText (that was the corruption); `inline_bold=True` is ignored. Use
+  `build_bold_plan()` + `postprocess_cv()` — or simply `render_cv.render()`.
+
 ## v1.7.0 — 2026-06-27
 
 Rich tailoring. v1.6.0 added a "bullet strength" bar to fix generic, un-tailored

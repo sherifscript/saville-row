@@ -310,3 +310,28 @@ def test_validate_rejects_em_dash():
     with pytest.raises(ValueError) as exc:
         validate_content_map(cm, config)
     assert "em dash" in str(exc.value)
+
+
+def test_transition_mode_allows_one_extra_slot():
+    from render_cv import validate_content_map
+    config = {"cv": {"max_experience_slots": 3}}
+    cm = _three_slot_map()
+    cm["experiences"].append({
+        "title": "Support Agent", "dates": "2016 - 2018",
+        "company": "Old Co", "location": "Town", "end_year": 2018,
+        "bullets": [
+            "**Client escalations:** resolved technical escalations for "
+            "enterprise accounts across three regions.",
+            "**Onboarding:** trained new team members on the support "
+            "playbook and CRM workflows.",
+        ],
+    })
+    # 4 slots rejected in default/adjacent positioning...
+    with pytest.raises(ValueError):
+        validate_content_map(cm, config, mode="labeled")
+    with pytest.raises(ValueError):
+        validate_content_map(cm, config, mode="labeled",
+                             positioning_mode="adjacent")
+    # ...but allowed (max+1) in transition mode.
+    validate_content_map(cm, config, mode="labeled",
+                         positioning_mode="transition")
