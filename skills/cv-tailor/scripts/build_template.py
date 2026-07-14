@@ -102,8 +102,12 @@ def acceptance_test(template_path):
              "bullets": [f"XXXX BULLET {i}.1", f"XXXX BULLET {i}.2"]}
             for i in range(1, 4)
         ],
-        "msc_bullets": ["XXXX MSC BULLET"],
-        "ba_bullets": ["XXXX BA BULLET"],
+        "degrees": [
+            {"name": f"XXXX DEGREE {i}", "date": "XXXX DATE",
+             "institution": f"XXXX INSTITUTION {i}", "location": "XXXX LOC",
+             "bullets": [f"XXXX DEGREE BULLET {i}.1"]}
+            for i in range(1, 4)
+        ],
         "additional": [{"label": "XXXX ADD", "description": "XXXX ADD DESC"}],
     }
     tpl = DocxTemplate(template_path)

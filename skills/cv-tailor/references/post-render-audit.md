@@ -1,8 +1,8 @@
 # Post-render audit — the checks every shipped CV must pass
 
-Before any CV is shipped (saved to the session folder for the user to send), it passes the audit below. The programmatic checks (2, 4, 5, 6, 7, 8, 9, 10, 11) are implemented in [`../scripts/audit.py`](../scripts/audit.py) and run automatically by `run_full_audit()`. The editorial checks (1, 3, and the honesty companion to 9) are graded by the model — and since v1.8.0 they are **required**: `run_full_audit()` seeds them as failed, and `all_passed` stays False until the model records a one-line verdict for each via `result.record_editorial(name, ok, note)`. A CV can no longer pass by omission (the 2026-06-27 Berlin batch shipped with the editorial checks silently skipped). Recording the verdicts is authoring work, not a pause — it never stops a batch run.
+Before any CV is shipped (saved to the session folder for the user to send), it passes the audit below. The programmatic checks (2, 4, 5, 6, 7, 8, 9, 10, 11, 12) are implemented in [`../scripts/audit.py`](../scripts/audit.py) and run automatically by `run_full_audit()`. The editorial checks (1, 3, and the honesty companion to 9) are graded by the model — and since v1.8.0 they are **required**: `run_full_audit()` seeds them as failed, and `all_passed` stays False until the model records a one-line verdict for each via `result.record_editorial(name, ok, note)`. A CV can no longer pass by omission (the 2026-06-27 Berlin batch shipped with the editorial checks silently skipped). Recording the verdicts is authoring work, not a pause — it never stops a batch run.
 
-There is also a batch-level sweep (12, warn-only) that runs once per session folder, not per CV.
+There is also a batch-level sweep (13, warn-only) that runs once per session folder, not per CV.
 
 If any check fails, the CV is **not shipped**. The framework either re-renders (for programmatic failures) or regenerates the failing section from the diagnosis (for editorial failures).
 
@@ -62,7 +62,7 @@ systems perform — and assert:
 
 1. every authored experience bullet appears as a whole, non-empty paragraph,
    in order; per-slot readable counts match the content map;
-2. the same for `msc_bullets` / `ba_bullets`;
+2. the same for every degree's bullets (`degrees[i].bullets`);
 3. no paragraph text contains raw markup (`<w:`) or leftover `**` markers;
 4. when bold was planned (`bullet_style: labeled` or `inline_bold: true`),
    each planned span's text is covered by a run with `run.bold` True — real
@@ -214,7 +214,30 @@ bullets, or fix the diagnosis if the assignment genuinely changed — then
 re-render. Implemented as `check_11_proof_points` in
 [`../scripts/audit.py`](../scripts/audit.py).
 
-### 12. Batch sameyness sweep (per session folder, WARN only)
+### 12. Does every degree render, or was one silently dropped?
+
+**Programmatic check.** Two assertions on the rendered CV:
+
+1. `content_map.degrees` carries at least `cv.expected_degree_count` entries
+   (the degree count job-search-setup records from the career file). Fewer
+   means a degree was dropped while building the content map.
+2. Every degree's institution string is visible in the rendered document.
+
+Education is a `degrees` loop since v1.9.0; before that the template's fixed
+two-slot education block forced a three-degree candidate to drop one, and
+nothing checked. The 2026-07-14 Werkstudent CV shipped without the BA and
+with the Hamburg MSc compressed to a single bullet — structural thinning the
+audit never saw.
+
+When `cv.expected_degree_count` is not configured the count assertion cannot
+run; the check passes on institution visibility alone and says so loudly in
+its note. Set the key in `config.yaml`.
+
+**On failure:** add the missing degree to `degrees` (1–3 bullets, same
+substance bar as experience bullets) and re-render. Implemented as
+`check_12_education_completeness` in [`../scripts/audit.py`](../scripts/audit.py).
+
+### 13. Batch sameyness sweep (per session folder, WARN only)
 
 **Batch-level, not part of `run_full_audit`.** After the last CV of a batch,
 `python audit.py --sameyness <session folder>` scans every `CV - *.docx` for
@@ -240,6 +263,7 @@ audit_result = run_full_audit(
     expected_keywords=["workflow automation", "B2B SaaS", "..."],
     career_file_path="career.txt",    # enables Checks 9 + 10 grounding
     bold_plan=bold_plan,              # from build_bold_plan(); Check 5 bold
+    expected_degree_count=3,          # cv.expected_degree_count; Check 12
 )
 
 # REQUIRED: record the editorial verdicts — all_passed stays False otherwise.

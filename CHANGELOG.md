@@ -3,6 +3,43 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v1.9.0 — 2026-07-14
+
+CV richness. The 2026-07-14 Werkstudent CV (test6) shipped thin — 10
+experience bullets against a career file offering 6/6/3, the Hamburg MSc
+compressed to one bullet, and the BA silently dropped — while passing every
+gate. Near-full career-file density is now the contract, and education can
+no longer lose a degree structurally.
+
+### Changed
+
+- **Bullet floors raised to 5/4/3** (lead / slot 2 / slot 3+), up from 3/2.
+  `cv.bullet_floors` in config overrides them, but only for career files
+  that genuinely have fewer bullets — trimming rich material now requires a
+  deliberate config change (`render_cv.validate_content_map`).
+- **Education is a `degrees` loop.** The OPUS template's fixed
+  `msc_*`/`ba_*` two-slot education block forced a three-degree candidate to
+  drop one; the template now loops over a `degrees` list (name, date,
+  institution, location, 1–3 bullets each) exactly like experiences.
+  Validation rejects the retired `msc_*`/`ba_*` keys with a migration hint.
+- **`Run CV only` keeps the richness bar.** The shortcut skips the diagnosis
+  and lint, not density: with no JD to tailor against, the CV defaults to
+  every career-file bullet per slot, light-edited, and every degree.
+- **Summary-off regions compensate with density.** When
+  `region_section_overrides` disables the summary (EU/Denmark), the lead
+  slot's default bullet count rises by one.
+
+### Added
+
+- **Audit Check 12 (education completeness):** fails a CV whose `degrees`
+  count falls below `cv.expected_degree_count` (new config key,
+  recorded by job-search-setup from the career file) or whose institutions
+  are not visible in the rendered document. The batch sameyness sweep is
+  renumbered to 13 in the docs.
+- Tests: default floors, `cv.bullet_floors` override, retired-key rejection,
+  degree field validation, Check 12 behavior, and a three-degree end-to-end
+  render through the new template loop.
+
 ## v1.8.0 — 2026-07-06
 
 Render integrity, audit teeth, first-class positioning. The 2026-06-27

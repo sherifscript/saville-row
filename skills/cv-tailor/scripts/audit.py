@@ -37,6 +37,10 @@ Programmatic checks:
             (parsed from Diagnosis.md — the source of truth, not a
             model-copied field) must surface in that slot's bullets. Catches
             "the 30% fell out of the lead slot".
+  Check 12 — education completeness: the `degrees` list carries every degree
+            (>= cv.expected_degree_count when configured) and each degree's
+            institution is visible in the rendered document. Catches the
+            2026-07-14 dropped-BA failure.
 
 Editorial checks 1 and 3 are REQUIRED: run_full_audit seeds them as failed,
 and all_passed stays False until the model records a verdict for each via
@@ -201,7 +205,8 @@ def check_5_rendered_integrity(rendered_docx_path, content_map,
 
       a. every authored experience bullet appears as a whole, non-empty
          paragraph, in order; per-slot readable counts match the content map;
-      b. same for msc_bullets / ba_bullets;
+      b. same for every degree's bullets (and the retired msc_bullets /
+         ba_bullets keys when auditing a pre-v1.9.0 file);
       c. no paragraph text contains raw markup ('<w:') or leftover '**';
       d. when bold was planned: each planned span's text is covered by a run
          with run.bold True in its paragraph (real run inspection);
@@ -231,7 +236,11 @@ def check_5_rendered_integrity(rendered_docx_path, content_map,
     for si, role in enumerate(content_map.get("experiences", [])):
         label = "slot %d (%s)" % (si + 1, role.get("company", "?"))
         expected_lists.append((label, role.get("bullets", []) or []))
-    for key in ("msc_bullets", "ba_bullets"):
+    for di, deg in enumerate(content_map.get("degrees", [])):
+        if deg.get("bullets"):
+            label = "degree %d (%s)" % (di + 1, deg.get("institution", "?"))
+            expected_lists.append((label, deg["bullets"]))
+    for key in ("msc_bullets", "ba_bullets"):  # pre-v1.9.0 forensics only
         if content_map.get(key):
             expected_lists.append((key, content_map[key]))
 
@@ -740,6 +749,47 @@ def check_11_proof_points(experiences, diagnosis_md_path):
     return ok, note
 
 
+def check_12_education_completeness(degrees, document_xml,
+                                    expected_degree_count=None):
+    """Check 12: every degree renders; none silently dropped.
+
+    The 2026-07-14 Werkstudent CV shipped without the BA because the old
+    two-slot education template forced a three-degree candidate to drop one,
+    and nothing checked. Now education is a `degrees` loop and this check
+    asserts (a) the content_map carries at least `cv.expected_degree_count`
+    degrees (the count job-search-setup records from the career file), and
+    (b) every degree's institution is visible in the rendered document.
+
+    Without `expected_degree_count` the count cannot be enforced — the note
+    says so loudly instead of pretending coverage.
+    """
+    if not degrees:
+        return False, ("content_map has no degrees; education is a required "
+                       "section — every degree in the career file renders.")
+    problems = []
+    if expected_degree_count and len(degrees) < expected_degree_count:
+        problems.append(
+            "%d degree(s) in content_map; career file has %d "
+            "(cv.expected_degree_count). A degree was dropped."
+            % (len(degrees), expected_degree_count))
+    text = _visible_text(document_xml)
+    for i, deg in enumerate(degrees):
+        inst = deg.get("institution", "")
+        if inst and _norm_ws(inst) not in _norm_ws(text):
+            problems.append(
+                "degrees[%d] institution %r not visible in the rendered CV"
+                % (i, inst))
+    ok = not problems
+    if ok:
+        note = "%d degree(s) present and visible" % len(degrees)
+        note += ("." if expected_degree_count else
+                 "; cv.expected_degree_count not set, so a dropped degree "
+                 "cannot be detected — set it in config.yaml.")
+    else:
+        note = "; ".join(problems)
+    return ok, note
+
+
 def scan_batch_sameyness(session_dir):
     """Batch-level sweep (WARN only, not part of run_full_audit): exact
     duplicate experience bullets across different CVs in a session folder.
@@ -792,7 +842,8 @@ def scan_batch_sameyness(session_dir):
 
 def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
                    expected_keywords, expect_bold=True, career_file_path=None,
-                   bold_plan=None, require_editorial=True):
+                   bold_plan=None, require_editorial=True,
+                   expected_degree_count=None):
     """Run the programmatic audit checks. Returns an AuditResult.
 
     `bold_plan` is the plan returned by build_bold_plan(); Check 5 uses it
@@ -864,6 +915,12 @@ def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
     ok11, note11 = check_11_proof_points(experiences, diagnosis_md_path)
     result.passed["check_11_proof_points"] = ok11
     result.notes["check_11_proof_points"] = note11
+
+    ok12, note12 = check_12_education_completeness(
+        content_map.get("degrees", []), document_xml,
+        expected_degree_count=expected_degree_count)
+    result.passed["check_12_education"] = ok12
+    result.notes["check_12_education"] = note12
 
     return result
 

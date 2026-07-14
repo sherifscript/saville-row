@@ -44,25 +44,21 @@ grounding check (Check 9) flags any number or claim with no career-file source.
 | `experiences[i].end_year` | int | career file | **Required.** The role's end year; `9999` for an ongoing (Present) role. Feeds the Check 7 chronology gate — validation rejects a map without it (the old skip-when-absent behavior was exploitable). |
 | `experiences[i].concurrent` | bool | career file | Optional, default false. Mark `true` on an ongoing *side* engagement (e.g. freelance) that overlaps the primary block, so chronology checks treat it as concurrent rather than out of order. |
 | `experiences[i].bullets` | list[string] | diagnosis | Must clear the substance bar in `SKILL.md` "Write strong bullets": **light-edit** the career-file bullet (don't rewrite it thin), **preserve its concrete specifics** (named clients, numbers, specific nouns), surface the named proof point, lead with ownership + scope, frame in the JD's vocabulary, ~25–40 words. The diagnosis's per-slot proof points say which credential each slot names. Bold: `plain` mode marks `**bold**` only on quantified outcomes and credential proper nouns, never JD keywords (see docxtpl-recipe.md "what to bold"); `labeled` mode opens each bullet with a `**Label:**` lead-in that translates the fact into the JD's vocabulary, followed by a full-substance clause. Check 10 rejects generic fillers that lack a concrete proof point. |
-| `msc_degree` | string | career file | Higher/most-recent degree name. |
-| `msc_date` | string | career file | Higher degree completion date. |
-| `msc_institution` | string | career file | Higher degree institution. |
-| `msc_location` | string | career file | Higher degree location (City, Country). |
-| `msc_bullets` | list[string] | diagnosis | 1–2 descriptive bullets under the higher degree. 25–40 words each. Markdown bold allowed. |
-| `ba_degree` | string | career file | Lower/earlier degree name. |
-| `ba_date` | string | career file | Lower degree completion date. |
-| `ba_institution` | string | career file | Lower degree institution. |
-| `ba_location` | string | career file | Lower degree location (City, Country). |
-| `ba_bullets` | list[string] | diagnosis | 1–2 descriptive bullets under the lower degree. Same rules. |
+| `degrees` | list of degree dicts | career file + diagnosis | **Every** degree in the career file, most recent first — including an in-progress degree ("Expected [year]") and the undergraduate degree. Dropping one is the Check 12 failure mode (the 2026-07-14 CV shipped without the BA). |
+| `degrees[i].name` | string | career file | Degree name (e.g. "MSc Quantitative Analysis and Social Data Science"). |
+| `degrees[i].date` | string | career file | Completion date, or "Expected [year]" for an in-progress degree. |
+| `degrees[i].institution` | string | career file | Institution name. |
+| `degrees[i].location` | string | career file | City, Country. |
+| `degrees[i].bullets` | list[string] | diagnosis | 1–3 descriptive bullets per degree, 25–40 words each, same substance bar as experience bullets. Markdown bold allowed. |
 | `additional` | list of `{label, description}` | diagnosis + region | Diagnosis-driven items. Work Authorization included for Western/EU/EEA targets, omitted for Egypt/Gulf. Languages typically last. |
 | `publications` | list of `{title, venue, year, link}` | career file | Only present if `cv.sections` includes `publications` |
 | `certifications` | list of `{name, issuer, year}` | career file | Only present if `cv.sections` includes `certifications` |
 | `volunteering` | list of `{role, organization, dates, description}` | career file | Only present if `cv.sections` includes `volunteering` |
 
-> The `msc_*` / `ba_*` keys are named for the two-degree default. They are
-> just "higher degree" and "lower degree" slots — a candidate with one
-> degree leaves the `ba_*` keys empty and disables the BA region in the
-> template; a candidate with a PhD puts it in the `msc_*` slot.
+> The pre-v1.9.0 `msc_*` / `ba_*` keys are retired: the fixed two-slot form
+> forced a three-degree candidate to drop one, and the drop was silent.
+> Validation now rejects those keys outright — put every degree in
+> `degrees`, however many there are.
 
 ## Bullets are plain strings — always
 
@@ -88,13 +84,18 @@ postprocess pass; its content_map key may be omitted entirely.
 Before `tpl.render()`, `render_cv.py` runs validate:
 
 - Required keys exist (`candidate_name`, `tagline`, `contact_line_1`,
-  `core_skills`, `experiences`; `summary` only when the summary section is
-  enabled for the target region)
+  `core_skills`, `experiences`, `degrees`; `summary` only when the summary
+  section is enabled for the target region)
 - No required key is empty or None
+- The retired `msc_*` / `ba_*` keys are absent (hard error with a migration
+  hint when present)
+- Every degree has `name`, `date`, `institution`, `location`, and >= 1 bullet
 - `experiences` length matches `cv.max_experience_slots` (+1 allowed only in
   `transition` positioning)
 - Every experience has an integer `end_year` (9999 = Present)
-- Bullet floors: the lead slot has >= 3 bullets; every other slot >= 2
+- Bullet floors (near-full career-file density): lead slot >= 5 bullets,
+  slot 2 >= 4, slot 3 and later >= 3. `cv.bullet_floors` overrides them only
+  when the career file itself has fewer bullets, never to trim rich material
 - In `labeled` mode, every experience bullet opens with a `**Label:**` lead-in
 - No employer name appears in `summary`
 - No company name appears in any bullet
@@ -132,11 +133,25 @@ content_map = {
         },
         # ... two more experience entries
     ],
-    "msc_bullets": [
-        "MSc in Quantitative Psychology with coursework in panel data econometrics, mixed-effects modeling, and **user research** methodology — directly applied to **activation funnel** analysis at Beta Inc.",
-    ],
-    "ba_bullets": [
-        "BA in Cognitive Science with concentrations in human-computer interaction and decision theory; thesis on attention and engagement in consumer mobile apps.",
+    "degrees": [
+        {
+            "name": "MSc in Quantitative Psychology",
+            "date": "2019",
+            "institution": "NYU",
+            "location": "New York, NY",
+            "bullets": [
+                "Coursework in panel data econometrics, mixed-effects modeling, and **user research** methodology, directly applied to **activation funnel** analysis at Beta Inc.",
+            ],
+        },
+        {
+            "name": "BA in Cognitive Science",
+            "date": "2016",
+            "institution": "Reed College",
+            "location": "Portland, OR",
+            "bullets": [
+                "Concentrations in human-computer interaction and decision theory; thesis on attention and engagement in consumer mobile apps.",
+            ],
+        },
     ],
     "additional": [
         {"label": "Work Authorization", "description": "US Citizen, available immediately."},

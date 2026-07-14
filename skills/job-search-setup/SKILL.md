@@ -2,8 +2,8 @@
 name: job-search-setup
 description: First-run wizard for saville-row. Reads the candidate's career file, proposes branches, prompts for voice references and regions, writes config.yaml. Run once per repo before any other skill.
 metadata:
-  version: 1.8.0
-  last_updated: 2026-07-06
+  version: 1.9.0
+  last_updated: 2026-07-14
 ---
 
 # job-search-setup
@@ -37,6 +37,8 @@ This gives new users a frame before they answer questions whose purpose they wou
 ### Step 1 — Locate the career file
 
 Ask the user for the path to their career history file. Accept any format: `.txt`, `.md`, `.docx`, `.pdf`. Read it once. It will be the single source of truth for all factual content downstream.
+
+While reading it, count the degrees it contains (completed and in progress) and write the count to `config.yaml > cv.expected_degree_count`. The post-render audit's Check 12 uses it to fail any CV that renders fewer degrees than the career file holds — without it, a silently dropped degree is undetectable.
 
 If the user does not have one yet, point them at [`references/career-file-guide.md`](./references/career-file-guide.md) and offer to help them build it: *"I can interview you for 15 minutes and draft a starter career file. Want to do that now, or come back when you have one?"* The guide's short version: open a blank document and brain-dump everything you have ever done — the framework selects per application, so the file should be longer and rawer than any CV.
 
