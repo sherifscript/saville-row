@@ -2,7 +2,7 @@
 name: cover-letter
 description: Write voice-anchored cover letters under 300 words, no em dashes, with an opener load-bearing on the role's specifics. Refuses to draft without a voice reference. Also drafts LinkedIn recruiter nudges.
 metadata:
-  version: 1.8.0
+  version: 1.9.0
   last_updated: 2026-07-06
 ---
 

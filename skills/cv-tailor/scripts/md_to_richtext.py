@@ -19,7 +19,7 @@ The v1.8.0 pipeline:
      run (template formatting inherited exactly).
 
 Marker rules are unchanged from the old design:
-  - Boldable fields: experiences[i].bullets, msc_bullets, ba_bullets.
+  - Boldable fields: experiences[i].bullets, degrees[i].bullets.
   - Never-bold fields (tagline, summary, contact lines, core_skills
     descriptions, additional descriptions): markers are stripped so a leaked
     `**` can never render literally.
@@ -71,9 +71,9 @@ def build_bold_plan(cm, mode="plain"):
 
     Returns (cm, plan). Mutates cm in place: after this call every bullet is
     a plain string with no markers — safe for `{{ bullet }}` placeholders.
-    Plan entries are in document order (experience slots, then msc, then ba):
+    Plan entries are in document order (experience slots, then degrees):
 
-        {"section": "experience"|"msc"|"ba", "slot": int|None,
+        {"section": "experience"|"degree", "slot": int|None,
          "text": "<stripped bullet>", "spans": [(start, end), ...]}
 
     Every bullet gets an entry even in plain mode (spans empty) — the
@@ -107,6 +107,12 @@ def build_bold_plan(cm, mode="plain"):
         if "bullets" in role:
             role["bullets"] = handle(role["bullets"], "experience", i)
 
+    for i, deg in enumerate(cm.get("degrees", [])):
+        if deg.get("bullets"):
+            deg["bullets"] = handle(deg["bullets"], "degree", i)
+
+    # Retired two-slot education keys: still stripped/planned so a pre-v1.9.0
+    # content_map fails loudly at render validation, not as literal `**`.
     for key, section in (("msc_bullets", "msc"), ("ba_bullets", "ba")):
         if cm.get(key):
             cm[key] = handle(cm[key], section)
@@ -150,8 +156,11 @@ if __name__ == "__main__":
         "experiences": [
             {"bullets": ["Lifted **activation by 18%**, covered in **TechCrunch**."]}
         ],
-        "msc_bullets": ["MSc with **panel data econometrics** coursework."],
-        "ba_bullets": ["BA in Cognitive Science."],
+        "degrees": [
+            {"name": "MSc", "bullets":
+                ["MSc with **panel data econometrics** coursework."]},
+            {"name": "BA", "bullets": ["BA in Cognitive Science."]},
+        ],
         "additional": [{"label": "Languages", "description": "English, **Korean**"}],
     }
 
@@ -167,9 +176,11 @@ if __name__ == "__main__":
     assert "**" not in cm["summary"]
     assert "**" not in cm["core_skills"][0]["description"]
     assert "**" not in cm["additional"][0]["description"]
-    # msc entry recorded after experience entries; ba has no spans.
-    assert plan[1]["section"] == "msc" and len(plan[1]["spans"]) == 1
-    assert plan[2]["section"] == "ba" and plan[2]["spans"] == []
+    # degree entries recorded after experience entries; BA has no spans.
+    assert plan[1]["section"] == "degree" and plan[1]["slot"] == 0
+    assert len(plan[1]["spans"]) == 1
+    assert "**" not in cm["degrees"][0]["bullets"][0]
+    assert plan[2]["section"] == "degree" and plan[2]["spans"] == []
 
     # plain mode: same stripping, no spans anywhere.
     cm_p, plan_p = build_bold_plan(copy.deepcopy(sample), mode="plain")

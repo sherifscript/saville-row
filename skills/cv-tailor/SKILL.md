@@ -2,8 +2,8 @@
 name: cv-tailor
 description: Render diagnosis-driven, ATS-optimized CVs as .docx via docxtpl. Modular section composition, region-aware headers, inline-bold helper, and a mandatory post-render audit (tailoring coverage, numeric grounding, and named structural failure modes).
 metadata:
-  version: 1.8.0
-  last_updated: 2026-07-06
+  version: 1.9.0
+  last_updated: 2026-07-14
 ---
 
 # cv-tailor
@@ -22,7 +22,7 @@ Before doing anything, check for `Diagnosis - [Company] - [Job Title].md` in the
 
 The diagnosis must also **pass lint**: `scripts/lint_diagnosis.py` validates its structure (sections present, 6–10 keywords, one `Slot N` angle line per experience slot, each with a real `proof point:` and enough substance). `render_cv.render()` runs the lint automatically and refuses to render from a diagnosis that fails — a thin diagnosis licenses a thin CV, so fix the diagnosis, not the CV.
 
-Exception: `Run CV only` shortcut explicitly skips the diagnosis gate (and the lint). The CV is rendered against broad branch judgment instead.
+Exception: `Run CV only` shortcut explicitly skips the diagnosis gate (and the lint). The CV is rendered against broad branch judgment instead. The shortcut skips the diagnosis, not the richness bar: with no JD to tailor against there is no reason to trim, so a CV-only render defaults to full career-file density — every bullet the career file gives each slot, light-edited, and every degree. The 2026-07-14 Werkstudent CV shipped thin (4/3/3, BA dropped) precisely because this path had no stated floor.
 
 ## What it does
 
@@ -170,12 +170,19 @@ Every bullet must clear this bar:
    bullets. This is a floor on substance, not a hard cap; the diagnosis decides
    how much each slot needs, but a ~12-word fragment is almost always
    under-written. Put the metric where it lands (lead or terminal), not buried
-   mid-clause behind filler. **Bullet counts per slot:** the diagnosis decides,
-   with hard floors enforced at validation — the lead slot carries at least 3
-   bullets (default to 4 when the career file supports it; the source role has
-   7), every other slot at least 2 (default 3). The 2026-06-27 batch silently
-   shrank the lead slot from 4 bullets to 3 and dropped its strongest metric;
-   floors make shrinkage a deliberate choice, not drift.
+   mid-clause behind filler. **Bullet counts per slot: near-full career-file
+   density is the default.** Start from every bullet the career file gives the
+   role and light-edit them all; cutting one is an editorial decision that must
+   be named in the check_3 verdict, never silent. Hard floors enforced at
+   validation: lead slot >= 5 bullets, slot 2 >= 4, slot 3 and later >= 3
+   (`cv.bullet_floors` overrides them only when the career file itself has
+   fewer — never to trim rich material). When the target region disables the
+   summary (`region_section_overrides`, e.g. EU), the lead slot's default
+   rises by one more bullet: the page has the room, and density is what
+   replaces the summary's proof. The old 3/2 floors let the 2026-07-14
+   Werkstudent CV ship at 4/3/3 while the career file offered 6/6/3 — thin by
+   permission; the 2026-06-27 batch had already shown the same silent
+   shrinkage. Floors make trimming a deliberate choice, not drift.
 
 Everything stays grounded: the proof point and every number must already exist in
 the career file (Checks 9, 10). Reframe what is true; invent nothing.
@@ -227,7 +234,7 @@ The two mandatory helpers around `tpl.render()`:
 
 - `build_bold_plan(cm, mode)` (`scripts/md_to_richtext.py`) — strips every
   `**` marker before render. In the boldable fields (experience bullets,
-  msc/ba bullets) it records the bold spans in a plan; in all other fields
+  degree bullets) it records the bold spans in a plan; in all other fields
   (tagline, summary, core_skills descriptions, additional descriptions) it
   strips outright so a leaked marker cannot render literally.
 - `postprocess_cv(path, plan, disabled_sections)` (`scripts/postprocess.py`)
@@ -253,8 +260,7 @@ Bold rendering is controlled by `config.yaml > cv.inline_bold` (default:
 | Field | Bold allowed (when inline_bold: true)? |
 | --- | --- |
 | `experiences[i].bullets` | Yes |
-| `msc_bullets` | Yes |
-| `ba_bullets` | Yes |
+| `degrees[i].bullets` | Yes |
 | `tagline` | No (styled by template) |
 | `summary` | No (prose) |
 | `core_skills[i].description` | No (label is bold; description plain) |
@@ -309,6 +315,19 @@ generic label) applies to plain mode only — see `references/docxtpl-recipe.md`
 **The post-render audit's Check 7 enforces the structure programmatically.** A CV that fails Check 7 is not shipped.
 
 User can override `cv.max_experience_slots` in config. See [`references/experience-slot-logic.md`](./references/experience-slot-logic.md).
+
+### Education structure — every degree renders
+
+Education is a `degrees` loop (since v1.9.0), ordered most recent first, one
+entry per degree in the career file — including an in-progress degree
+("Expected [year]") and the undergraduate degree. Each degree carries 1–3
+bullets at the same substance bar as experience bullets. Do not drop a degree
+to fit a slot count: the old fixed two-slot template is what silently shipped
+the 2026-07-14 Werkstudent CV without the BA. Validation requires the
+`degrees` key (and rejects the retired `msc_*`/`ba_*` keys); the post-render
+audit's Check 12 fails a CV whose rendered degree count falls below
+`cv.expected_degree_count` or whose institutions are not visible in the
+document.
 
 ### No em dashes in employer-facing content
 
@@ -396,7 +415,7 @@ The render driver script and any content-map JSON/YAML dumps used to build a CV 
 ## Files referenced
 
 - [`references/docxtpl-recipe.md`](./references/docxtpl-recipe.md) — the autoescape mandate, the RichText helper, named failure modes
-- [`references/post-render-audit.md`](./references/post-render-audit.md) — the audit checks (programmatic 2,4,5,6,7,8,9,10 + editorial 1,3)
+- [`references/post-render-audit.md`](./references/post-render-audit.md) — the audit checks (programmatic 2,4,5,6,7,8,9,10,11,12 + editorial 1,3)
 - [`references/modular-sections.md`](./references/modular-sections.md) — section composition
 - [`references/regional-headers.md`](./references/regional-headers.md) — the regional header pattern
 - [`references/experience-slot-logic.md`](./references/experience-slot-logic.md) — slot 1/2/3 rules

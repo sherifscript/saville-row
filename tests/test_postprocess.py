@@ -179,6 +179,8 @@ def test_plan_mismatch_raises(tmp_path):
 # ---------------------------------------------------------------------------
 
 def _three_slot_map():
+    # Bullet counts meet the v1.9.0 floors (lead >= 5, slot 2 >= 4,
+    # slot 3 >= 3) — near-full career-file density is the contract.
     return minimal_content_map(experiences=[
         {"title": "Senior Analyst", "dates": "2023 - Present",
          "company": "Acme", "location": "City", "end_year": 9999,
@@ -189,6 +191,10 @@ def _three_slot_map():
              "across departments for weekly reporting.",
              "**Executive interviews:** conducted interviews with "
              "executives, structuring input into decision evidence.",
+             "**Market scoping:** scoped ambiguous questions into "
+             "methodologies covering 40+ corporations under deadline.",
+             "**Citation impact:** produced analyses cited by Deloitte "
+             "and W3C in published industry research.",
          ]},
         {"title": "Analyst", "dates": "2020 - 2023",
          "company": "Acme", "location": "City", "end_year": 2023,
@@ -197,6 +203,10 @@ def _three_slot_map():
              "data across high-frequency publication cycles.",
              "**Trial tracking:** tracked vaccine trials from Phase I "
              "to Phase III into structured reports.",
+             "**Workflow automation:** supported Python data workflows "
+             "reducing manual entry across the team.",
+             "**Progression:** promoted within 3 years from assistant "
+             "to expert across the research team.",
          ]},
         {"title": "Consultant", "dates": "2018 - 2020",
          "company": "Other Co", "location": "Town", "end_year": 2020,
@@ -205,6 +215,8 @@ def _three_slot_map():
              "market research projects across regions.",
              "**Cross-cultural delivery:** managed communication for "
              "research projects targeting regional markets.",
+             "**Client synthesis:** structured findings for 20+ client "
+             "engagements across the region.",
          ]},
     ])
 
@@ -312,6 +324,105 @@ def test_validate_rejects_em_dash():
     assert "em dash" in str(exc.value)
 
 
+def test_validate_default_floors_are_5_4_3():
+    """The 2026-07-14 Werkstudent regression: 4/3/3 must now fail."""
+    from render_cv import validate_content_map
+    config = {"cv": {"max_experience_slots": 3}}
+    cm = _three_slot_map()
+    cm["experiences"][0]["bullets"] = cm["experiences"][0]["bullets"][:4]
+    cm["experiences"][1]["bullets"] = cm["experiences"][1]["bullets"][:3]
+    with pytest.raises(ValueError) as exc:
+        validate_content_map(cm, config)
+    msg = str(exc.value)
+    assert "floor is 5" in msg
+    assert "floor is 4" in msg
+
+
+def test_validate_bullet_floors_config_override():
+    from render_cv import validate_content_map
+    config = {"cv": {"max_experience_slots": 3, "bullet_floors": [3, 2, 2]}}
+    cm = _three_slot_map()
+    cm["experiences"][0]["bullets"] = cm["experiences"][0]["bullets"][:3]
+    cm["experiences"][1]["bullets"] = cm["experiences"][1]["bullets"][:2]
+    validate_content_map(cm, config)  # passes under the explicit override
+
+
+def test_validate_rejects_retired_msc_ba_keys():
+    from render_cv import validate_content_map
+    config = {"cv": {"max_experience_slots": 3}}
+    cm = _three_slot_map()
+    cm["msc_degree"] = "MSc"
+    with pytest.raises(ValueError) as exc:
+        validate_content_map(cm, config)
+    assert "retired" in str(exc.value)
+
+
+def test_validate_requires_degrees_with_fields_and_bullets():
+    from render_cv import validate_content_map
+    config = {"cv": {"max_experience_slots": 3}}
+    cm = _three_slot_map()
+    cm["degrees"] = [{"name": "MSc", "date": "2018",
+                      "institution": "A University", "location": "City",
+                      "bullets": []}]
+    with pytest.raises(ValueError) as exc:
+        validate_content_map(cm, config)
+    assert "no bullets" in str(exc.value)
+    del cm["degrees"]
+    with pytest.raises(ValueError) as exc:
+        validate_content_map(cm, config)
+    assert "degrees" in str(exc.value)
+
+
+def test_check_12_education_completeness(tmp_path):
+    from audit import check_12_education_completeness, _read_document_xml
+    cm = _three_slot_map()
+    cm2, plan = build_bold_plan(cm, mode="plain")
+    path = _render_plain(cm2, tmp_path / "edu.docx")
+    xml = _read_document_xml(path)
+    degrees = cm2["degrees"]
+    ok, note = check_12_education_completeness(degrees, xml,
+                                               expected_degree_count=2)
+    assert ok, note
+    # A dropped degree fails the count assertion.
+    ok, note = check_12_education_completeness(degrees[:1], xml,
+                                               expected_degree_count=2)
+    assert not ok and "dropped" in note
+    # A degree in the map but not in the document fails visibility.
+    ghost = degrees + [{"name": "PhD", "institution": "Ghost Institute",
+                        "bullets": ["x"]}]
+    ok, note = check_12_education_completeness(ghost, xml,
+                                               expected_degree_count=3)
+    assert not ok and "Ghost Institute" in note
+    # Unset expected count: passes on visibility, says so loudly.
+    ok, note = check_12_education_completeness(degrees, xml)
+    assert ok and "expected_degree_count" in note
+
+
+def test_render_all_degrees_visible_end_to_end(tmp_path):
+    """Three degrees through the template loop; none dropped."""
+    config = {"cv": {"bullet_style": "labeled", "max_experience_slots": 3,
+                     "expected_degree_count": 3}}
+    cm = _three_slot_map()
+    cm["degrees"] = cm["degrees"] + [{
+        "name": "MSc Data Science", "date": "Expected 2027",
+        "institution": "C Institute", "location": "City",
+        "bullets": ["A third degree bullet."]}]
+    # most recent first: in-progress degree leads
+    cm["degrees"].sort(key=lambda d: d["date"] == "Expected 2027",
+                       reverse=True)
+    out = tmp_path / "cv3deg.docx"
+    result = render(
+        diagnosis_path=None, content_map=cm, config=config,
+        repo_root=REPO_ROOT, output_path=str(out),
+        expected_keywords=KEYWORDS,
+    )
+    _record_editorial_pass(result)
+    assert result.all_passed, result.failure_summary
+    texts = [p.text for p in Document(str(out)).paragraphs]
+    for inst in ("A University", "B College", "C Institute"):
+        assert any(inst in t for t in texts), inst
+
+
 def test_transition_mode_allows_one_extra_slot():
     from render_cv import validate_content_map
     config = {"cv": {"max_experience_slots": 3}}
@@ -324,6 +435,8 @@ def test_transition_mode_allows_one_extra_slot():
             "enterprise accounts across three regions.",
             "**Onboarding:** trained new team members on the support "
             "playbook and CRM workflows.",
+            "**Knowledge base:** documented recurring issues into a "
+            "searchable playbook adopted by the team.",
         ],
     })
     # 4 slots rejected in default/adjacent positioning...

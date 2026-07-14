@@ -45,8 +45,14 @@ except ImportError:
 # summary section is enabled for the target region — see validate_content_map.
 BASE_REQUIRED_KEYS = (
     "candidate_name", "tagline", "contact_line_1",
-    "core_skills", "experiences",
+    "core_skills", "experiences", "degrees",
 )
+
+# Per-slot bullet minimums (slot 1, slot 2, slot 3+). Near-full career-file
+# density is the contract; a CV thinner than this needs an explicit
+# cv.bullet_floors override, which exists for career files that genuinely
+# have fewer bullets — never for trimming rich material.
+DEFAULT_BULLET_FLOORS = (5, 4, 3)
 
 DEFAULT_SECTIONS = (
     "tagline", "contact", "summary", "core_skills",
@@ -104,6 +110,29 @@ def validate_content_map(cm, config, enabled_sections=None, mode="plain",
         if key not in cm or cm[key] in (None, "", [], {}):
             errors.append(f"missing or empty required key: {key}")
 
+    # v1.9.0: education is a `degrees` list rendered by a template loop.
+    # The old fixed msc_*/ba_* pair silently dropped the third degree
+    # (2026-07-14 Werkstudent CV shipped without the BA).
+    if any(k in cm for k in ("msc_degree", "ba_degree", "msc_bullets",
+                             "ba_bullets")):
+        errors.append(
+            "msc_*/ba_* keys are retired; put every degree in the `degrees` "
+            "list (see content-map-schema.md) — the two-slot form is what "
+            "silently dropped the BA"
+        )
+    for i, deg in enumerate(cm.get("degrees") or []):
+        for field in ("name", "date", "institution", "location"):
+            if not deg.get(field):
+                errors.append(f"degrees[{i}] missing '{field}'")
+        if not deg.get("bullets"):
+            errors.append(
+                f"degrees[{i}] ({deg.get('institution', '?')}) has no "
+                f"bullets; every degree carries 1-3 bullets"
+            )
+
+    floors = tuple(config.get("cv", {}).get("bullet_floors")
+                   or DEFAULT_BULLET_FLOORS)
+
     # Slot count: exactly cv.max_experience_slots. A transition-positioned
     # diagnosis may add one slot (its Slot plan must justify it) — see
     # experience-slot-logic.md.
@@ -127,15 +156,21 @@ def validate_content_map(cm, config, enabled_sections=None, mode="plain",
                 f"integer end_year (use 9999 for Present) — required for the "
                 f"Check 7 chronology gate"
             )
-        # Bullet floors: a lead slot below 3 or any slot below 2 is an
-        # under-written CV, not a style choice.
+        # Bullet floors: near-full career-file density is the default.
+        # The old 3/2 floors let the 2026-07-14 Werkstudent CV ship at
+        # 4/3/3 while the career file offered 6/6/3 — thin by permission.
+        # Trimming below the source must be a deliberate config choice
+        # (cv.bullet_floors), not drift.
         n_bullets = len(role.get("bullets") or [])
-        floor = 3 if i == 0 else 2
+        floor = floors[min(i, len(floors) - 1)]
         if n_bullets < floor:
             errors.append(
                 f"experiences[{i}] ({role.get('company', '?')}) has "
                 f"{n_bullets} bullet(s); floor is {floor} "
-                f"(lead slot >= 3, every other slot >= 2)"
+                f"(defaults: lead slot >= {DEFAULT_BULLET_FLOORS[0]}, "
+                f"slot 2 >= {DEFAULT_BULLET_FLOORS[1]}, later slots >= "
+                f"{DEFAULT_BULLET_FLOORS[2]}; override via cv.bullet_floors "
+                f"only when the career file itself has fewer bullets)"
             )
         if mode == "labeled":
             for b in role.get("bullets") or []:
@@ -267,6 +302,7 @@ def render(diagnosis_path, content_map, config, repo_root, output_path,
         expect_bold=expect_bold,
         career_file_path=career_file_path,
         bold_plan=bold_plan,
+        expected_degree_count=cv_cfg.get("expected_degree_count"),
     )
     return result
 

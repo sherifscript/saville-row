@@ -8,22 +8,24 @@ headers. This is the default (`config.yaml > cv.template: OPUS`).
 
 `full_template.docx` is **built and render-tested** — it renders cleanly via
 `docxtpl` with `autoescape=True`. It is fully public: every personal field
-(name, contact, both degrees) is a placeholder.
+(name, contact, every degree) is a placeholder.
 
 ## Placeholders in this template
 
 ```
-{{ candidate_name }}        {{ msc_degree }}      {{ ba_degree }}
-{{ tagline }}               {{ msc_date }}        {{ ba_date }}
-{{ contact_line_1 }}        {{ msc_institution }} {{ ba_institution }}
-{{ personal_site }}         {{ msc_location }}    {{ ba_location }}
+{{ candidate_name }}        {{ degree.name }}
+{{ tagline }}               {{ degree.date }}
+{{ contact_line_1 }}        {{ degree.institution }}
+{{ personal_site }}         {{ degree.location }}
 {{ linkedin_url }}
 {{ contact_line_2_suffix }}
 {{ summary }}
 ```
 
 Plus the paragraph loops: `core_skills`, `experiences` (with nested
-`role.bullets`), `msc_bullets`, `ba_bullets`, `additional`.
+`role.bullets`), `degrees` (with nested `degree.bullets` — since v1.9.0
+education is a loop, so every degree in the career file renders; the old
+fixed `msc_*`/`ba_*` pair silently dropped a third degree), `additional`.
 
 See `../../skills/cv-tailor/references/content-map-schema.md` for the full content
 map.

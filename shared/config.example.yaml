@@ -58,6 +58,19 @@ cv:
   # General). Leave null to let the diagnosis pick by broad judgment.
   default_third_slot: null
 
+  # Per-slot bullet minimums [lead, slot 2, slot 3+]. Default [5, 4, 3]:
+  # near-full career-file density is the contract — a CV thinner than its
+  # source must be a deliberate choice, not drift (the 2026-07-14 CV
+  # shipped at 4/3/3 against a 6/6/3 career file under the old 3/2 floors).
+  # Lower these only when the career file itself has fewer bullets for a
+  # slot, never to trim rich material.
+  # bullet_floors: [5, 4, 3]
+
+  # How many degrees the career file contains (job-search-setup counts
+  # them). The post-render audit's Check 12 fails any CV rendering fewer —
+  # this is what catches a silently dropped degree.
+  # expected_degree_count: 2
+
   # Inline bold in experience and education bullets.
   # When true, **phrase** markers in bullets render as bold runs — a recruiter's
   # eye lands on quantified outcomes and credential proper nouns first.

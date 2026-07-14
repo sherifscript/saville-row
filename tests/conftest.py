@@ -28,12 +28,14 @@ def minimal_content_map(**overrides):
             "company": "Acme", "location": "City",
             "bullets": ["Did a plain thing."],
         }],
-        "msc_degree": "MSc", "msc_date": "2018",
-        "msc_institution": "A University", "msc_location": "City",
-        "msc_bullets": ["A degree bullet."],
-        "ba_degree": "BA", "ba_date": "2016",
-        "ba_institution": "B College", "ba_location": "City",
-        "ba_bullets": ["Another degree bullet."],
+        "degrees": [
+            {"name": "MSc", "date": "2018",
+             "institution": "A University", "location": "City",
+             "bullets": ["A degree bullet."]},
+            {"name": "BA", "date": "2016",
+             "institution": "B College", "location": "City",
+             "bullets": ["Another degree bullet."]},
+        ],
         "additional": [{"label": "Languages", "description": "English"}],
     }
     cm.update(overrides)
