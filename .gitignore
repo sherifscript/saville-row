@@ -44,6 +44,9 @@ Requests/
 RUN_INFO.md
 SESSION_RECORD.md
 
+# Project memory (single-user repo; keep local)
+CLAUDE.md
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db
