@@ -197,7 +197,8 @@ def _norm_ws(text):
 
 
 def check_5_rendered_integrity(rendered_docx_path, content_map,
-                               bold_plan=None, expect_bold=False):
+                               bold_plan=None, expect_bold=False,
+                               student_mode=False):
     """Check 5: rendered-text integrity (supersedes the bold-run regex count).
 
     Opens the rendered docx with python-docx — the same parse Word and ATS
@@ -232,14 +233,18 @@ def check_5_rendered_integrity(rendered_docx_path, content_map,
         return None
 
     # a + b: every authored bullet is a readable paragraph, in order.
-    expected_lists = []
+    # student_mode: EDUCATION precedes EXPERIENCE, so degrees are
+    # expected first in document order.
+    experience_lists, degree_lists = [], []
     for si, role in enumerate(content_map.get("experiences", [])):
         label = "slot %d (%s)" % (si + 1, role.get("company", "?"))
-        expected_lists.append((label, role.get("bullets", []) or []))
+        experience_lists.append((label, role.get("bullets", []) or []))
     for di, deg in enumerate(content_map.get("degrees", [])):
         if deg.get("bullets"):
             label = "degree %d (%s)" % (di + 1, deg.get("institution", "?"))
-            expected_lists.append((label, deg["bullets"]))
+            degree_lists.append((label, deg["bullets"]))
+    expected_lists = (degree_lists + experience_lists if student_mode
+                      else experience_lists + degree_lists)
     for key in ("msc_bullets", "ba_bullets"):  # pre-v1.9.0 forensics only
         if content_map.get(key):
             expected_lists.append((key, content_map[key]))
@@ -843,7 +848,7 @@ def scan_batch_sameyness(session_dir):
 def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
                    expected_keywords, expect_bold=True, career_file_path=None,
                    bold_plan=None, require_editorial=True,
-                   expected_degree_count=None):
+                   expected_degree_count=None, student_mode=False):
     """Run the programmatic audit checks. Returns an AuditResult.
 
     `bold_plan` is the plan returned by build_bold_plan(); Check 5 uses it
@@ -884,7 +889,8 @@ def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
 
     ok5, note5 = check_5_rendered_integrity(
         rendered_docx_path, content_map,
-        bold_plan=bold_plan, expect_bold=expect_bold)
+        bold_plan=bold_plan, expect_bold=expect_bold,
+        student_mode=student_mode)
     result.passed["check_5_integrity"] = ok5
     result.notes["check_5_integrity"] = note5
 

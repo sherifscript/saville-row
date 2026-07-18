@@ -33,7 +33,8 @@ from docxtpl import DocxTemplate
 from md_to_richtext import build_bold_plan
 from postprocess import postprocess_cv
 from audit import run_full_audit, _iter_strings
-from lint_diagnosis import lint_diagnosis, parse_positioning_mode
+from lint_diagnosis import (lint_diagnosis, parse_positioning_mode,
+                            parse_student_mode)
 
 try:
     from section_composer import compose_template
@@ -241,6 +242,7 @@ def render(diagnosis_path, content_map, config, repo_root, output_path,
     template_name = cv_cfg.get("template", "OPUS")
     mode = resolve_bold_mode(config)
     enabled, disabled = effective_sections(config, region)
+    student_mode = cv_cfg.get("student_mode", False)
 
     # 0. Lint the diagnosis — the mechanical backstop to the SKILL-text gate.
     #    A thin diagnosis licenses a thin CV; refuse to render from one.
@@ -260,6 +262,11 @@ def render(diagnosis_path, content_map, config, repo_root, output_path,
         # driver cannot forget to wire it. An explicit argument wins.
         if positioning_mode is None:
             positioning_mode = parse_positioning_mode(diagnosis_text)
+        # Per-application student-mode override ("Student mode: on" line in
+        # the diagnosis) beats the cv.student_mode config default.
+        override = parse_student_mode(diagnosis_text)
+        if override is not None:
+            student_mode = override
 
     # 1. Pre-render validation.
     validate_content_map(content_map, config, enabled_sections=enabled,
@@ -290,7 +297,8 @@ def render(diagnosis_path, content_map, config, repo_root, output_path,
 
     # 5. Post-process: apply planned bold as real runs; remove disabled
     #    sections. Raises PostprocessError when a bullet cannot be located.
-    postprocess_cv(output_path, bold_plan, disabled_sections=tuple(disabled))
+    postprocess_cv(output_path, bold_plan, disabled_sections=tuple(disabled),
+                   student_mode=student_mode)
 
     # 6. Post-render audit. Refuse to ship on any failure.
     expect_bold = mode != "plain" and any(spec["spans"] for spec in bold_plan)
@@ -303,6 +311,7 @@ def render(diagnosis_path, content_map, config, repo_root, output_path,
         career_file_path=career_file_path,
         bold_plan=bold_plan,
         expected_degree_count=cv_cfg.get("expected_degree_count"),
+        student_mode=student_mode,
     )
     return result
 

@@ -392,6 +392,14 @@ full template lacks (publications/certifications/volunteering on OPUS) has no
 render path yet — surface that content as an `additional` item. See
 [`references/modular-sections.md`](./references/modular-sections.md).
 
+### Student mode
+
+`cv.student_mode: true` moves EDUCATION above PROFESSIONAL EXPERIENCE — the
+layout early-career/student CVs lead with. Default false. A diagnosis can
+override it per application with a `Student mode: on` (or `off`) line, the
+same way `Mode:` declares the positioning mode. The move happens in
+`postprocess_cv()`; no template change.
+
 ## Output
 
 ```

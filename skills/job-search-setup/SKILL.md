@@ -115,6 +115,13 @@ Default: `OPUS`. Write `cv.template: [choice]` to `config.yaml`.
 
 Ask: *"Which CV sections do you want by default? You can override per application."* Default-on: tagline, contact, summary, core_skills, experience, education, additional. Default-off: publications, certifications, volunteering. The user can toggle anything.
 
+If the career file reads early-career (student, recent graduate, degree in
+progress, thin work history), also offer student mode: *"Your profile reads
+early-career — want your CV to lead with education above experience? That's
+the standard student/graduate layout."* Write `cv.student_mode: true/false`
+to `config.yaml` (default false). A diagnosis can override it per
+application with a `Student mode: on/off` line.
+
 If the user targets multiple regions, also offer per-region toggles: *"Should any section differ by region — e.g. many European CVs drop the summary?"* Write the answer to `cv.region_section_overrides` (keys = the region names from Step 3, e.g. `EU: {summary: false}`); the render removes those sections from that region's CVs.
 
 Note: the OPUS template renders only its built-in sections — turning ON publications/certifications/volunteering has no render path yet; offer to surface that content as an `additional` item instead (see `../cv-tailor/references/modular-sections.md`).

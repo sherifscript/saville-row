@@ -145,6 +145,11 @@ Examples:
 - "Mode: transition — first dedicated Customer Success role; the bridge is
   client-facing research delivery and value-realization evidence; risk is
   no CSM title anywhere, named in the letter."
+
+Optional, same section: a `Student mode: on` (or `off`) line overrides the
+`cv.student_mode` config default for this application — the CV then leads
+with EDUCATION above PROFESSIONAL EXPERIENCE. Use it when the role targets
+students/recent graduates and the config default doesn't fit this one role.
 ```
 
 ## How to write each section well
