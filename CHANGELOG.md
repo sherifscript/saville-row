@@ -3,6 +3,29 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v1.10.0 — 2026-07-18
+
+### Added
+
+- **Student mode.** `cv.student_mode: true` moves EDUCATION above
+  PROFESSIONAL EXPERIENCE in the postprocess pass — the layout
+  early-career/student CVs lead with. Default false. A diagnosis can
+  override per application with a `Student mode: on/off` line (parsed like
+  the positioning mode). Offered by the `job-search-setup` wizard when the
+  career file reads early-career. Check 5 and the bold plan follow the
+  moved section order.
+- **Release automation.** `.github/workflows/release.yml` tags `vX.Y.Z`
+  and creates a GitHub Release (notes sliced from this file) whenever the
+  `plugin.json` version changes on `main`; idempotent when the tag already
+  exists. CI now runs `bump_version.py --check` so version drift across
+  `plugin.json` / `marketplace.json` / SKILL.md frontmatters fails the
+  build.
+
+### Changed
+
+- **README slimmed.** Popularity badges and the star-history section are
+  gone — metrics return when there's real traction to show.
+
 ## v1.9.0 — 2026-07-14
 
 CV richness. The 2026-07-14 Werkstudent CV (test6) shipped thin — 10
