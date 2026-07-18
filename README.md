@@ -161,8 +161,8 @@ Either for the editorial skills. CV rendering needs local Python (`docxtpl`), so
 
 ## Troubleshooting
 
-**The plugin shows up as "SavilleRow" (raw, title-cased) or its skills appear empty.**
-The marketplace cache predates the current release. Run `claude plugin marketplace update sherifscript`, then reinstall. Some app surfaces (such as the Claude Desktop plugin directory) title-case the raw `name` field instead of honoring `displayName: "SavilleRow"`, which is why the plugin is named `saville-row`.
+**The plugin shows up as "Saville Row" (raw, title-cased) or its skills appear empty.**
+The marketplace cache predates the current release. Run `claude plugin marketplace update sherifscript`, then reinstall. Some app surfaces (such as the Claude Desktop plugin directory) title-case the raw `name` field instead of honoring `displayName: "SavilleRow"`.
 
 **The marketplace shows the full `.git` URL instead of `sherifscript/saville-row`.**
 Cosmetic. It happens when the marketplace was added by full git URL rather than GitHub shorthand. Re-add it so it registers as a `github` source:

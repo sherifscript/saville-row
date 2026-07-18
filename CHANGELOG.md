@@ -247,12 +247,6 @@ only checked the lead.
 
 ### Changed
 
-- **Plugin renamed `saville-row` → `saville-row`.** Some app surfaces
-  (e.g. the Claude Desktop plugin directory) title-case the raw `name` field
-  instead of honoring `displayName`, so the old `name` was rendering as
-  "SavilleRow" in those UIs. The new `name` falls back to "SavilleRow".
-  The GitHub repo slug is unchanged (`sherifscript/saville-row`); only the
-  plugin/install name changed.
 - **Marketplace entry enriched.** The `.claude-plugin/marketplace.json`
   plugin entry now carries the same metadata as `plugin.json` —
   `version`, `author`, `homepage`, `repository`, `license`, `keywords` —
@@ -294,7 +288,7 @@ remaining Life Assets-style workspace conveniences.
   removals, and gives each file a one-line description, mirroring the
   original workflow's Life Assets index.
 - **README Troubleshooting section** — covers the stale-marketplace-cache
-  symptom (plugin shows as raw "SavilleRow" or with empty skills) and the
+  symptom (plugin shows as raw "Saville Row" or with empty skills) and the
   fix (`claude plugin marketplace update sherifscript` then reinstall).
 - **`.gitignore` hardening** — `data/` (legacy v1.2.0 layout containing the
   PII workflow reference), `applications/`, `.scratch/`, and year-bearing
