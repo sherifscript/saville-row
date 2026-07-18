@@ -64,6 +64,19 @@ def parse_positioning_mode(md_text):
     return m.group(1).lower() if m else None
 
 
+_STUDENT_MODE_RE = re.compile(
+    r"student\s*mode:\s*\**\s*(on|off|true|false|yes|no)\b", re.IGNORECASE)
+
+
+def parse_student_mode(md_text):
+    """Return the diagnosis's per-application student-mode override
+    (True/False), or None when the diagnosis does not mention it."""
+    m = _STUDENT_MODE_RE.search(md_text)
+    if not m:
+        return None
+    return m.group(1).lower() in ("on", "true", "yes")
+
+
 def _keyword_bullets(lines):
     """Bullet lines under the Keywords heading, up to the next heading."""
     bullets = []

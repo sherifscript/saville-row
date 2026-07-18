@@ -3,6 +3,29 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v1.10.0 — 2026-07-18
+
+### Added
+
+- **Student mode.** `cv.student_mode: true` moves EDUCATION above
+  PROFESSIONAL EXPERIENCE in the postprocess pass — the layout
+  early-career/student CVs lead with. Default false. A diagnosis can
+  override per application with a `Student mode: on/off` line (parsed like
+  the positioning mode). Offered by the `job-search-setup` wizard when the
+  career file reads early-career. Check 5 and the bold plan follow the
+  moved section order.
+- **Release automation.** `.github/workflows/release.yml` tags `vX.Y.Z`
+  and creates a GitHub Release (notes sliced from this file) whenever the
+  `plugin.json` version changes on `main`; idempotent when the tag already
+  exists. CI now runs `bump_version.py --check` so version drift across
+  `plugin.json` / `marketplace.json` / SKILL.md frontmatters fails the
+  build.
+
+### Changed
+
+- **README slimmed.** Popularity badges and the star-history section are
+  gone — metrics return when there's real traction to show.
+
 ## v1.9.0 — 2026-07-14
 
 CV richness. The 2026-07-14 Werkstudent CV (test6) shipped thin — 10
@@ -247,12 +270,6 @@ only checked the lead.
 
 ### Changed
 
-- **Plugin renamed `saville-row` → `saville-row`.** Some app surfaces
-  (e.g. the Claude Desktop plugin directory) title-case the raw `name` field
-  instead of honoring `displayName`, so the old `name` was rendering as
-  "SavilleRow" in those UIs. The new `name` falls back to "SavilleRow".
-  The GitHub repo slug is unchanged (`sherifscript/saville-row`); only the
-  plugin/install name changed.
 - **Marketplace entry enriched.** The `.claude-plugin/marketplace.json`
   plugin entry now carries the same metadata as `plugin.json` —
   `version`, `author`, `homepage`, `repository`, `license`, `keywords` —
@@ -294,7 +311,7 @@ remaining Life Assets-style workspace conveniences.
   removals, and gives each file a one-line description, mirroring the
   original workflow's Life Assets index.
 - **README Troubleshooting section** — covers the stale-marketplace-cache
-  symptom (plugin shows as raw "SavilleRow" or with empty skills) and the
+  symptom (plugin shows as raw "Saville Row" or with empty skills) and the
   fix (`claude plugin marketplace update sherifscript` then reinstall).
 - **`.gitignore` hardening** — `data/` (legacy v1.2.0 layout containing the
   PII workflow reference), `applications/`, `.scratch/`, and year-bearing

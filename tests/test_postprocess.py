@@ -423,6 +423,49 @@ def test_render_all_degrees_visible_end_to_end(tmp_path):
         assert any(inst in t for t in texts), inst
 
 
+def test_render_student_mode_education_first(tmp_path):
+    """student_mode moves EDUCATION above PROFESSIONAL EXPERIENCE while the
+    full audit still passes and hyperlinks survive."""
+    config = {"cv": {"bullet_style": "labeled", "max_experience_slots": 3,
+                     "student_mode": True}}
+    out = tmp_path / "cv_student.docx"
+    result = render(
+        diagnosis_path=None,
+        content_map=_three_slot_map(),
+        config=config,
+        repo_root=REPO_ROOT,
+        output_path=str(out),
+        expected_keywords=KEYWORDS,
+    )
+    _record_editorial_pass(result)
+    assert result.all_passed, result.failure_summary
+
+    texts = [p.text.strip() for p in Document(str(out)).paragraphs]
+    assert texts.index("EDUCATION") < texts.index("PROFESSIONAL EXPERIENCE")
+    # Education content moved with its header; bullets stay readable.
+    assert any("A University" in t for t in texts)
+    p = _para_with_text(
+        Document(str(out)),
+        "Pipeline automation: built a Python pipeline cutting "
+        "publication time 30% across reporting.")
+    assert p.runs[0].bold is True
+    with zipfile.ZipFile(str(out)) as z:
+        rels = z.read("word/_rels/document.xml.rels").decode("utf-8")
+    assert rels.count("/relationships/hyperlink") >= 2
+
+
+def test_move_section_missing_header_warns(tmp_path):
+    """No-op + warning when a header is absent (summary-only doc edge)."""
+    cm = minimal_content_map()
+    cm, plan = build_bold_plan(cm, mode="plain")
+    path = _render_plain(cm, tmp_path / "warn.docx")
+    headers = {"experience": "PROFESSIONAL EXPERIENCE",
+               "education": "NO SUCH HEADER"}
+    summary = postprocess_cv(path, plan, section_headers=headers,
+                             student_mode=True)
+    assert any("not found" in w for w in summary["warnings"])
+
+
 def test_transition_mode_allows_one_extra_slot():
     from render_cv import validate_content_map
     config = {"cv": {"max_experience_slots": 3}}

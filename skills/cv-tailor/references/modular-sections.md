@@ -118,7 +118,7 @@ Each partial is a docxtpl template containing only that section's variable regio
 The naive approach is to put every section in one `full_template.docx` with `{% if include_publications %}...{% endif %}` blocks. This breaks for two reasons:
 
 1. **docxtpl Jinja blocks inside Word XML are fragile.** Block boundaries on paragraph or section boundaries get clobbered when Word saves the file. Editing the template in Word becomes risky.
-2. **Section ordering matters.** Some users want `publications` between `education` and `additional`; others want it at the end. Conditionals can't reorder; partials can.
+2. **Section ordering matters.** Some users want `publications` between `education` and `additional`; others want it at the end. Conditionals can't reorder; partials can. (One reorder exists without partials: `cv.student_mode` moves EDUCATION above PROFESSIONAL EXPERIENCE in the postprocess pass — a targeted paragraph move, not general reordering.)
 
 Partials give clean ordering, clean toggling, and clean editability. Each partial can be opened and edited in Word without affecting any other.
 

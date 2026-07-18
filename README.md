@@ -12,7 +12,6 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/stars/sherifscript/saville-row?style=flat-square&color=2ea043&label=stars" alt="Stars">
   <img src="https://img.shields.io/github/v/release/sherifscript/saville-row?style=flat-square&color=2ea043&label=release" alt="Release">
   <img src="https://img.shields.io/github/actions/workflow/status/sherifscript/saville-row/ci.yml?style=flat-square&label=CI" alt="CI">
   <img src="https://img.shields.io/badge/skills-8-2ea043?style=flat-square" alt="8 skills">
@@ -162,8 +161,8 @@ Either for the editorial skills. CV rendering needs local Python (`docxtpl`), so
 
 ## Troubleshooting
 
-**The plugin shows up as "SavilleRow" (raw, title-cased) or its skills appear empty.**
-The marketplace cache predates the current release. Run `claude plugin marketplace update sherifscript`, then reinstall. Some app surfaces (such as the Claude Desktop plugin directory) title-case the raw `name` field instead of honoring `displayName: "SavilleRow"`, which is why the plugin is named `saville-row`.
+**The plugin shows up as "Saville Row" (raw, title-cased) or its skills appear empty.**
+The marketplace cache predates the current release. Run `claude plugin marketplace update sherifscript`, then reinstall. Some app surfaces (such as the Claude Desktop plugin directory) title-case the raw `name` field instead of honoring `displayName: "SavilleRow"`.
 
 **The marketplace shows the full `.git` URL instead of `sherifscript/saville-row`.**
 Cosmetic. It happens when the marketplace was added by full git URL rather than GitHub shorthand. Re-add it so it registers as a `github` source:
@@ -197,14 +196,6 @@ This is **less strict than the original private workflow** the framework was ext
 - `docxtpl`, `python-docx`, `openpyxl`, `PyYAML` (install via `pip install -r requirements.txt`).
 - Optional: LibreOffice for PDF output, and a web scraper account (such as Apify) for job board discovery (LinkedIn, Wuzzuf, etc.).
 
-## Star history
-
-<p align="center">
-  <a href="https://star-history.com/#sherifscript/saville-row&Date">
-    <img src="https://api.star-history.com/svg?repos=sherifscript/saville-row&type=Date" width="600" alt="Star history chart">
-  </a>
-</p>
-
 ## License
 
 [CC BY-NC 4.0](./LICENSE). Free to share and adapt for non-commercial use with attribution.
@@ -213,4 +204,4 @@ This is **less strict than the original private workflow** the framework was ext
 
 Extracted from a real personal workflow built over many months of job searching. The named failure modes guarded by the audit (the `Artist & Label` becoming `Artist  Label` ampersand strip, the empty-bold-bullet regression, the "every CV looked tailored, none were" diagnosis-skip incident) all happened. Those are the scars this framework was built around.
 
-See [CHANGELOG.md](./CHANGELOG.md) for version history. Current release: **v1.4.1**.
+See [CHANGELOG.md](./CHANGELOG.md) for version history.

@@ -212,9 +212,43 @@ def _remove_sections(doc, disabled, headers):
     return removed, warnings
 
 
+def _move_section_before(doc, move_name, anchor_name, headers):
+    """Move `move_name`'s paragraphs (header through the paragraph before
+    the next known header) to just before `anchor_name`'s header.
+
+    Used by student mode to put EDUCATION above PROFESSIONAL EXPERIENCE.
+    Returns (moved, warnings); no-op when either header is missing.
+    """
+    paras = doc.paragraphs
+    header_positions = {}
+    for i, p in enumerate(paras):
+        stripped = p.text.strip()
+        for name, header_text in headers.items():
+            if stripped == header_text:
+                header_positions[name] = i
+
+    if move_name not in header_positions or anchor_name not in header_positions:
+        missing = [n for n in (move_name, anchor_name)
+                   if n not in header_positions]
+        return False, ["header for section '%s' not found; section not moved"
+                       % "', '".join(missing)]
+    start = header_positions[move_name]
+    if header_positions[anchor_name] >= start:
+        return False, []  # already above the anchor
+    following = [i for i in sorted(header_positions.values()) if i > start]
+    end = following[0] if following else len(paras)
+    anchor_el = paras[header_positions[anchor_name]]._element
+    for p in paras[start:end]:
+        anchor_el.addprevious(p._element)
+    return True, []
+
+
 def postprocess_cv(docx_path, bold_plan, disabled_sections=(),
-                   section_headers=OPUS_SECTION_HEADERS):
+                   section_headers=OPUS_SECTION_HEADERS, student_mode=False):
     """Post-render pass: remove disabled sections, apply planned bold.
+
+    `student_mode=True` moves EDUCATION above PROFESSIONAL EXPERIENCE
+    (early-career CVs lead with education).
 
     Opens the document once, saves in place. Returns a summary dict:
     {"removed_sections": [...], "bolded_runs": int, "warnings": [...]}.
@@ -226,6 +260,16 @@ def postprocess_cv(docx_path, bold_plan, disabled_sections=(),
     doc = Document(docx_path)
     removed, warnings = _remove_sections(doc, disabled_sections,
                                          section_headers)
+    if student_mode:
+        # Must run before _apply_bold: its forward cursor over
+        # doc.paragraphs assumes final document order — so when the move
+        # happens, the plan is reordered too (degree bullets first).
+        moved, move_warnings = _move_section_before(
+            doc, "education", "experience", section_headers)
+        warnings.extend(move_warnings)
+        if moved:
+            bold_plan = ([s for s in bold_plan if s["section"] == "degree"]
+                         + [s for s in bold_plan if s["section"] != "degree"])
     bolded = _apply_bold(doc, bold_plan)
     doc.save(docx_path)
     return {

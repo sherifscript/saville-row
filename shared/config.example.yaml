@@ -105,6 +105,11 @@ cv:
     # - certifications # uncomment if certifications matter in your field
     # - volunteering   # uncomment to include volunteer work
 
+  # Student mode: move EDUCATION above PROFESSIONAL EXPERIENCE — the layout
+  # early-career/student CVs lead with. Default false. A diagnosis can
+  # override per application with a "Student mode: on" (or off) line.
+  # student_mode: false
+
   # Per-region section toggles, keyed by the region names used in
   # regional-headers.yaml. A section mapped to false is removed from CVs
   # rendered for that region (the postprocess pass deletes it). Common use:
