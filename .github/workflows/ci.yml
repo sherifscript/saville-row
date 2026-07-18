@@ -26,6 +26,9 @@ jobs:
           done
           exit $fail
 
+      - name: Verify version sync (plugin.json vs marketplace.json vs SKILL.md)
+        run: python scripts/bump_version.py "$(jq -r .version .claude-plugin/plugin.json)" --check
+
       - name: Check SKILL.md frontmatter
         run: |
           fail=0
