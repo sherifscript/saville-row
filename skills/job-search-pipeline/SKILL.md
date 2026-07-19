@@ -73,13 +73,23 @@ the batch). For EACH selected role, in order:
    programmatic audit).
 4. Ship only on `all_passed`; a failure means fix and re-render, not skip.
 
-**Batch size cap: 5 CVs per session run.** Quality decay with batch size is
-measured, not hypothetical — it happened under this plugin AND under the
-pre-plugin workflow (the rich 2026-05-04/06 sessions were 1–2 CVs; the thin
-2026-05-18 Cairo and 2026-06-27 Berlin batches were 10). When discovery
-selects more than 5 roles, ship the top 5 end-to-end and list the rest in the
-closing summary as the next session's queue. No instruction survives contact
-with the tenth CV of a batch; a fresh session does.
+**Chunk big batches; never cut them.** Job search is a numbers game — a
+10-role day across ~~job board (Indeed) and ~~job board (LinkedIn) is a
+legitimate target and the pipeline must deliver it. But quality decay with
+batch size is measured, not hypothetical, in BOTH eras of this workflow (the
+rich 2026-05-04/06 sessions were 1–2 CVs; the thin 2026-05-18 Cairo and
+2026-06-27 Berlin batches were 10 straight in one context). The cap is
+therefore per **authoring context**, not per day: no single context authors
+more than 5 CVs.
+
+For selections above 5: split into chunks of <= 5 and run each chunk's
+diagnose → tailor → audit in a **fresh subagent context** (give it only the
+config, the career file, and that chunk's JDs — not the transcript of the
+chunks before it). If subagents are unavailable, ship the first 5, write the
+remaining roles as a queue into Session Notes, and tell the user to start a
+fresh session with `Run Request` for the queue — same-day volume, fresh
+attention. No instruction survives contact with the tenth consecutive CV;
+a fresh context does.
 
 After the last CV, run the batch sameyness sweep
 (`python audit.py --sameyness <session folder>`) and carry any warnings into

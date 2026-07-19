@@ -23,10 +23,20 @@ false assurance. This release deletes process and adds one mechanical gate.
   the strongest shipped CVs (2026-05-06 Mastercard ~30 avg, 2026-05-18 Tabby
   ~22 avg) so rich CVs pass with margin and category-noun rewrites (~16 avg)
   fail. Fails at authoring time, before render.
-- **Batch size cap** in the pipeline: 5 CVs per session run. Quality decay
-  with batch size is measured across BOTH the plugin era and the pre-plugin
-  workflow (rich sessions were 1–2 CVs; the thin Cairo/Berlin batches were
-  10). Overflow roles queue for the next session.
+- **Batch chunking** in the pipeline: no single authoring context writes
+  more than 5 CVs. Quality decay with batch size is measured across BOTH the
+  plugin era and the pre-plugin workflow (rich sessions were 1–2 CVs; the
+  thin Cairo/Berlin batches were 10 straight in one context). Volume is
+  preserved — job search is a numbers game — by running each chunk of <= 5
+  in a fresh subagent context (or a fresh session via a Session Notes
+  queue), never by cutting the day's roles.
+- **Student-search rules** in job-discovery: localized query terms per
+  market ("Werkstudent" is a German-market institution — Belgium needs
+  jobstudent / job étudiant, NL werkstudent/bijbaan, US/UK student
+  assistant/placement) and a full-time filter — a student search that
+  returns unmarked full-time roles discards them and reports the count
+  (the 2026-07 Belgium run logged full-time positions from a
+  Werkstudent-style query).
 
 ### Changed
 
@@ -49,6 +59,11 @@ false assurance. This release deletes process and adds one mechanical gate.
 
 ### Removed
 
+- **Reference bloat**: `docxtpl-recipe.md` compressed 200 → ~100 lines (the
+  scripts enforce its rules mechanically; the doc keeps rule + trigger +
+  pointer); `modular-sections.md` 150 → ~65 (it mostly documented the
+  INACTIVE partials system — now states the operative postprocess-removal
+  mechanism first and demotes partials to a future note).
 - **The editorial-verdict machinery** (`record_editorial`, seeded checks 1
   and 3, `require_editorial`): `run_full_audit()`'s verdict is now final.
   The judgment content moved to where it operates — the authoring bar in
