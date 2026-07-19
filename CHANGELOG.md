@@ -3,7 +3,7 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
-## Unreleased (v2.0.0)
+## v2.0.0 — 2026-07-19
 
 The lean-core rebuild. Diagnosis of the recurring "thin CV" failure showed
 three compounding causes that v1.7.0 and v1.9.0 had patched around without
