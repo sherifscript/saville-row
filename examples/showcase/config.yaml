@@ -12,6 +12,11 @@ cv:
   max_experience_slots: 3
   continuous_employer_block: true     # Beta Inc Senior PM + PM = one block
   default_third_slot: null
+  inline_bold: true                   # the five bolded proof phrases
+  # The career file gives 3/2/3 bullets per slot — fewer than the default
+  # 5/4/3 floors. Overriding DOWN is only legitimate in exactly this case.
+  bullet_floors: [3, 2, 3]
+  expected_degree_count: 2
   sections:
     - tagline
     - contact

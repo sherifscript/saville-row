@@ -71,12 +71,15 @@ the batch). For EACH selected role, in order:
    shipped two different Languages strings from two drivers).
 3. Render via `render_cv.render()` (validation → render → postprocess →
    programmatic audit).
-4. Record the two editorial verdicts on the returned result —
-   `result.record_editorial('check_1_lead_slots', ...)` and
-   `('check_3_recruiter_fit', ...)` — with one honest line each. The audit's
-   `all_passed` stays False until both are recorded; recording them is
-   authoring work, not a pause, and never stops the run.
-5. Ship only on `all_passed`; a failure means fix and re-render, not skip.
+4. Ship only on `all_passed`; a failure means fix and re-render, not skip.
+
+**Batch size cap: 5 CVs per session run.** Quality decay with batch size is
+measured, not hypothetical — it happened under this plugin AND under the
+pre-plugin workflow (the rich 2026-05-04/06 sessions were 1–2 CVs; the thin
+2026-05-18 Cairo and 2026-06-27 Berlin batches were 10). When discovery
+selects more than 5 roles, ship the top 5 end-to-end and list the rest in the
+closing summary as the next session's queue. No instruction survives contact
+with the tenth CV of a batch; a fresh session does.
 
 After the last CV, run the batch sameyness sweep
 (`python audit.py --sameyness <session folder>`) and carry any warnings into

@@ -268,7 +268,12 @@ def test_check11_skips_without_diagnosis():
 # Editorial seeding — no pass by omission.
 # ---------------------------------------------------------------------------
 
-def test_editorial_verdicts_required(tmp_path):
+def test_audit_passes_without_editorial_ceremony(tmp_path):
+    """v2.0.0: run_full_audit's verdict is final — no editorial seeding.
+
+    The retired model-graded verdicts (checks 1 and 3) were rubber-stamped
+    in every batch; richness is now enforced pre-render by the
+    validate_content_map length floors instead."""
     from docxtpl import DocxTemplate
     from md_to_richtext import build_bold_plan
     from postprocess import postprocess_cv
@@ -291,15 +296,6 @@ def test_editorial_verdicts_required(tmp_path):
         rendered_docx_path=str(out), diagnosis_md_path=None,
         content_map=cm, expected_keywords=KEYWORDS,
         expect_bold=False, bold_plan=plan)
-    assert result.all_passed is False  # seeded editorial checks unrecorded
-    result.record_editorial("check_1_lead_slots", True, "ok")
-    assert result.all_passed is False  # still one unrecorded
-    result.record_editorial("check_3_recruiter_fit", True, "ok")
     assert result.all_passed is True, result.failure_summary
-
-
-def test_record_editorial_rejects_unknown_key():
-    import pytest
-    result = AuditResult()
-    with pytest.raises(KeyError):
-        result.record_editorial("check_99_vibes", True, "nope")
+    assert not any(k.startswith("check_1_") or k.startswith("check_3_")
+                   for k in result.passed)

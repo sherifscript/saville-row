@@ -180,54 +180,72 @@ def test_plan_mismatch_raises(tmp_path):
 
 def _three_slot_map():
     # Bullet counts meet the v1.9.0 floors (lead >= 5, slot 2 >= 4,
-    # slot 3 >= 3) — near-full career-file density is the contract.
+    # slot 3 >= 3) and the v2.0.0 length floors (clause >= 12 words,
+    # section mean >= 20) — career-file density is the contract, and the
+    # fixture models the standard a real content_map must meet.
     return minimal_content_map(experiences=[
         {"title": "Senior Analyst", "dates": "2023 - Present",
          "company": "Acme", "location": "City", "end_year": 9999,
          "bullets": [
-             "**Pipeline automation:** built a Python pipeline cutting "
-             "publication time 30% across reporting.",
-             "**Dashboard ownership:** owned Power BI dashboards used "
-             "across departments for weekly reporting.",
-             "**Executive interviews:** conducted interviews with "
-             "executives, structuring input into decision evidence.",
-             "**Market scoping:** scoped ambiguous questions into "
-             "methodologies covering 40+ corporations under deadline.",
-             "**Citation impact:** produced analyses cited by Deloitte "
-             "and W3C in published industry research.",
+             "**Pipeline automation:** diagnosed a manual data entry "
+             "bottleneck and built an automated Python pipeline that "
+             "increased report publication speed by 30% across weekly "
+             "reporting cycles.",
+             "**Dashboard ownership:** owned Power BI KPI dashboards used "
+             "across four departments, gathering stakeholder requirements "
+             "and shipping monthly iterations consumed in weekly executive "
+             "reporting.",
+             "**Executive interviews:** conducted structured interviews "
+             "with senior executives and subject-matter experts, "
+             "translating qualitative input into decision evidence used by "
+             "enterprise clients for strategic planning decisions.",
+             "**Market scoping:** scoped ambiguous research questions into "
+             "repeatable methodologies covering 40+ multinational "
+             "corporations, delivering competitive landscape reports under "
+             "tight publication deadlines.",
+             "**Citation impact:** produced analyses cited by Deloitte and "
+             "W3C in published industry research, a quality signal "
+             "recognized by institutional clients worldwide.",
          ]},
         {"title": "Analyst", "dates": "2020 - 2023",
          "company": "Acme", "location": "City", "end_year": 2023,
          "bullets": [
-             "**Data quality:** cleaned and validated epidemiological "
-             "data across high-frequency publication cycles.",
-             "**Trial tracking:** tracked vaccine trials from Phase I "
-             "to Phase III into structured reports.",
+             "**Data quality:** cleaned and validated epidemiological and "
+             "market data across high-frequency publication cycles, "
+             "maintaining accuracy across 50+ regional datasets during "
+             "peak demand.",
+             "**Trial tracking:** tracked vaccine trials from Phase I to "
+             "Phase III, structuring findings into reports used by "
+             "institutional and government clients worldwide during a "
+             "period of unprecedented global demand.",
              "**Workflow automation:** supported Python data workflows "
-             "reducing manual entry across the team.",
-             "**Progression:** promoted within 3 years from assistant "
-             "to expert across the research team.",
+             "that reduced manual entry across the team, freeing analyst "
+             "time for higher-value interpretive work across high-frequency "
+             "publication cycles.",
+             "**Progression:** promoted from assistant to expert within 3 "
+             "years, building fluency in hypothesis structuring, source "
+             "triangulation, and executive-audience writing.",
          ]},
         {"title": "Consultant", "dates": "2018 - 2020",
          "company": "Other Co", "location": "Town", "end_year": 2020,
          "bullets": [
-             "**Primary research:** conducted expert interviews for "
-             "market research projects across regions.",
-             "**Cross-cultural delivery:** managed communication for "
-             "research projects targeting regional markets.",
-             "**Client synthesis:** structured findings for 20+ client "
-             "engagements across the region.",
+             "**Primary research:** conducted structured expert interviews "
+             "for global market research projects, ensuring accurate "
+             "domain capture across specialized industries for "
+             "international clients.",
+             "**Cross-cultural delivery:** managed bilingual communication "
+             "and coordination for research projects targeting regional "
+             "markets, delivering outputs aligned with international "
+             "research standards.",
+             "**Client synthesis:** structured qualitative findings into "
+             "deliverables for 20+ client engagements across the region, "
+             "consumed directly by strategy and product teams for planning "
+             "and prioritization.",
          ]},
     ])
 
 
 KEYWORDS = ["pipeline", "dashboards", "data quality", "market research"]
-
-
-def _record_editorial_pass(result):
-    """Tests stand in for the model's required editorial verdicts."""
-    result.record_editorial("check_1_lead_slots", True, "test fixture verdict")
-    result.record_editorial("check_3_recruiter_fit", True, "test fixture verdict")
 
 
 def test_render_end_to_end_labeled(tmp_path):
@@ -241,18 +259,15 @@ def test_render_end_to_end_labeled(tmp_path):
         output_path=str(out),
         expected_keywords=KEYWORDS,
     )
-    # all_passed is deliberately False until the editorial verdicts are
-    # recorded — a CV can no longer pass by omission.
-    assert not result.all_passed
-    _record_editorial_pass(result)
     assert result.all_passed, result.failure_summary
 
     # Every bullet must be readable and the labels bold — what Word and an
     # ATS parser see, not what a raw-XML regex sees.
     doc = Document(str(out))
     p = _para_with_text(
-        doc, "Pipeline automation: built a Python pipeline cutting "
-             "publication time 30% across reporting.")
+        doc, "Pipeline automation: diagnosed a manual data entry bottleneck "
+             "and built an automated Python pipeline that increased report "
+             "publication speed by 30% across weekly reporting cycles.")
     assert p.runs[0].bold is True
     assert p.runs[0].text == "Pipeline automation:"
 
@@ -275,7 +290,6 @@ def test_render_region_override_removes_summary(tmp_path):
         expected_keywords=KEYWORDS,
         region="EU",
     )
-    _record_editorial_pass(result)
     assert result.all_passed, result.failure_summary
     texts = [p.text.strip() for p in Document(str(out)).paragraphs]
     assert "PROFESSIONAL SUMMARY" not in texts
@@ -336,6 +350,39 @@ def test_validate_default_floors_are_5_4_3():
     msg = str(exc.value)
     assert "floor is 5" in msg
     assert "floor is 4" in msg
+
+
+def test_validate_rejects_thin_written_bullets():
+    """v2.0.0: the thin-CV leak — count floors met, bullets written short.
+
+    A 12-word-fragment bullet and a section written at ~16 words/clause both
+    fail validation now; before, they passed every gate (the v1.6.0-era
+    'category-noun' CVs and the showcase's one-liner bullets)."""
+    from render_cv import validate_content_map
+    config = {"cv": {"max_experience_slots": 3}}
+
+    # One fragment among rich bullets: per-bullet floor fires.
+    cm = _three_slot_map()
+    cm["experiences"][0]["bullets"][0] = \
+        "**Pipeline automation:** built a Python pipeline, 30% faster."
+    with pytest.raises(ValueError) as exc:
+        validate_content_map(cm, config, mode="labeled")
+    assert "fragment" in str(exc.value)
+
+    # Uniformly short bullets clear the per-bullet floor but fail the mean.
+    cm = _three_slot_map()
+    for role in cm["experiences"]:
+        role["bullets"] = [
+            "**Label %d:** delivered analytical outputs across markets for "
+            "enterprise clients under sustained deadline pressure "
+            "conditions." % i
+            for i in range(len(role["bullets"]))]
+    with pytest.raises(ValueError) as exc:
+        validate_content_map(cm, config, mode="labeled")
+    assert "written thin" in str(exc.value)
+
+    # The full fixture passes both length floors.
+    validate_content_map(_three_slot_map(), config, mode="labeled")
 
 
 def test_validate_bullet_floors_config_override():
@@ -416,7 +463,6 @@ def test_render_all_degrees_visible_end_to_end(tmp_path):
         repo_root=REPO_ROOT, output_path=str(out),
         expected_keywords=KEYWORDS,
     )
-    _record_editorial_pass(result)
     assert result.all_passed, result.failure_summary
     texts = [p.text for p in Document(str(out)).paragraphs]
     for inst in ("A University", "B College", "C Institute"):
@@ -437,7 +483,6 @@ def test_render_student_mode_education_first(tmp_path):
         output_path=str(out),
         expected_keywords=KEYWORDS,
     )
-    _record_editorial_pass(result)
     assert result.all_passed, result.failure_summary
 
     texts = [p.text.strip() for p in Document(str(out)).paragraphs]
@@ -446,8 +491,9 @@ def test_render_student_mode_education_first(tmp_path):
     assert any("A University" in t for t in texts)
     p = _para_with_text(
         Document(str(out)),
-        "Pipeline automation: built a Python pipeline cutting "
-        "publication time 30% across reporting.")
+        "Pipeline automation: diagnosed a manual data entry bottleneck "
+        "and built an automated Python pipeline that increased report "
+        "publication speed by 30% across weekly reporting cycles.")
     assert p.runs[0].bold is True
     with zipfile.ZipFile(str(out)) as z:
         rels = z.read("word/_rels/document.xml.rels").decode("utf-8")
@@ -475,11 +521,15 @@ def test_transition_mode_allows_one_extra_slot():
         "company": "Old Co", "location": "Town", "end_year": 2018,
         "bullets": [
             "**Client escalations:** resolved technical escalations for "
-            "enterprise accounts across three regions.",
+            "enterprise accounts across three regions, coordinating "
+            "engineering and account teams to protect renewal-stage "
+            "relationships.",
             "**Onboarding:** trained new team members on the support "
-            "playbook and CRM workflows.",
+            "playbook and CRM workflows, cutting ramp time for new hires "
+            "during a peak growth quarter.",
             "**Knowledge base:** documented recurring issues into a "
-            "searchable playbook adopted by the team.",
+            "searchable playbook adopted by the team, reducing repeat "
+            "escalations and duplicate investigation work.",
         ],
     })
     # 4 slots rejected in default/adjacent positioning...
