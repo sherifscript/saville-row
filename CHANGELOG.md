@@ -3,6 +3,72 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
+## Unreleased (v2.0.0)
+
+The lean-core rebuild. Diagnosis of the recurring "thin CV" failure showed
+three compounding causes that v1.7.0 and v1.9.0 had patched around without
+closing: (1) ~4,000 lines of instruction text diluted the authoring task the
+skills exist for; (2) every richness rule was prose or a bullet-COUNT floor —
+nothing programmatic ever checked bullet LENGTH, so a 12-word fragment
+carrying one number passed all 13 checks (the committed showcase CV itself
+shipped this way: one bullet per role, every quantified win dropped); (3) the
+model-graded editorial verdicts were rubber-stamped in every batch, giving
+false assurance. This release deletes process and adds one mechanical gate.
+
+### Added
+
+- **Bullet length floors** in `validate_content_map` (the one new gate):
+  every experience bullet's substance clause >= 12 words (label lead-in
+  excluded in labeled mode) and the section-wide average >= 20. Calibrated on
+  the strongest shipped CVs (2026-05-06 Mastercard ~30 avg, 2026-05-18 Tabby
+  ~22 avg) so rich CVs pass with margin and category-noun rewrites (~16 avg)
+  fail. Fails at authoring time, before render.
+- **Batch chunking** in the pipeline: no single authoring context writes
+  more than 5 CVs. Quality decay with batch size is measured across BOTH the
+  plugin era and the pre-plugin workflow (rich sessions were 1–2 CVs; the
+  thin Cairo/Berlin batches were 10 straight in one context). Volume is
+  preserved — job search is a numbers game — by running each chunk of <= 5
+  in a fresh subagent context (or a fresh session via a Session Notes
+  queue), never by cutting the day's roles.
+- **Student-search rules** in job-discovery: localized query terms per
+  market ("Werkstudent" is a German-market institution — Belgium needs
+  jobstudent / job étudiant, NL werkstudent/bijbaan, US/UK student
+  assistant/placement) and a full-time filter — a student search that
+  returns unmarked full-time roles discards them and reports the count
+  (the 2026-07 Belgium run logged full-time positions from a
+  Werkstudent-style query).
+
+### Changed
+
+- **cv-tailor SKILL.md rewritten around the writing, not the process**
+  (437 → ~215 lines). Centerpiece: "the career file is the CV" — tailoring is
+  light-editing + vocabulary reframing, never compression — with worked
+  career-file-bullet → tailored-bullet examples including the banned thin
+  version. The 25–40-word figure is now framed purely as the career file's
+  own range backed by hard floors, not a target to write down to.
+- **Diagnosis depth bar raised** (`diagnosis-template.md`): sections 1/2/4
+  now specify 4–6 / 2–4 / 2–4 sentences with named specifics and benchmark
+  examples from the strongest shipped diagnoses. The old "2–3 sentences …
+  1 sentence … intentional brevity" spec mandated exactly the terseness that
+  thinned every downstream artifact (the 2026-06-27 batch compressed
+  diagnosis sections to 1–2 sentences and the CVs thinned with them).
+- **Showcase regenerated at the real standard.** The committed example CV now
+  carries all 8 career-file bullets (3/2/3) with every metric intact and the
+  five bolded proof phrases its README always claimed; its diagnosis is
+  rewritten to the current spec (Section angles, Positioning, lint-clean).
+
+### Removed
+
+- **Reference bloat**: `docxtpl-recipe.md` compressed 200 → ~100 lines (the
+  scripts enforce its rules mechanically; the doc keeps rule + trigger +
+  pointer); `modular-sections.md` 150 → ~65 (it mostly documented the
+  INACTIVE partials system — now states the operative postprocess-removal
+  mechanism first and demotes partials to a future note).
+- **The editorial-verdict machinery** (`record_editorial`, seeded checks 1
+  and 3, `require_editorial`): `run_full_audit()`'s verdict is now final.
+  The judgment content moved to where it operates — the authoring bar in
+  SKILL.md (read at writing time) and the programmatic length floors.
+
 ## v1.10.0 — 2026-07-18
 
 ### Added

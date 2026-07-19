@@ -1,6 +1,6 @@
 # Post-render audit — the checks every shipped CV must pass
 
-Before any CV is shipped (saved to the session folder for the user to send), it passes the audit below. The programmatic checks (2, 4, 5, 6, 7, 8, 9, 10, 11, 12) are implemented in [`../scripts/audit.py`](../scripts/audit.py) and run automatically by `run_full_audit()`. The editorial checks (1, 3, and the honesty companion to 9) are graded by the model — and since v1.8.0 they are **required**: `run_full_audit()` seeds them as failed, and `all_passed` stays False until the model records a one-line verdict for each via `result.record_editorial(name, ok, note)`. A CV can no longer pass by omission (the 2026-06-27 Berlin batch shipped with the editorial checks silently skipped). Recording the verdicts is authoring work, not a pause — it never stops a batch run.
+Before any CV is shipped (saved to the session folder for the user to send), it passes the audit below. The programmatic checks (2, 4, 5, 6, 7, 8, 9, 10, 11, 12) are implemented in [`../scripts/audit.py`](../scripts/audit.py) and run automatically by `run_full_audit()`; its verdict is final. Questions 1 and 3 are the **final read** — advisory judgment applied while authoring, not recorded machinery. (The v1.8.0–v1.10.0 `record_editorial` verdict system was retired in v2.0.0: one-line model-graded verdicts were rubber-stamped in every batch while thin CVs shipped. Richness is now enforced programmatically before render — `validate_content_map`'s bullet count and length floors — and the judgment guidance below is applied where it works: at writing time.)
 
 There is also a batch-level sweep (13, warn-only) that runs once per session folder, not per CV.
 
@@ -16,9 +16,7 @@ If any check fails, the CV is **not shipped**. The framework either re-renders (
 
 2. Each lead slot **names the concrete proof point** the diagnosis assigned it (the institution, client, platform, or number), rather than hiding behind a generic noun. Fail: "tracked positioning for enterprise decision-makers". Pass: "synthesized findings into reports cited by Deloitte and the Harvard Law Review". This is the gap that shipped the 2026-06-25 Cairo batch: the named credentials sat unused in the career file while the bullets used generic audiences. Check 10 catches the named filler phrases programmatically; this editorial check is the broader judgment that a real proof point is actually surfaced.
 
-**On failure:** regenerate the failing slot from its diagnosis proof point. The diagnosis is usually fine; the bullet writer drifted into generic phrasing or left the proof point on the table.
-
-**Recording the verdict (required):** after the programmatic audit returns, call `result.record_editorial('check_1_lead_slots', ok, note)` with a one-line verdict. `all_passed` stays False until it is recorded.
+**On failure:** regenerate the failing slot from its diagnosis proof point. The diagnosis is usually fine; the bullet writer drifted into generic phrasing or left the proof point on the table. (Checks 10 and 11 catch the mechanical part of this; the final read is the judgment layer.)
 
 ### 2. Do at least two experience bullets contain JD keywords verbatim?
 
@@ -40,9 +38,7 @@ Three things to judge explicitly, because a CV can pass every programmatic check
 
 **Bolding discipline is part of this check (plain mode).** Scan every bolded phrase in the rendered CV at once. There should be roughly 4–8 bold items total, and every one should be a quantified outcome or a credential proper noun — never a JD keyword. If a phrase is bolded twice, or if most bullets carry a bold phrase, or if a plain skill word like "user research" is bolded, the CV reads as unedited. Fix the `**` markers in the content map (see docxtpl-recipe.md "what to bold") and re-render. In `bullet_style: labeled` this part is suspended: every bullet is supposed to open with a bold capability label, so the 4–8 ceiling does not apply; instead confirm each label is a 2–5 word capability phrase in the role's vocabulary, not a dumped JD keyword.
 
-**On failure:** strengthen the diagnosis first (specifically section 4, "which credential speaks loudest to that bar?"), then re-render. Do not patch the CV directly.
-
-**Recording the verdict (required):** call `result.record_editorial('check_3_recruiter_fit', ok, note)` with a one-line verdict covering richness, domain translation, and the honesty companion (no semantic inflation). `all_passed` stays False until it is recorded.
+**On failure:** strengthen the diagnosis first (specifically section 4, "which credential speaks loudest to that bar?"), then re-render. Do not patch the CV directly. (The richness half of this read is now enforced programmatically by the validation length floors; what remains for judgment is fit, translation, and honesty — no semantic inflation, "supported" never becomes "led".)
 
 ### 4. Is every `&` from the content_map present in the rendered docx?
 
@@ -265,16 +261,6 @@ audit_result = run_full_audit(
     bold_plan=bold_plan,              # from build_bold_plan(); Check 5 bold
     expected_degree_count=3,          # cv.expected_degree_count; Check 12
 )
-
-# REQUIRED: record the editorial verdicts — all_passed stays False otherwise.
-audit_result.record_editorial(
-    "check_1_lead_slots", True,
-    "lead bullets serve the diagnosed dashboard-consolidation problem; "
-    "the 30% pipeline proof point leads slot 1")
-audit_result.record_editorial(
-    "check_3_recruiter_fit", True,
-    "bullets keep the career-file specifics; labels frame in JD vocabulary; "
-    "no semantic inflation")
 
 if not audit_result.all_passed:
     print(audit_result.failure_summary)

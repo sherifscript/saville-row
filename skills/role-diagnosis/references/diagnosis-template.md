@@ -9,16 +9,29 @@ The Diagnosis.md file is the only place in the framework where editorial judgmen
 
 ## What is this team actually hiring to fix?
 
-2–3 sentences. Read past the JD's surface bullets. What is the underlying
-pressure — a missing capability, a stalled initiative, a person who left,
-scale they can't keep up with, a market they don't understand? If the JD
-says "build dashboards," is the real ask "make our metrics legible to a
-non-technical exec"? Name the real problem.
+4–6 sentences with NAMED specifics: the company's scale or stage, the
+signal in the JD's phrasing, what the team can't currently do, and why now.
+Read past the JD's surface bullets. What is the underlying pressure — a
+missing capability, a stalled initiative, a person who left, scale they
+can't keep up with, a market they don't understand? If the JD says "build
+dashboards," is the real ask "make our metrics legible to a non-technical
+exec"? Name the real problem. The depth bar is the strongest shipped
+diagnoses, e.g.: "Tabby is a $7B+ GMV fintech processing millions of BNPL
+transactions, and their data function is under pressure to turn that volume
+into insights that reach product, risk, and operations leaders on demand.
+The 'SQL superstar' framing signals they've had analysts who couldn't write
+performant queries and became a bottleneck." A one-sentence version of this
+section produces a one-note CV — the 2026-06-27 batch compressed these
+sections to 1–2 sentences each and the CVs thinned with them.
 
 ## What would a great hire deliver in their first 90 days?
 
-1–2 sentences. Concrete outputs the team would point to and say "yes,
-that was the win." Not aspirations — specific shipped deliverables.
+2–4 sentences. Concrete outputs the team would point to and say "yes,
+that was the win" — named deliverables, named data sources or tools where
+the JD gives them, a number where one is inferable. Not aspirations.
+(Benchmark: "A working competitive and market sizing framework for 2–3
+priority markets using existing data subscriptions (Nielsen, Euromonitor,
+Mintel), delivered as a reusable tool — not a one-off deck.")
 
 ## What is the actual bar?
 
@@ -38,8 +51,11 @@ There can only be one primary bar — secondary bars come second.
 
 ## Which of my credentials speaks loudest to that bar?
 
-1–2 sentences. Pick the single strongest proof point from the candidate's
-career file. This becomes the lead angle of the lead experience section.
+2–4 sentences. Pick the single strongest proof point from the candidate's
+career file and say WHY it maps to this team's bar — the number, the named
+client/institution, and the connection to the diagnosed problem. This
+becomes the lead angle of the lead experience section, so write it with the
+specifics the lead bullet will need.
 
 Examples of credentials to consider:
 - multi-year senior tenure at a recognized company
@@ -270,4 +286,4 @@ translation machinery exists precisely so honesty costs nothing.
 
 ## How long should it take?
 
-A good diagnosis takes 5–10 minutes to write. Less and it's surface-level; more and you're rewriting the JD. The discipline is intentional brevity — 5 sections, each short.
+A good diagnosis takes 5–10 minutes to write. Less and it's surface-level; more and you're rewriting the JD. The discipline is one page of DENSE reading — 5 sections, each carrying named specifics. Brevity means no padding and no JD-restating; it never means short sections. A diagnosis whose sections read like tweet-length summaries starves every downstream artifact: the CV bullets can only be as specific as the angles this file gives them.

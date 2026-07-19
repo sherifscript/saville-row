@@ -43,7 +43,7 @@ grounding check (Check 9) flags any number or claim with no career-file source.
 | `experiences[i].location` | string | career file | City, Country |
 | `experiences[i].end_year` | int | career file | **Required.** The role's end year; `9999` for an ongoing (Present) role. Feeds the Check 7 chronology gate — validation rejects a map without it (the old skip-when-absent behavior was exploitable). |
 | `experiences[i].concurrent` | bool | career file | Optional, default false. Mark `true` on an ongoing *side* engagement (e.g. freelance) that overlaps the primary block, so chronology checks treat it as concurrent rather than out of order. |
-| `experiences[i].bullets` | list[string] | diagnosis | Must clear the substance bar in `SKILL.md` "Write strong bullets": **light-edit** the career-file bullet (don't rewrite it thin), **preserve its concrete specifics** (named clients, numbers, specific nouns), surface the named proof point, lead with ownership + scope, frame in the JD's vocabulary, ~25–40 words. The diagnosis's per-slot proof points say which credential each slot names. Bold: `plain` mode marks `**bold**` only on quantified outcomes and credential proper nouns, never JD keywords (see docxtpl-recipe.md "what to bold"); `labeled` mode opens each bullet with a `**Label:**` lead-in that translates the fact into the JD's vocabulary, followed by a full-substance clause. Check 10 rejects generic fillers that lack a concrete proof point. |
+| `experiences[i].bullets` | list[string] | diagnosis | Must clear the substance bar in `SKILL.md` "Write strong bullets": **light-edit** the career-file bullet (don't rewrite it thin), **preserve its concrete specifics** (named clients, numbers, specific nouns), surface the named proof point, lead with ownership + scope, frame in the JD's vocabulary, 25–40 words (a floor on substance — validation rejects any bullet under 12 clause-words and any CV averaging under 20). The diagnosis's per-slot proof points say which credential each slot names. Bold: `plain` mode marks `**bold**` only on quantified outcomes and credential proper nouns, never JD keywords (see docxtpl-recipe.md "what to bold"); `labeled` mode opens each bullet with a `**Label:**` lead-in that translates the fact into the JD's vocabulary, followed by a full-substance clause. Check 10 rejects generic fillers that lack a concrete proof point. |
 | `degrees` | list of degree dicts | career file + diagnosis | **Every** degree in the career file, most recent first — including an in-progress degree ("Expected [year]") and the undergraduate degree. Dropping one is the Check 12 failure mode (the 2026-07-14 CV shipped without the BA). |
 | `degrees[i].name` | string | career file | Degree name (e.g. "MSc Quantitative Analysis and Social Data Science"). |
 | `degrees[i].date` | string | career file | Completion date, or "Expected [year]" for an in-progress degree. |
@@ -93,9 +93,14 @@ Before `tpl.render()`, `render_cv.py` runs validate:
 - `experiences` length matches `cv.max_experience_slots` (+1 allowed only in
   `transition` positioning)
 - Every experience has an integer `end_year` (9999 = Present)
-- Bullet floors (near-full career-file density): lead slot >= 5 bullets,
-  slot 2 >= 4, slot 3 and later >= 3. `cv.bullet_floors` overrides them only
-  when the career file itself has fewer bullets, never to trim rich material
+- Bullet count floors (near-full career-file density): lead slot >= 5
+  bullets, slot 2 >= 4, slot 3 and later >= 3. `cv.bullet_floors` overrides
+  them only when the career file itself has fewer bullets, never to trim
+  rich material
+- Bullet length floors (written-thin guard, v2.0.0): every experience
+  bullet's substance clause >= 12 words (label lead-in excluded in labeled
+  mode) and the section-wide average >= 20 words. Career-file bullets run
+  ~25–40; a CV that fails this was compressed, not tailored
 - In `labeled` mode, every experience bullet opens with a `**Label:**` lead-in
 - No employer name appears in `summary`
 - No company name appears in any bullet

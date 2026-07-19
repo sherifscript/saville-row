@@ -2,8 +2,7 @@
 audit.py — post-render audit for tailored CVs.
 
 Implements the programmatic checks of the post-render audit
-(see skills/cv-tailor/references/post-render-audit.md). The editorial checks (#1, #3)
-are run by the model, not here.
+(see skills/cv-tailor/references/post-render-audit.md).
 
 Programmatic checks:
   Check 2 — at least two JD keywords appear verbatim in the rendered CV.
@@ -42,9 +41,13 @@ Programmatic checks:
             institution is visible in the rendered document. Catches the
             2026-07-14 dropped-BA failure.
 
-Editorial checks 1 and 3 are REQUIRED: run_full_audit seeds them as failed,
-and all_passed stays False until the model records a verdict for each via
-result.record_editorial(...). Recording them is authoring work, not a pause.
+The old editorial checks (1: lead-slot judgment, 3: recruiter-fit richness)
+were retired in v2.0.0: model-graded one-line verdicts were rubber-stamped in
+every batch and gave false assurance while thin CVs shipped. Their substance
+moved where it is actually enforced — richness is now programmatic
+(validate_content_map's bullet count + length floors in render_cv.py) and
+honesty/judgment lives in the authoring spec (cv-tailor SKILL.md), which the
+model reads at writing time.
 
 Batch-level (not part of run_full_audit): scan_batch_sameyness(session_dir)
 warns on exact-duplicate bullets across different CVs in a session folder.
@@ -58,12 +61,6 @@ import re
 from dataclasses import dataclass, field
 
 from docx import Document
-
-
-# The two editorial checks the model must grade explicitly. Seeded as failed
-# by run_full_audit so a CV can never pass by omission — the 2026-06-27
-# Berlin batch shipped with these silently skipped.
-EDITORIAL_CHECKS = ("check_1_lead_slots", "check_3_recruiter_fit")
 
 
 @dataclass
@@ -82,22 +79,6 @@ class AuditResult:
             if not ok:
                 lines.append("  FAIL [" + name + "]: " + self.notes.get(name, ""))
         return "\n".join(lines) if lines else "All checks passed."
-
-    def record_editorial(self, check_name, ok, note):
-        """Record the model's verdict for an editorial check (1 or 3).
-
-        check_1_lead_slots — do the lead slots serve the diagnosed problem
-        with their named proof points surfaced?
-        check_3_recruiter_fit — richness vs the career file, domain
-        translation, recruiter-fit, and the Check 9 honesty companion
-        (no semantic inflation: "supported" did not become "led").
-        """
-        if check_name not in EDITORIAL_CHECKS:
-            raise KeyError(
-                "unknown editorial check %r; expected one of %s"
-                % (check_name, EDITORIAL_CHECKS))
-        self.passed[check_name] = bool(ok)
-        self.notes[check_name] = note
 
 
 def _read_document_xml(docx_path):
@@ -387,21 +368,30 @@ def check_7_experience_structure(experiences):
             "belongs below the primary block must set concurrent: true."
         )
 
-    # Check that slots 1 and 2 share the same employer (contiguous block rule)
-    slot1_company = experiences[0].get("company", "")
-    slot2_company = experiences[1].get("company", "") if len(experiences) > 1 else ""
-    if slot1_company and slot2_company and slot1_company != slot2_company:
-        return False, (
-            "Slots 1 and 2 are different employers ("
-            + str(slot1_company) + " vs " + str(slot2_company) + "). "
-            "When the candidate has two adjacent roles at the same primary employer "
-            "(e.g., Statista Expert + Statista Assistant), they must occupy slots "
-            "1 + 2 as a contiguous block. See "
-            "skills/cv-tailor/references/experience-slot-logic.md."
-        )
+    # Contiguous-block rule: any employer holding 2+ roles must have them
+    # adjacent (no other employer's role splitting the block). This preserves
+    # the "no gap in the promotion block" intent WITHOUT assuming the block
+    # sits at slots 1+2 — a more recent role at a DIFFERENT employer (a current
+    # role at a new employer) may lead above the block, which reverse chronology
+    # already orders correctly. The old rule failed any two different-employer
+    # top roles, which cannot represent a new current role above an older block.
+    from collections import OrderedDict
+    positions = OrderedDict()
+    for i, e in enumerate(experiences):
+        positions.setdefault(e.get("company", ""), []).append(i)
+    for company, idxs in positions.items():
+        contiguous = idxs == list(range(idxs[0], idxs[0] + len(idxs)))
+        if company and len(idxs) > 1 and not contiguous:
+            return False, (
+                "Same-employer roles for " + str(company) + " are not "
+                "contiguous (slots " + str([i + 1 for i in idxs]) + "). Two "
+                "adjacent roles at one employer must render as a contiguous "
+                "block with no other role between them. See "
+                "skills/cv-tailor/references/experience-slot-logic.md."
+            )
 
     return True, ("Experience structure valid: reverse-chronological; "
-                  "slots 1 + 2 share employer " + str(slot1_company) + ".")
+                  "same-employer roles render contiguously.")
 
 
 def check_8_slot_coverage(experiences, expected_keywords):
@@ -847,37 +837,16 @@ def scan_batch_sameyness(session_dir):
 
 def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
                    expected_keywords, expect_bold=True, career_file_path=None,
-                   bold_plan=None, require_editorial=True,
-                   expected_degree_count=None, student_mode=False):
+                   bold_plan=None, expected_degree_count=None,
+                   student_mode=False):
     """Run the programmatic audit checks. Returns an AuditResult.
 
     `bold_plan` is the plan returned by build_bold_plan(); Check 5 uses it
     to verify each planned bold span rendered as a real bold run.
-
-    The editorial checks (1: lead slots serve the diagnosed problem with
-    their proof points; 3: recruiter-fit / richness / domain translation /
-    honesty companion) are seeded as FAILED when `require_editorial` is True
-    (the default). `all_passed` stays False until the model records a
-    verdict for each via result.record_editorial(name, ok, note) — a CV can
-    no longer pass by omission. Recording the verdicts is authoring work,
-    not a pause.
     """
     document_xml = _read_document_xml(rendered_docx_path)
     experiences = content_map.get("experiences", [])
     result = AuditResult()
-
-    if require_editorial:
-        result.passed["check_1_lead_slots"] = False
-        result.notes["check_1_lead_slots"] = (
-            "editorial verdict not recorded. Read the lead slots against the "
-            "diagnosis's problem statement and per-slot proof points, then "
-            "call result.record_editorial('check_1_lead_slots', ok, note).")
-        result.passed["check_3_recruiter_fit"] = False
-        result.notes["check_3_recruiter_fit"] = (
-            "editorial verdict not recorded. Judge richness vs the career "
-            "file, domain translation, recruiter-fit, and the honesty "
-            "companion (no semantic inflation), then call "
-            "result.record_editorial('check_3_recruiter_fit', ok, note).")
 
     ok2, note2 = check_2_keywords_in_experience(experiences, expected_keywords)
     result.passed["check_2_keywords"] = ok2

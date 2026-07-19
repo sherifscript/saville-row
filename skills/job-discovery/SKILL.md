@@ -43,6 +43,29 @@ metadata:
 
 The first time job-discovery runs and finds no `connectors.yaml`, it prompts the user to enable connectors and provides the default config. Setup, the ~~web scraper account flow, and the plug-and-play pattern for adding any new board are in [`references/connector-setup.md`](./references/connector-setup.md).
 
+## Student searches
+
+A student-role search ("find Werkstudent jobs", "student jobs in [X]", or any
+search while `cv.student_mode` is on) needs two things a normal search does
+not:
+
+1. **Localized query terms — "Werkstudent" does not travel.** The concept is
+   a German-market institution; searching it verbatim elsewhere returns
+   either nothing or mislabeled full-time roles. Query per market:
+   Germany/Austria: `Werkstudent`, `working student`. Netherlands:
+   `werkstudent`, `bijbaan student`. Belgium: `jobstudent` / `studentenjob`
+   (NL), `job étudiant` (FR), plus `student` + the field. UK/IE/US:
+   `student assistant`, `part-time student`, `placement`, `internship`.
+   Elsewhere: `working student`, `student assistant`, `intern` + the field.
+2. **Full-time filter.** Before the results table, discard any role whose
+   title/description signals a standard full-time position with no student /
+   part-time / internship marker — a student search that returns full-time
+   roles is a failed search, not bonus results (the 2026-07 Belgium run
+   logged full-time positions from a Werkstudent-style query). Report the
+   discarded count. When localized terms yield few genuine student roles,
+   say the market has thin coverage rather than padding with full-time
+   listings.
+
 ## Remote searches
 
 A `Run Remote` search (any of: "Run Remote", "search remote", "find remote roles", "run the workflow remote") is a geography of its own. It invokes every enabled `remote_board` connector plus the primary connectors with their remote filter applied, and routes globally-remote results to the **Remote** sheet. Country-fenced remote roles ("Remote, US only") still route to the country sheet. See [`references/connector-routing.md`](./references/connector-routing.md) and [`references/regional-sheet-mapping.md`](./references/regional-sheet-mapping.md).

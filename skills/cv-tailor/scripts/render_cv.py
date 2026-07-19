@@ -55,12 +55,35 @@ BASE_REQUIRED_KEYS = (
 # have fewer bullets — never for trimming rich material.
 DEFAULT_BULLET_FLOORS = (5, 4, 3)
 
+# Bullet LENGTH floors (words in the substance clause, label lead-in
+# excluded). Count floors alone let the thin failure ship: a 12-word
+# fragment carrying one number passed every audit check (v1.7.0 and v1.9.0
+# both patched around this without closing it). Career-file-grade bullets
+# run ~25-40 words; the calibration floor is set from the strongest shipped
+# CVs (2026-05-06 Mastercard ~30 avg, 2026-05-18 Tabby ~22 avg) so real
+# rich CVs pass with margin and category-noun rewrites (~16 avg) fail.
+MIN_BULLET_CLAUSE_WORDS = 12   # any single bullet under this is a fragment
+MIN_MEAN_CLAUSE_WORDS = 20     # section-wide average under this is thin
+
 DEFAULT_SECTIONS = (
     "tagline", "contact", "summary", "core_skills",
     "experience", "education", "additional",
 )
 
 _LABELED_BULLET_RE = re.compile(r"^\*\*[^*\n]{2,60}:\*\*")
+
+
+def _clause_words(bullet, mode):
+    """Word count of a bullet's substance clause.
+
+    In labeled mode the '**Label:**' lead-in is excluded — the label is an
+    addition, not a budget cut, so it cannot buy back clause words. Bold
+    markers never count as words either way.
+    """
+    text = bullet.replace("**", "")
+    if mode == "labeled":
+        text = re.sub(r"^[^:]{0,60}:\s*", "", text)
+    return len(text.split())
 
 
 def load_yaml(path):
@@ -180,6 +203,35 @@ def validate_content_map(cm, config, enabled_sections=None, mode="plain",
                         f"labeled mode: bullet in slot {i + 1} lacks a "
                         f"'**Label:**' lead-in: {b[:50]!r}"
                     )
+
+    # Bullet LENGTH floors. Count floors above stop dropped bullets; these
+    # stop written-thin bullets — the fragment that carries one number and
+    # passes every downstream check. Enforced at validation so the failure
+    # lands at authoring time, before render.
+    clause_counts = []
+    for i, role in enumerate(cm.get("experiences", [])):
+        for b in role.get("bullets") or []:
+            if not isinstance(b, str):
+                continue
+            n = _clause_words(b, mode)
+            clause_counts.append(n)
+            if n < MIN_BULLET_CLAUSE_WORDS:
+                errors.append(
+                    f"experiences[{i}] ({role.get('company', '?')}) bullet "
+                    f"is a {n}-word fragment (floor "
+                    f"{MIN_BULLET_CLAUSE_WORDS}): {b[:60]!r}. Light-edit the "
+                    f"career-file bullet; do not compress it — put the "
+                    f"detail back"
+                )
+    if clause_counts:
+        mean = sum(clause_counts) / len(clause_counts)
+        if mean < MIN_MEAN_CLAUSE_WORDS:
+            errors.append(
+                f"experience bullets average {mean:.1f} words per clause "
+                f"(floor {MIN_MEAN_CLAUSE_WORDS}); career-file bullets run "
+                f"~25-40. The CV is written thin — restore the concrete "
+                f"specifics the career file gives each fact"
+            )
 
     # No employer name in the summary.
     summary = cm.get("summary") or ""
