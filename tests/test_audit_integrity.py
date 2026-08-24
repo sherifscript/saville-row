@@ -5,7 +5,7 @@ The corruption: a docxtpl RichText value passed through the template's plain
 `{{ bullet }}` placeholder embeds the RichText run-XML inside <w:t>. Word,
 python-docx, and ATS parsers read the paragraph as EMPTY, while a raw-XML
 regex still "sees" the text — which is exactly how all 10 CVs of the
-2026-06-27 Berlin batch shipped blank experience sections with a passing
+2026-06-27 a 2026-06 batch shipped blank experience sections with a passing
 audit.
 
 check_5_rendered_integrity reads the rendered file with python-docx (the
@@ -17,7 +17,7 @@ from docxtpl import DocxTemplate, RichText
 from audit import check_5_rendered_integrity
 from md_to_richtext import build_bold_plan
 from postprocess import postprocess_cv
-from conftest import TEMPLATE, minimal_content_map
+from conftest import TEMPLATE, contact_links, minimal_content_map
 
 
 BULLET_TEXT = "Label: the rest of the bullet with real substance in it."
@@ -59,7 +59,7 @@ def test_integrity_passes_healthy_postprocessed_render(tmp_path):
     }])
     cm, plan = build_bold_plan(cm, mode="labeled")
     path = _save(cm, tmp_path / "healthy.docx")
-    postprocess_cv(path, plan)
+    postprocess_cv(path, plan, contact_links=contact_links(cm))
 
     ok, note = check_5_rendered_integrity(
         path, cm, bold_plan=plan, expect_bold=True)
@@ -96,12 +96,16 @@ def test_integrity_fails_visible_markup(tmp_path):
     assert "raw markup" in note
 
 
-def test_integrity_reports_missing_hyperlinks_note(tmp_path):
-    """A healthy OPUS render keeps its two contact hyperlink rels."""
+def test_integrity_checks_hyperlink_targets_not_count(tmp_path):
+    """Each contact link must POINT at its own label, not merely exist.
+
+    The predecessor of this test asserted `>= 2 hyperlink rels`, which the
+    2026-08 leak satisfied while both links pointed at the template author.
+    """
     cm = minimal_content_map()
     cm, plan = build_bold_plan(cm, mode="plain")
     path = _save(cm, tmp_path / "rels.docx")
-    postprocess_cv(path, plan)
+    postprocess_cv(path, plan, contact_links=contact_links(cm))
     ok, note = check_5_rendered_integrity(path, cm)
     assert ok is True, note
-    assert "2 hyperlink rel(s) intact" in note
+    assert "2 contact link(s) match their target" in note

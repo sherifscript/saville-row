@@ -10,7 +10,8 @@ Programmatic checks:
   Check 5 — rendered-text integrity: every authored bullet is readable via
             python-docx (the parser Word and ATS systems agree with), per-slot
             counts match, no raw markup in any paragraph text, planned bold
-            spans are real bold runs, and the contact hyperlinks survive.
+            spans are real bold runs, and every contact hyperlink points
+            at its own visible text.
             Supersedes the old bold-run regex count, which could never fail
             on the OPUS template (its section headers are bold) and passed
             the 2026-05-11 / test5 corruption where every bullet rendered
@@ -61,6 +62,7 @@ import re
 from dataclasses import dataclass, field
 
 from docx import Document
+from docx.oxml.ns import qn
 
 
 @dataclass
@@ -177,6 +179,39 @@ def _norm_ws(text):
     return " ".join(text.split())
 
 
+def _norm_target(value):
+    """Compare a hyperlink target to its label without tripping on scheme.
+
+    A CV shows `example.com`; the relationship has to carry
+    `https://example.com` or Word will not treat it as an external link.
+    Comparing after stripping the scheme and any trailing slash is what
+    makes label and target comparable at all.
+    """
+    value = _norm_ws(str(value or "")).lower()
+    value = re.sub(r"^https?://", "", value)
+    return value.rstrip("/")
+
+
+def _read_hyperlinks(docx_path):
+    """[(visible label, rId, relationship target)] for every hyperlink.
+
+    Joined by r:id, which is the only honest way to pair what a reader sees
+    with where a click actually goes: they live in different parts of the
+    package (word/document.xml vs word/_rels/document.xml.rels) and nothing
+    but the rId connects them.
+    """
+    doc = Document(docx_path)
+    rels = doc.part.rels
+    out = []
+    for el in doc.element.iter(qn("w:hyperlink")):
+        rid = el.get(qn("r:id"))
+        if rid is None or rid not in rels:
+            continue
+        label = _norm_ws("".join(n.text or "" for n in el.iter(qn("w:t"))))
+        out.append((label, rid, rels[rid].target_ref))
+    return out
+
+
 def check_5_rendered_integrity(rendered_docx_path, content_map,
                                bold_plan=None, expect_bold=False,
                                student_mode=False):
@@ -192,8 +227,13 @@ def check_5_rendered_integrity(rendered_docx_path, content_map,
       c. no paragraph text contains raw markup ('<w:') or leftover '**';
       d. when bold was planned: each planned span's text is covered by a run
          with run.bold True in its paragraph (real run inspection);
-      e. the contact hyperlinks survived the postprocess round-trip
-         (>= 2 hyperlink relationships — asherif.me + LinkedIn in OPUS).
+      e. every contact hyperlink's relationship TARGET equals its own
+         visible text. A template built from a finished CV keeps that
+         person's site and LinkedIn as the click destination of every CV
+         rendered from it — invisible on screen, harvested by ATS parsers
+         that read relationships instead of display text (the 2026-08
+         leak). The old check counted relationships, which the leak
+         passed trivially.
 
     Why it exists: the old check counted <w:b/> in the raw XML. The OPUS
     template's own section headers are bold, so that count could never be
@@ -286,22 +326,38 @@ def check_5_rendered_integrity(rendered_docx_path, content_map,
     elif expect_bold and not bold_plan:
         problems.append("expect_bold=True but no bold_plan was supplied")
 
-    # e: contact hyperlinks survived the round-trip.
-    with zipfile.ZipFile(rendered_docx_path) as z:
-        rels = z.read("word/_rels/document.xml.rels").decode(
-            "utf-8", errors="replace")
-    n_links = rels.count("/relationships/hyperlink")
-    if n_links < 2:
-        problems.append(
-            "hyperlink relationships: %d found, >= 2 expected (personal "
-            "site + LinkedIn) — the postprocess round-trip may have dropped "
-            "them" % n_links)
+    # e: every contact hyperlink points at its own visible text.
+    _contact_links = _read_hyperlinks(rendered_docx_path)
+    links_checked = 0
+    for key in ("personal_site", "linkedin_url"):
+        expected_label = _norm_ws(str(content_map.get(key, "")))
+        if not expected_label:
+            problems.append(
+                "%s missing from the content map — the OPUS contact line "
+                "hard-wires a hyperlink for it" % key)
+            continue
+        hits = [(rid, target) for label, rid, target in _contact_links
+                if label == expected_label]
+        if len(hits) != 1:
+            problems.append(
+                "%s (%r): expected exactly 1 hyperlink with that visible "
+                "text, found %d" % (key, expected_label, len(hits)))
+            continue
+        rid, target = hits[0]
+        if _norm_target(target) != _norm_target(expected_label):
+            problems.append(
+                "%s points somewhere else: label %r, relationship target %r "
+                "— an ATS reads the target, not the label"
+                % (key, expected_label, target))
+        else:
+            links_checked += 1
 
     ok = not problems
     if ok:
         note = ("%d/%d bullets readable via python-docx; %d bold span(s) "
-                "verified; %d hyperlink rel(s) intact."
-                % (total_found, total_expected, bold_checked, n_links))
+                "verified; %d contact link(s) match their target."
+                % (total_found, total_expected, bold_checked,
+                   links_checked))
     else:
         note = "; ".join(problems)
     return ok, note
@@ -483,9 +539,9 @@ def check_9_numeric_grounding(document_xml, career_file_text):
 
 
 # Generic filler phrases that signal a weak, un-tailored bullet. Each one
-# was an actual offender in the 2026-06-25 Cairo batch, where bullets said
-# "enterprise decision-makers" while named proof points (Deloitte, Harvard
-# Law Review, W3C) sat unused in the career file. High-precision by design:
+# was an actual offender in the 2026-06-25 batch, where bullets said
+# "enterprise decision-makers" while named proof points (Alpha Advisory,
+# Beacon Law Review, W3C) sat unused in the career file. High-precision by design:
 # only multi-word abstractions. Bare "stakeholders" is deliberately NOT listed
 # (it is a common, valid JD term).
 #
@@ -528,8 +584,8 @@ _CAP_TOKEN_RE = re.compile(r"\b[A-Z][A-Za-z0-9+&.-]+\b")
 def _career_whitelist(career_file_text):
     """Capitalized tokens from the career file, minus the generic stoplist.
 
-    These are the named entities a bullet may cite as proof: Deloitte,
-    Python, Statista, MENA, W3C, Spotify. Membership is what separates a
+    These are the named entities a bullet may cite as proof: Alpha Advisory,
+    Python, Northwind, MENA, W3C, Spotify. Membership is what separates a
     career-grounded proper noun from decorative capitalization.
     """
     if not career_file_text:
@@ -566,7 +622,7 @@ def _is_proofed(bullet_text, whitelist):
     The whitelist version of _has_concrete_proof: a capitalized token counts
     only when the career file actually contains it (and it is not a stoplisted
     sector/language noun), so "Technology and Telecom" no longer grounds a
-    bullet while "Deloitte" and "Python" still do.
+    bullet while "Alpha Advisory" and "Python" still do.
     """
     if any(ch.isdigit() for ch in bullet_text):
         return True
@@ -597,7 +653,7 @@ def check_10_bullet_strength(experiences, career_file_text=None):
     Without a career file the density floor is skipped and proof detection
     falls back to the heuristic _has_concrete_proof (any mid-clause
     capitalized token) — the pre-v1.8.0 behavior, which the 2026-06-27
-    Berlin batch showed is trivially satisfied ("Technology", a year).
+    a 2026-06 batch showed is trivially satisfied ("Technology", a year).
     """
     if not experiences:
         return True, "No experiences; bullet-strength check skipped."
@@ -690,7 +746,7 @@ def check_11_proof_points(experiences, diagnosis_md_path):
     *its assigned proof point* — the named credential/metric the diagnosis
     said the bullets must surface. Catches the observed drift where the lead
     slot's "+30% publication speed" proof point silently fell out of the
-    rendered bullets (2026-06-27 Berlin batch).
+    rendered bullets (2026-06-27 a 2026-06 batch).
 
     A slot passes when >= 1 distinctive token from its proof point appears
     (word-bounded, case-insensitive) in its bullets. Proof points with no
@@ -791,7 +847,7 @@ def scan_batch_sameyness(session_dir):
 
     Cross-CV reuse of a bullet is sometimes legitimate (the same true fact
     for two similar JDs) — the sweep exists so it is a visible choice, not
-    silent drift (2026-06-14 Denmark: one slot byte-identical across all
+    silent drift (2026-06-14: one slot byte-identical across all
     ten CVs). Returns a list of warning strings, empty when clean.
     """
     bullet_files = {}
@@ -902,18 +958,18 @@ def run_full_audit(rendered_docx_path, diagnosis_md_path, content_map,
 
 def _selftest():
     """Smallest check that fails if check_10 logic breaks (weak/strong split)."""
-    weak = [{"company": "Statista", "bullets": [
+    weak = [{"company": "Northwind", "bullets": [
         "Tracked competitive positioning for enterprise decision-makers."]}]
-    strong = [{"company": "Statista", "bullets": [
-        "Synthesized findings into reports cited by Deloitte and the "
-        "Harvard Law Review, briefing global stakeholders."]}]
+    strong = [{"company": "Northwind", "bullets": [
+        "Synthesized findings into reports cited by Alpha Advisory and the "
+        "Beacon Law Review, briefing global stakeholders."]}]
     ok_weak, _ = check_10_bullet_strength(weak)
     ok_strong, _ = check_10_bullet_strength(strong)
     assert not ok_weak, "check_10 should FAIL a generic-filler bullet"
     assert ok_strong, "check_10 should PASS a named-proof-point bullet"
     # Grounding-aware: a generic phrase is allowed when the bullet itself
     # carries concrete proof (a number or named entity).
-    grounded = [{"company": "Statista", "bullets": [
+    grounded = [{"company": "Northwind", "bullets": [
         "Managed analytical workstreams for 40+ multinationals across "
         "Technology and Telecom, delivering client-ready outputs."]}]
     ok_grounded, _ = check_10_bullet_strength(grounded)
@@ -928,20 +984,20 @@ def _selftest():
     ok_labeled, _ = check_10_bullet_strength(labeled_weak)
     assert not ok_labeled, "check_10 should FAIL filler behind a label lead-in"
     # Whitelist mode: sector nouns do not ground a bullet; career entities do.
-    career = ("Synthesized reports cited by Deloitte and W3C. "
+    career = ("Synthesized reports cited by Alpha Advisory and W3C. "
               "Built a Python pipeline, +30% speed, across Technology "
               "and Telecom sectors.")
     sector_only = [{"company": "X", "bullets": [
         "Coverage: tracked positioning across Technology and Telecom.",
         "Coverage two: tracked more positioning across sectors broadly.",
-        "Reporting: synthesized findings cited by Deloitte and W3C.",
+        "Reporting: synthesized findings cited by Alpha Advisory and W3C.",
     ]}]
     ok_density, note_density = check_10_bullet_strength(sector_only, career)
     assert not ok_density, "density floor should FAIL 1/3 proofed"
     two_proofed = [{"company": "X", "bullets": [
         "Coverage: tracked positioning for 40+ multinationals.",
         "Coverage two: tracked more positioning across sectors broadly.",
-        "Reporting: synthesized findings cited by Deloitte and W3C.",
+        "Reporting: synthesized findings cited by Alpha Advisory and W3C.",
     ]}]
     ok_two, _ = check_10_bullet_strength(two_proofed, career)
     assert ok_two, "2/3 proofed should PASS the density floor"

@@ -31,8 +31,10 @@ PostprocessError — a loud render-time failure instead of a silent blank CV.
 """
 
 import copy
+import urllib.parse
 
 from docx import Document
+from docx.oxml.ns import qn
 from docx.text.run import Run
 
 
@@ -49,9 +51,18 @@ OPUS_SECTION_HEADERS = {
 # Sections that must never be removed, whatever the config says.
 REQUIRED_SECTIONS = ("tagline", "contact", "experience", "education")
 
+# Content-map keys whose rendered text sits inside a <w:hyperlink>. Each
+# one's relationship target must equal its own visible text — see
+# _sync_contact_hyperlinks.
+CONTACT_LINK_KEYS = ("personal_site", "linkedin_url")
+
 
 class PostprocessError(ValueError):
     """A bold-plan entry could not be matched to the rendered document."""
+
+
+class ContactLinkError(ValueError):
+    """A contact hyperlink could not be uniquely bound to its target."""
 
 
 def _norm(text):
@@ -166,6 +177,71 @@ def _apply_bold(doc, bold_plan):
     return bolded
 
 
+def _normalize_target(value):
+    """Return an http(s) target for a contact value.
+
+    A bare `example.com` gets an https:// scheme — Word needs an explicit one
+    or the relationship is not a working external link. Anything that is not
+    http/https is rejected rather than normalized: a contact line is a trust
+    boundary, and `javascript:` or `file:` targets have no business in a CV
+    that gets mailed to strangers.
+    """
+    value = (value or "").strip()
+    if not value:
+        raise ContactLinkError("empty contact link value")
+    scheme = urllib.parse.urlparse(value).scheme.lower()
+    if not scheme:
+        return "https://" + value
+    if scheme not in ("http", "https"):
+        raise ContactLinkError(
+            "unsupported contact link scheme %r in %r (http/https only)"
+            % (scheme, value))
+    return value
+
+
+def _sync_contact_hyperlinks(doc, contact_links):
+    """Point each contact hyperlink's relationship at its own visible text.
+
+    Why this exists: docxtpl renders `{{ personal_site }}` into the <w:t>
+    inside a <w:hyperlink>, but a hyperlink's DESTINATION lives in
+    word/_rels/document.xml.rels, keyed by r:id — a part docxtpl never
+    touches. A template built from someone's finished CV therefore keeps
+    THEIR site and LinkedIn as the click targets of every CV rendered from
+    it forever, visible to any ATS that reads relationships instead of
+    display text. That is the 2026-08 leak.
+
+    Each link is bound by r:id and its target set from the content map. The
+    old target is never consulted — matching on it would re-couple the fix
+    to the very values being removed, and would break the moment the
+    template is neutralized.
+    """
+    rels = doc.part.rels
+    elements = list(doc.element.iter(qn("w:hyperlink")))
+    synced = 0
+    for key in CONTACT_LINK_KEYS:
+        if key not in contact_links:
+            continue
+        raw = contact_links[key]
+        label = _norm(raw)
+        target = _normalize_target(raw)
+        matches = []
+        for el in elements:
+            rid = el.get(qn("r:id"))
+            if rid is None or rid not in rels:
+                continue
+            text = _norm("".join(n.text or "" for n in el.iter(qn("w:t"))))
+            if text == label:
+                matches.append(rid)
+        if len(matches) != 1:
+            raise ContactLinkError(
+                "%s (%r): expected exactly 1 hyperlink with that visible "
+                "text, found %d — cannot bind its target safely"
+                % (key, label, len(matches)))
+        rels[matches[0]]._target = target
+        synced += 1
+    return synced
+
+
 def _remove_sections(doc, disabled, headers):
     """Delete each disabled section's paragraphs (header through the
     paragraph before the next known header). Collect-then-remove."""
@@ -244,7 +320,8 @@ def _move_section_before(doc, move_name, anchor_name, headers):
 
 
 def postprocess_cv(docx_path, bold_plan, disabled_sections=(),
-                   section_headers=OPUS_SECTION_HEADERS, student_mode=False):
+                   section_headers=OPUS_SECTION_HEADERS, student_mode=False,
+                   contact_links=None):
     """Post-render pass: remove disabled sections, apply planned bold.
 
     `student_mode=True` moves EDUCATION above PROFESSIONAL EXPERIENCE
@@ -253,9 +330,16 @@ def postprocess_cv(docx_path, bold_plan, disabled_sections=(),
     Opens the document once, saves in place. Returns a summary dict:
     {"removed_sections": [...], "bolded_runs": int, "warnings": [...]}.
 
+    `contact_links` is the {key: value} slice of the content map whose text
+    renders inside a hyperlink (CONTACT_LINK_KEYS). When given, each link's
+    relationship target is rebound to its own visible value; see
+    _sync_contact_hyperlinks. Callers that omit it leave the template's
+    targets in place — audit check 5 is the independent backstop.
+
     Raises PostprocessError when a planned bullet cannot be located —
     ship nothing rather than a CV whose bullets are not where the plan
-    says they are.
+    says they are. Raises ContactLinkError when a contact hyperlink cannot
+    be uniquely bound.
     """
     doc = Document(docx_path)
     removed, warnings = _remove_sections(doc, disabled_sections,
@@ -271,10 +355,12 @@ def postprocess_cv(docx_path, bold_plan, disabled_sections=(),
             bold_plan = ([s for s in bold_plan if s["section"] == "degree"]
                          + [s for s in bold_plan if s["section"] != "degree"])
     bolded = _apply_bold(doc, bold_plan)
+    synced = _sync_contact_hyperlinks(doc, contact_links or {})
     doc.save(docx_path)
     return {
         "removed_sections": removed,
         "bolded_runs": bolded,
+        "synced_contact_links": synced,
         "warnings": warnings,
     }
 

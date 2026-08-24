@@ -2,7 +2,7 @@
 Guards the 2026-06-14 failure mode: tailoring effort decayed down the page.
 The lead experience slot was tailored per role, but the lower and branch slots
 shipped as byte-for-byte identical career-file boilerplate across every CV
-(the Atheneum slot was identical in all ten CVs of the Denmark batch).
+(the Cobalt Expert Network slot was identical in all ten CVs of the one multi-role batch).
 
 Check 8 fails any experience slot that carries zero diagnosed keywords.
 Check 9 fails any metric in the CV that has no source in the career file.
@@ -27,20 +27,20 @@ KEYWORDS = ["category strategies", "shopper insights", "data-driven", "pricing"]
 def test_check8_flags_unangled_lower_slot():
     """Lead slot tailored, branch slot pasted verbatim -> fail, naming the slot."""
     exp = [
-        {"company": "Statista", "bullets": [
+        {"company": "Northwind", "bullets": [
             "Translated pricing and shopper insights into data-driven recommendations."]},
-        {"company": "Atheneum", "bullets": [
-            "Conduct technical interviews with SWANA-based experts for market research."]},
+        {"company": "Cobalt Expert Network", "bullets": [
+            "Conduct technical interviews with region-based experts for market research."]},
     ]
     ok, note = check_8_slot_coverage(exp, KEYWORDS)
     assert ok is False
-    assert "slot 2" in note and "Atheneum" in note
+    assert "slot 2" in note and "Cobalt Expert Network" in note
 
 
 def test_check8_passes_when_every_slot_angled():
     exp = [
-        {"company": "Statista", "bullets": ["Built data-driven category strategies."]},
-        {"company": "Atheneum", "bullets": ["Shopper insights from expert interviews."]},
+        {"company": "Northwind", "bullets": ["Built data-driven category strategies."]},
+        {"company": "Cobalt Expert Network", "bullets": ["Shopper insights from expert interviews."]},
     ]
     ok, _ = check_8_slot_coverage(exp, KEYWORDS)
     assert ok is True
@@ -72,17 +72,17 @@ def test_check9_skips_without_career_file():
 
 
 def test_check10_flags_generic_filler():
-    exp = [{"company": "Statista", "bullets": [
+    exp = [{"company": "Northwind", "bullets": [
         "Tracked positioning for enterprise decision-makers."]}]
     ok, note = check_10_bullet_strength(exp)
     assert ok is False
-    assert "enterprise decision-makers" in note and "Statista" in note
+    assert "enterprise decision-makers" in note and "Northwind" in note
 
 
 def test_check10_passes_named_proof_point():
-    exp = [{"company": "Statista", "bullets": [
-        "Synthesized findings into reports cited by Deloitte and the "
-        "Harvard Law Review."]}]
+    exp = [{"company": "Northwind", "bullets": [
+        "Synthesized findings into reports cited by Alpha Advisory and the "
+        "Beacon Law Review."]}]
     assert check_10_bullet_strength(exp)[0] is True
 
 
@@ -103,12 +103,12 @@ def test_check10_skips_without_experiences():
 # ---------------------------------------------------------------------------
 
 def test_check2_counts_experience_bullets_only():
-    exp = [{"company": "Statista", "bullets": [
+    exp = [{"company": "Northwind", "bullets": [
         "Built pricing models with shopper insights for retail clients."]}]
     ok, _ = check_2_keywords_in_experience(exp, KEYWORDS)
     assert ok is True  # "pricing" + "shopper insights" both in bullets
 
-    generic = [{"company": "Statista", "bullets": [
+    generic = [{"company": "Northwind", "bullets": [
         "Did some general research work for various teams."]}]
     ok2, note2 = check_2_keywords_in_experience(generic, KEYWORDS)
     assert ok2 is False
@@ -121,15 +121,15 @@ def test_check2_counts_experience_bullets_only():
 
 def _block(**third):
     return [
-        {"company": "Statista", "end_year": 2025},
-        {"company": "Statista", "end_year": 2023},
-        dict({"company": "Atheneum"}, **third),
+        {"company": "Northwind", "end_year": 2025},
+        {"company": "Northwind", "end_year": 2023},
+        dict({"company": "Cobalt Expert Network"}, **third),
     ]
 
 
 def test_check7_missing_end_year_now_fails():
     exp = _block()
-    exp[2] = {"company": "Atheneum"}  # no end_year at all
+    exp[2] = {"company": "Cobalt Expert Network"}  # no end_year at all
     ok, note = check_7_experience_structure(exp)
     assert ok is False
     assert "end_year" in note
@@ -182,7 +182,7 @@ def test_check9_ignores_years_and_language_levels():
 # Check 10 — proof density with the career-file whitelist.
 # ---------------------------------------------------------------------------
 
-CAREER_WL = ("Synthesized reports cited by Deloitte and W3C. Built a Python "
+CAREER_WL = ("Synthesized reports cited by Alpha Advisory and W3C. Built a Python "
              "pipeline, +30% speed, across Technology and Telecom sectors.")
 
 
@@ -190,7 +190,7 @@ def test_check10_sector_nouns_do_not_ground():
     exp = [{"company": "X", "bullets": [
         "Coverage: tracked positioning across Technology and Telecom.",
         "Sector reads: tracked more positioning across sectors broadly.",
-        "Reporting: synthesized findings cited by Deloitte and W3C.",
+        "Reporting: synthesized findings cited by Alpha Advisory and W3C.",
     ]}]
     ok, note = check_10_bullet_strength(exp, CAREER_WL)
     assert ok is False  # only 1/3 proofed; Technology/Telecom stoplisted
@@ -201,7 +201,7 @@ def test_check10_density_floor_two_of_three_passes():
     exp = [{"company": "X", "bullets": [
         "Coverage: tracked positioning for 40+ multinationals.",
         "Sector reads: tracked more positioning across sectors broadly.",
-        "Reporting: synthesized findings cited by Deloitte and W3C.",
+        "Reporting: synthesized findings cited by Alpha Advisory and W3C.",
     ]}]
     ok, note = check_10_bullet_strength(exp, CAREER_WL)
     assert ok is True, note  # one interpretive bullet per slot is the pattern
@@ -224,8 +224,8 @@ DIAGNOSIS_MD = """# Role Diagnosis — Test | Analyst
 
 ## Section angles — one line for every rendered part
 
-- Slot 1 (Statista Research Expert): pipeline ownership | proof point: Python pipeline, +30% publication speed | angled as source-of-truth reporting.
-- Slot 2 (Statista Research Assistant): pandemic data | proof point: none | angled as data quality at scale.
+- Slot 1 (Northwind Research Expert): pipeline ownership | proof point: Python pipeline, +30% publication speed | angled as source-of-truth reporting.
+- Slot 2 (Northwind Research Assistant): pandemic data | proof point: none | angled as data quality at scale.
 - Slot 3 (VOV Music): label operations | proof point: data used by institutions | angled as commercial reporting.
 """
 
@@ -234,9 +234,9 @@ def test_check11_flags_dropped_proof_point(tmp_path):
     d = tmp_path / "Diagnosis - Test - Analyst.md"
     d.write_text(DIAGNOSIS_MD, encoding="utf-8")
     exp = [
-        {"company": "Statista", "bullets": [
+        {"company": "Northwind", "bullets": [
             "Dashboards: owned reporting used across departments."]},  # 30%/Python dropped!
-        {"company": "Statista", "bullets": ["Data quality: cleaned data."]},
+        {"company": "Northwind", "bullets": ["Data quality: cleaned data."]},
         {"company": "VOV", "bullets": ["Reporting: ran label operations."]},
     ]
     ok, note = check_11_proof_points(exp, str(d))
@@ -248,9 +248,9 @@ def test_check11_passes_when_any_token_surfaces(tmp_path):
     d = tmp_path / "Diagnosis - Test - Analyst.md"
     d.write_text(DIAGNOSIS_MD, encoding="utf-8")
     exp = [
-        {"company": "Statista", "bullets": [
+        {"company": "Northwind", "bullets": [
             "Pipeline automation: built a Python pipeline lifting speed 30%."]},
-        {"company": "Statista", "bullets": ["Data quality: cleaned data."]},
+        {"company": "Northwind", "bullets": ["Data quality: cleaned data."]},
         {"company": "VOV", "bullets": ["Reporting: ran label operations."]},
     ]
     ok, note = check_11_proof_points(exp, str(d))
@@ -277,7 +277,7 @@ def test_audit_passes_without_editorial_ceremony(tmp_path):
     from docxtpl import DocxTemplate
     from md_to_richtext import build_bold_plan
     from postprocess import postprocess_cv
-    from conftest import TEMPLATE, minimal_content_map
+    from conftest import TEMPLATE, contact_links, minimal_content_map
 
     cm = minimal_content_map(experiences=[{
         "title": "T", "dates": "D", "company": "Acme", "location": "L",
@@ -290,7 +290,7 @@ def test_audit_passes_without_editorial_ceremony(tmp_path):
     tpl.render(cm, autoescape=True)
     out = tmp_path / "cv.docx"
     tpl.save(str(out))
-    postprocess_cv(str(out), plan)
+    postprocess_cv(str(out), plan, contact_links=contact_links(cm))
 
     result = run_full_audit(
         rendered_docx_path=str(out), diagnosis_md_path=None,
