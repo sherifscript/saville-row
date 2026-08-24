@@ -3,6 +3,52 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
+## Unreleased
+
+### Fixed
+
+- **Contact hyperlink targets leaked the template author** (privacy). The OPUS
+  template was built from a finished personal CV, so its two contact
+  hyperlinks kept that person's site and LinkedIn as relationship targets in
+  `word/_rels/document.xml.rels`. docxtpl rewrites the visible `<w:t>` and
+  never the relationship, so every CV rendered from the template *displayed*
+  the candidate's URLs and *clicked through* to the template author's —
+  invisible on screen, read by ATS parsers that follow relationships instead
+  of display text. Both gates that should have caught it were counting rather
+  than checking: audit check 5(e) passed on ">= 2 hyperlink rels" and
+  `test_hyperlinks_survive_roundtrip` asserted the same count, so the leak
+  satisfied both. `postprocess_cv` now binds each contact link by `r:id` and
+  sets its target from the content map (never from the old target); check 5(e)
+  joins `document.xml` to `document.xml.rels` by `r:id` and compares each label
+  against its own target; `personal_site` and `linkedin_url` became required
+  content-map keys. Unsupported URL schemes are rejected.
+
+### Added
+
+- `tests/test_contact_links.py` — two-candidate regression asserting
+  *positively* that each rendered CV's targets are its own, plus
+  cross-contamination absence. Absence alone passes trivially when a renderer
+  leaves both candidates on neutral placeholders.
+- `tests/test_tracked_docx_privacy.py` — fails the build if a tracked `.docx`
+  points anywhere but an RFC 2606 reserved domain, or if a private workspace
+  directory becomes tracked. Deliberately identifier-free: a denylist of the
+  removed values would write them permanently into a public repository in
+  order to remove them from it, and would only ever catch the known leak.
+
+### Changed
+
+- `templates/OPUS/full_template.docx` and the showcase CV neutralized to
+  reserved example domains, labels and targets moved together.
+- Test fixtures no longer use the maintainer's real employers and
+  affiliations. The incident post-mortems in `skills/cv-tailor/references/`
+  keep their named specifics — per CLAUDE.md those worked examples are the
+  instructional mechanism, and abstracting them degrades what works.
+- `SECURITY.md` rewritten for the current directory layout; now separates Git
+  privacy from model-provider, connector, and employer disclosure, and
+  documents how to inspect a `.docx` for hidden hyperlink targets.
+- `settings.json` no longer pre-authorizes `pip` or blanket `python`
+  execution.
+
 ## v2.0.0 — 2026-07-19
 
 The lean-core rebuild. Diagnosis of the recurring "thin CV" failure showed
