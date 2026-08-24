@@ -1,6 +1,6 @@
 """
 Tests for the batch sameyness sweep — the 2026-06-14 detector (one slot
-byte-identical across all ten Denmark CVs). Warn-only by design: cross-CV
+byte-identical across all ten CVs in one batch). Warn-only by design: cross-CV
 reuse is sometimes legitimate; it must be a visible choice, not silent drift.
 """
 from docxtpl import DocxTemplate

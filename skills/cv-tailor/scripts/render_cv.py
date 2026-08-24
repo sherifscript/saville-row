@@ -31,7 +31,7 @@ import yaml
 from docxtpl import DocxTemplate
 
 from md_to_richtext import build_bold_plan
-from postprocess import postprocess_cv
+from postprocess import CONTACT_LINK_KEYS, postprocess_cv
 from audit import run_full_audit, _iter_strings
 from lint_diagnosis import (lint_diagnosis, parse_positioning_mode,
                             parse_student_mode)
@@ -46,6 +46,7 @@ except ImportError:
 # summary section is enabled for the target region — see validate_content_map.
 BASE_REQUIRED_KEYS = (
     "candidate_name", "tagline", "contact_line_1",
+    "personal_site", "linkedin_url",
     "core_skills", "experiences", "degrees",
 )
 
@@ -350,7 +351,10 @@ def render(diagnosis_path, content_map, config, repo_root, output_path,
     # 5. Post-process: apply planned bold as real runs; remove disabled
     #    sections. Raises PostprocessError when a bullet cannot be located.
     postprocess_cv(output_path, bold_plan, disabled_sections=tuple(disabled),
-                   student_mode=student_mode)
+                   student_mode=student_mode,
+                   contact_links={k: content_map[k]
+                                  for k in CONTACT_LINK_KEYS
+                                  if k in content_map})
 
     # 6. Post-render audit. Refuse to ship on any failure.
     expect_bold = mode != "plain" and any(spec["spans"] for spec in bold_plan)

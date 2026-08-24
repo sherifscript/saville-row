@@ -7,8 +7,8 @@ from lint_diagnosis import lint_diagnosis, parse_positioning_mode
 
 
 def _good_diagnosis():
-    """Modeled on the real Sungrow diagnosis shape from the Berlin batch."""
-    return """# Role Diagnosis — Sungrow Europe | Market Research Analyst
+    """Modeled on the real Helios Energy diagnosis shape from the a 2026-06 batch."""
+    return """# Role Diagnosis — Helios Energy Europe | Market Research Analyst
 
 ## What is this team actually hiring to fix?
 
@@ -25,7 +25,7 @@ Methodological rigor.
 
 ## Which of my credentials speaks loudest to that bar?
 
-End-to-end coverage of 40+ multinationals with findings cited by Deloitte.
+End-to-end coverage of 40+ multinationals with findings cited by Alpha Advisory.
 
 ## Branch
 
@@ -43,9 +43,9 @@ research-market-intelligence: keyword overlap on market research.
 
 ## Section angles — one line for every rendered part
 
-- Slot 1 (Statista Research Expert): end-to-end coverage of 40+ multinationals, competitive positioning and market sizing | proof point: cited by Deloitte, Harvard Law Review, Freedom House | angled as competitive intelligence for senior management.
-- Slot 2 (Statista Research Assistant): tracked sectors and synthesized findings into publication-ready outputs | proof point: data used by institutions, governments, media | angled as quantitative market research under deadline.
-- Slot 3 (Atheneum, research/recency): conduct technical interviews with industry experts | proof point: SWANA expert interviews for global research | angled as primary research feeding strategic recommendations.
+- Slot 1 (Northwind Research Expert): end-to-end coverage of 40+ multinationals, competitive positioning and market sizing | proof point: cited by Alpha Advisory, Beacon Law Review, Meridian Institute | angled as competitive intelligence for senior management.
+- Slot 2 (Northwind Research Assistant): tracked sectors and synthesized findings into publication-ready outputs | proof point: data used by institutions, governments, media | angled as quantitative market research under deadline.
+- Slot 3 (Cobalt Expert Network, research/recency): conduct technical interviews with industry experts | proof point: regional expert interviews for global research | angled as primary research feeding strategic recommendations.
 - Higher degree (MSc PEP): economics and quantitative methods | angled as analytical rigor.
 - core_skills: market research & competitive intelligence, quantitative analysis, tools.
 
@@ -96,7 +96,7 @@ def test_missing_slot_line_fails():
 
 def test_slot_line_without_proof_point_fails():
     text = _good_diagnosis().replace(
-        "| proof point: SWANA expert interviews for global research ", "")
+        "| proof point: regional expert interviews for global research ", "")
     ok, errors = lint_diagnosis(text)
     assert not ok
     assert any("proof point" in e for e in errors)
@@ -104,14 +104,14 @@ def test_slot_line_without_proof_point_fails():
 
 def test_thin_proof_point_fails_but_explicit_none_passes():
     text = _good_diagnosis().replace(
-        "proof point: SWANA expert interviews for global research",
-        "proof point: SWANA")
+        "proof point: regional expert interviews for global research",
+        "proof point: regional")
     ok, errors = lint_diagnosis(text)
     assert not ok
     assert any("too thin" in e for e in errors)
 
     text_none = _good_diagnosis().replace(
-        "proof point: SWANA expert interviews for global research",
+        "proof point: regional expert interviews for global research",
         "proof point: none — say so explicitly, do not invent one; the slot "
         "carries transferable primary-research framing instead")
     ok_none, errors_none = lint_diagnosis(text_none)
@@ -120,11 +120,11 @@ def test_thin_proof_point_fails_but_explicit_none_passes():
 
 def test_short_slot_angle_fails():
     text = _good_diagnosis().replace(
-        "- Slot 3 (Atheneum, research/recency): conduct technical interviews "
-        "with industry experts | proof point: SWANA expert interviews for "
+        "- Slot 3 (Cobalt Expert Network, research/recency): conduct technical interviews "
+        "with industry experts | proof point: regional expert interviews for "
         "global research | angled as primary research feeding strategic "
         "recommendations.",
-        "- Slot 3: research | proof point: SWANA expert interviews rock")
+        "- Slot 3: research | proof point: regional expert interviews rock")
     ok, errors = lint_diagnosis(text)
     assert not ok
     assert any("chars" in e for e in errors)

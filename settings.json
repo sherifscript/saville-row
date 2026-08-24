@@ -1,10 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python *)",
-      "PowerShell(python *)",
-      "Bash(pip *)",
-      "PowerShell(pip *)"
+      "Bash(python -m pytest *)",
+      "PowerShell(python -m pytest *)",
+      "Bash(python *render_cv.py *)",
+      "PowerShell(python *render_cv.py *)",
+      "Bash(python *lint_diagnosis.py *)",
+      "PowerShell(python *lint_diagnosis.py *)",
+      "Bash(python *audit.py *)",
+      "PowerShell(python *audit.py *)",
+      "Bash(python *text_to_docx.py *)",
+      "PowerShell(python *text_to_docx.py *)"
     ]
   }
 }

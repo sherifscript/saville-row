@@ -44,6 +44,9 @@ Requests/
 RUN_INFO.md
 SESSION_RECORD.md
 
+# Local remediation plans (may contain sensitive audit findings)
+/plans/
+
 # Project memory (single-user repo; keep local)
 CLAUDE.md
 

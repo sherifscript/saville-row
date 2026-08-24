@@ -14,7 +14,7 @@ from docxtpl import DocxTemplate
 from md_to_richtext import build_bold_plan
 from postprocess import postprocess_cv, PostprocessError, _split_run_bold
 from render_cv import render, effective_sections
-from conftest import TEMPLATE, REPO_ROOT, minimal_content_map
+from conftest import TEMPLATE, REPO_ROOT, contact_links, minimal_content_map
 
 
 def _render_plain(cm, out_path):
@@ -154,14 +154,22 @@ def test_required_sections_never_removed(tmp_path):
     assert "PROFESSIONAL EXPERIENCE" in [p.text.strip() for p in doc.paragraphs]
 
 
-def test_hyperlinks_survive_roundtrip(tmp_path):
+def test_hyperlinks_point_at_their_labels_after_roundtrip(tmp_path):
+    """Section removal must not orphan or misdirect the contact links.
+
+    Asserting a COUNT here (as this test used to) is what let the 2026-08
+    leak through: both rels were present and both pointed at the template
+    author. Assert the pairing instead.
+    """
     cm = minimal_content_map()
     cm, plan = build_bold_plan(cm, mode="plain")
     path = _render_plain(cm, tmp_path / "links.docx")
-    postprocess_cv(path, plan, disabled_sections=("summary",))
-    with zipfile.ZipFile(path) as z:
-        rels = z.read("word/_rels/document.xml.rels").decode("utf-8")
-    assert rels.count("/relationships/hyperlink") >= 2
+    postprocess_cv(path, plan, disabled_sections=("summary",),
+                   contact_links=contact_links(cm))
+    from audit import _read_hyperlinks, _norm_target
+    links = {label: target for label, _rid, target in _read_hyperlinks(path)}
+    for key in ("personal_site", "linkedin_url"):
+        assert _norm_target(links[cm[key]]) == _norm_target(cm[key])
 
 
 def test_plan_mismatch_raises(tmp_path):
@@ -203,7 +211,7 @@ def _three_slot_map():
              "repeatable methodologies covering 40+ multinational "
              "corporations, delivering competitive landscape reports under "
              "tight publication deadlines.",
-             "**Citation impact:** produced analyses cited by Deloitte and "
+             "**Citation impact:** produced analyses cited by Alpha Advisory and "
              "W3C in published industry research, a quality signal "
              "recognized by institutional clients worldwide.",
          ]},

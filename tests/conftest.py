@@ -40,3 +40,13 @@ def minimal_content_map(**overrides):
     }
     cm.update(overrides)
     return cm
+
+
+def contact_links(cm):
+    """The content-map slice postprocess_cv needs to bind hyperlink targets.
+
+    render_cv always passes this; a test that renders and then audits has to
+    pass it too, or check 5(e) correctly reports the template's placeholder
+    targets as a label/target mismatch.
+    """
+    return {k: cm[k] for k in ("personal_site", "linkedin_url") if k in cm}
