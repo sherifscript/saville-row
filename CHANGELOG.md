@@ -3,7 +3,7 @@
 All notable changes to saville-row are recorded here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
-## Unreleased
+## v2.0.1 — 2026-10-22
 
 ### Fixed
 
